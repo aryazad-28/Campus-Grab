@@ -22,6 +22,7 @@ body {
 /* Minimal scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
+  height: 6px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
@@ -32,4 +33,13 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: #a3a3a3;
+}
+
+/* Hide scrollbar for horizontal scroll */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
 }
