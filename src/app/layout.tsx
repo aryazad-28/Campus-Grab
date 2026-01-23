@@ -4,8 +4,8 @@ import "./globals.css"
 import { CartProvider } from "@/components/CartProvider"
 import { AuthProvider } from "@/components/AuthProvider"
 import { OrdersProvider } from "@/components/OrdersProvider"
-import { Header } from "@/components/Header"
-import { CurrentOrderBanner } from "@/components/CurrentOrderBanner"
+import { MenuProvider } from "@/components/MenuProvider"
+import { AIProvider } from "@/components/AIProvider"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,15 +26,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <AuthProvider>
-          <CartProvider>
-            <OrdersProvider>
-              <Header />
-              <main className="min-h-[calc(100vh-4rem)] pb-24">
-                {children}
-              </main>
-              <CurrentOrderBanner />
-            </OrdersProvider>
-          </CartProvider>
+          <AIProvider>
+            <MenuProvider>
+              <CartProvider>
+                <OrdersProvider>
+                  {children}
+                </OrdersProvider>
+              </CartProvider>
+            </MenuProvider>
+          </AIProvider>
         </AuthProvider>
       </body>
     </html>

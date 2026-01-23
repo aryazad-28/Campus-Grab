@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, Utensils, User, Menu, X } from 'lucide-react'
+import { ShoppingCart, Utensils, User, Menu, X, Sun, Moon } from 'lucide-react'
 import { useCart } from './CartProvider'
 import { useAuth } from './AuthProvider'
+import { useTheme } from './ThemeProvider'
 import { Button } from './ui/button'
 
 export function Header() {
@@ -12,8 +13,16 @@ export function Header() {
     const { isAuthenticated, user } = useAuth()
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
+    // Try to get theme context (may not exist if not in student layout)
+    let themeContext: { theme: 'light' | 'dark'; toggleTheme: () => void } | null = null
+    try {
+        themeContext = useTheme()
+    } catch {
+        // Not in theme provider context
+    }
+
     return (
-        <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/95 backdrop-blur-sm">
+        <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/95 dark:bg-neutral-900/95 dark:border-neutral-800 backdrop-blur-sm transition-colors">
             <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:h-16">
                 <Link href="/" className="flex items-center gap-2">
                     <Utensils className="h-5 w-5 sm:h-6 sm:w-6" />
@@ -26,11 +35,28 @@ export function Header() {
                         <Button variant="ghost" size="sm">Menu</Button>
                     </Link>
 
+                    {/* Theme Toggle */}
+                    {themeContext && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9"
+                            onClick={themeContext.toggleTheme}
+                            title={themeContext.theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+                        >
+                            {themeContext.theme === 'light' ? (
+                                <Moon className="h-4 w-4" />
+                            ) : (
+                                <Sun className="h-4 w-4" />
+                            )}
+                        </Button>
+                    )}
+
                     <Link href="/cart" className="relative">
                         <Button variant="outline" size="icon" className="h-9 w-9">
                             <ShoppingCart className="h-4 w-4" />
                             {cartCount > 0 && (
-                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 text-[10px] text-white">
+                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 dark:bg-white text-[10px] text-white dark:text-neutral-900">
                                     {cartCount > 9 ? '9+' : cartCount}
                                 </span>
                             )}
@@ -53,11 +79,27 @@ export function Header() {
 
                 {/* Mobile Navigation */}
                 <div className="flex items-center gap-2 sm:hidden">
+                    {/* Theme Toggle Mobile */}
+                    {themeContext && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-9 w-9"
+                            onClick={themeContext.toggleTheme}
+                        >
+                            {themeContext.theme === 'light' ? (
+                                <Moon className="h-4 w-4" />
+                            ) : (
+                                <Sun className="h-4 w-4" />
+                            )}
+                        </Button>
+                    )}
+
                     <Link href="/cart" className="relative">
                         <Button variant="outline" size="icon" className="h-9 w-9">
                             <ShoppingCart className="h-4 w-4" />
                             {cartCount > 0 && (
-                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 text-[10px] text-white">
+                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 dark:bg-white text-[10px] text-white dark:text-neutral-900">
                                     {cartCount > 9 ? '9+' : cartCount}
                                 </span>
                             )}
@@ -76,7 +118,7 @@ export function Header() {
 
             {/* Mobile Menu Dropdown */}
             {mobileMenuOpen && (
-                <div className="border-t border-neutral-200 bg-white px-4 py-3 sm:hidden">
+                <div className="border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 sm:hidden transition-colors">
                     <div className="flex flex-col gap-2">
                         <Link href="/menu" onClick={() => setMobileMenuOpen(false)}>
                             <Button variant="ghost" className="w-full justify-start">Menu</Button>

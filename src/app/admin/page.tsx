@@ -3,14 +3,16 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, UtensilsCrossed, LogOut, Plus } from 'lucide-react'
+import { LayoutDashboard, UtensilsCrossed, LogOut, ClipboardList, Bell } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
+import { useOrders } from '@/components/OrdersProvider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function AdminDashboard() {
     const router = useRouter()
     const { admin, isAuthenticated, isLoading, logout } = useAdmin()
+    const { orders } = useOrders()
 
     useEffect(() => {
         if (!isLoading && !isAuthenticated) {
@@ -20,8 +22,8 @@ export default function AdminDashboard() {
 
     if (isLoading || !isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <p className="text-neutral-500">Loading...</p>
+            <div className="min-h-screen flex items-center justify-center bg-slate-900">
+                <p className="text-slate-400">Loading...</p>
             </div>
         )
     }
@@ -31,20 +33,24 @@ export default function AdminDashboard() {
         router.push('/admin/login')
     }
 
+    const pendingOrders = orders.filter(o => o.status === 'pending').length
+    const preparingOrders = orders.filter(o => o.status === 'preparing').length
+    const readyOrders = orders.filter(o => o.status === 'ready').length
+
     return (
-        <div className="min-h-screen bg-neutral-50">
-            {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white">
-                <div className="container mx-auto flex h-16 items-center justify-between px-4">
+        <div className="min-h-screen bg-slate-900 text-white">
+            {/* Admin Header */}
+            <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-800">
+                <div className="container mx-auto flex h-14 items-center justify-between px-4">
                     <div className="flex items-center gap-2">
-                        <LayoutDashboard className="h-6 w-6" />
-                        <span className="text-lg font-semibold">Admin Dashboard</span>
+                        <LayoutDashboard className="h-6 w-6 text-blue-400" />
+                        <span className="text-lg font-semibold">Admin Panel</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <span className="text-sm text-neutral-500">{admin?.name}</span>
-                        <Button variant="ghost" size="sm" onClick={handleLogout} className="gap-2">
+                        <span className="text-sm text-slate-400 hidden sm:block">{admin?.name}</span>
+                        <Button variant="ghost" size="sm" onClick={handleLogout} className="text-slate-400 hover:text-white gap-2">
                             <LogOut className="h-4 w-4" />
-                            Logout
+                            <span className="hidden sm:inline">Logout</span>
                         </Button>
                     </div>
                 </div>
@@ -54,61 +60,70 @@ export default function AdminDashboard() {
             <main className="container mx-auto px-4 py-8">
                 <h1 className="mb-6 text-2xl font-semibold">Welcome, {admin?.name}</h1>
 
-                <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                    {/* Menu Management Card */}
-                    <Card className="hover:shadow-md transition-shadow">
+                {/* Stats Cards */}
+                <div className="grid gap-4 mb-8 sm:grid-cols-3">
+                    <Card className="bg-amber-500/10 border-amber-500/30">
+                        <CardContent className="p-4 text-center">
+                            <p className="text-3xl font-bold text-amber-400">{pendingOrders}</p>
+                            <p className="text-sm text-amber-300">New Orders</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-blue-500/10 border-blue-500/30">
+                        <CardContent className="p-4 text-center">
+                            <p className="text-3xl font-bold text-blue-400">{preparingOrders}</p>
+                            <p className="text-sm text-blue-300">Preparing</p>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-emerald-500/10 border-emerald-500/30">
+                        <CardContent className="p-4 text-center">
+                            <p className="text-3xl font-bold text-emerald-400">{readyOrders}</p>
+                            <p className="text-sm text-emerald-300">Ready</p>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="grid gap-4 sm:grid-cols-2">
+                    {/* Orders Management */}
+                    <Card className="bg-slate-800 border-slate-700 hover:border-slate-600 transition-colors">
                         <CardHeader className="pb-3">
-                            <CardTitle className="flex items-center gap-2 text-lg">
-                                <UtensilsCrossed className="h-5 w-5" />
-                                Menu Management
+                            <CardTitle className="flex items-center gap-2 text-lg text-white">
+                                <ClipboardList className="h-5 w-5 text-blue-400" />
+                                Orders
+                                {pendingOrders > 0 && (
+                                    <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-black">
+                                        {pendingOrders}
+                                    </span>
+                                )}
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm text-neutral-500 mb-4">
-                                Add, edit, or remove menu items. Changes sync instantly to all students.
+                            <p className="text-sm text-slate-400 mb-4">
+                                View and manage incoming orders. Update status as you prepare them.
                             </p>
-                            <Link href="/admin/menu">
-                                <Button className="w-full gap-2">
-                                    <Plus className="h-4 w-4" />
-                                    Manage Menu
+                            <Link href="/admin/orders">
+                                <Button className="w-full bg-blue-600 hover:bg-blue-700">
+                                    View Orders
                                 </Button>
                             </Link>
                         </CardContent>
                     </Card>
 
-                    {/* Quick Stats */}
-                    <Card>
+                    {/* Menu Management */}
+                    <Card className="bg-slate-800 border-slate-700 hover:border-slate-600 transition-colors">
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-lg">Quick Stats</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                            <div className="flex justify-between">
-                                <span className="text-sm text-neutral-500">Total Items</span>
-                                <span className="font-medium">--</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-sm text-neutral-500">Categories</span>
-                                <span className="font-medium">--</span>
-                            </div>
-                            <div className="flex justify-between">
-                                <span className="text-sm text-neutral-500">Available</span>
-                                <span className="font-medium">--</span>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* View Student App */}
-                    <Card>
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-lg">Student App</CardTitle>
+                            <CardTitle className="flex items-center gap-2 text-lg text-white">
+                                <UtensilsCrossed className="h-5 w-5 text-emerald-400" />
+                                Menu
+                            </CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <p className="text-sm text-neutral-500 mb-4">
-                                Preview what students see on the menu page.
+                            <p className="text-sm text-slate-400 mb-4">
+                                Add, edit, or remove menu items. Changes sync instantly to students.
                             </p>
-                            <Link href="/menu" target="_blank">
-                                <Button variant="outline" className="w-full">
-                                    Open Student View
+                            <Link href="/admin/menu">
+                                <Button variant="outline" className="w-full border-slate-600 text-white hover:bg-slate-700">
+                                    Manage Menu
                                 </Button>
                             </Link>
                         </CardContent>

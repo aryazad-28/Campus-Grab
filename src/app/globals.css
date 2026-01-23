@@ -1,8 +1,29 @@
 @import "tailwindcss";
 
+/* Light theme (default) */
 :root {
   --background: #fafafa;
   --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --border: #e5e5e5;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #171717;
+  --accent-foreground: #fafafa;
+}
+
+/* Dark theme */
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #171717;
+  --card-foreground: #fafafa;
+  --border: #262626;
+  --muted: #262626;
+  --muted-foreground: #a3a3a3;
+  --accent: #fafafa;
+  --accent-foreground: #171717;
 }
 
 @theme inline {
@@ -17,6 +38,61 @@ body {
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Dark mode card styles */
+.dark .bg-white {
+  background-color: var(--card) !important;
+}
+
+.dark .border-neutral-200 {
+  border-color: var(--border) !important;
+}
+
+.dark .text-neutral-900 {
+  color: var(--foreground) !important;
+}
+
+.dark .text-neutral-500,
+.dark .text-neutral-400 {
+  color: var(--muted-foreground) !important;
+}
+
+.dark .bg-neutral-50,
+.dark .bg-neutral-100 {
+  background-color: var(--muted) !important;
+}
+
+/* Card component dark mode */
+.dark [data-slot="card"] {
+  background-color: var(--card);
+  border-color: var(--border);
+}
+
+/* Input dark mode */
+.dark input,
+.dark select {
+  background-color: var(--muted);
+  border-color: var(--border);
+  color: var(--foreground);
+}
+
+.dark input::placeholder {
+  color: var(--muted-foreground);
+}
+
+/* Badge styles */
+.dark .bg-emerald-50 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+}
+
+.dark .bg-blue-50 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark .bg-purple-50 {
+  background-color: rgba(168, 85, 247, 0.1) !important;
 }
 
 /* Minimal scrollbar */
@@ -28,11 +104,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d4d4d4;
+  background: var(--muted-foreground);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a3a3a3;
+  background: var(--foreground);
 }
 
 /* Hide scrollbar for horizontal scroll */

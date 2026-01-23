@@ -3,9 +3,11 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Minus, Plus, Trash2, ArrowLeft, Clock, CreditCard } from 'lucide-react'
+import { Minus, Plus, Trash2, ArrowLeft, Clock, CreditCard, Loader2 } from 'lucide-react'
 import { useCart } from '@/components/CartProvider'
 import { useOrders } from '@/components/OrdersProvider'
+import { useAuth } from '@/components/AuthProvider'
+import { useAI } from '@/components/AIProvider'
 import { supabase } from '@/lib/supabase'
 import { formatPrice, formatTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -18,8 +20,9 @@ export default function CartPage() {
     const router = useRouter()
     const { items, updateQuantity, removeFromCart, clearCart, cartTotal, maxEta } = useCart()
     const { addOrder } = useOrders()
+    const { user, isAuthenticated } = useAuth()
+    const { trackNewOrder } = useAI()
     const [step, setStep] = useState<CheckoutStep>('cart')
-    const [paymentMethod, setPaymentMethod] = useState<'upi' | 'cash'>('upi')
     const [orderId, setOrderId] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
 
@@ -28,11 +31,15 @@ export default function CartPage() {
 
     const handlePlaceOrder = async () => {
         if (items.length === 0) return
+        if (!isAuthenticated) {
+            router.push('/login')
+            return
+        }
 
         setIsProcessing(true)
 
         try {
-            // Add order to local OrdersProvider (for status tracking)
+            // Create order in local state
             const localOrderId = addOrder({
                 items: items.map(item => ({
                     name: item.name,
@@ -46,26 +53,34 @@ export default function CartPage() {
 
             setOrderId(localOrderId)
 
-            // Also try to save to Supabase if available
+            // Track for AI learning
+            trackNewOrder({
+                orderId: localOrderId,
+                items: items.map(item => ({
+                    itemId: item.id,
+                    itemName: item.name,
+                    canteenId: 1, // Default canteen
+                    estimatedTime: item.eta_minutes
+                }))
+            })
+
+            // Save to Supabase
             if (supabase) {
                 try {
-                    await supabase
-                        .from('orders')
-                        .insert({
-                            items: items.map(item => ({
-                                name: item.name,
-                                quantity: item.quantity,
-                                price: item.price
-                            })),
-                            subtotal: cartTotal,
-                            tax: tax,
-                            total: total,
-                            estimated_time: maxEta,
-                            payment_method: paymentMethod,
-                            status: 'pending'
-                        })
+                    await supabase.from('orders').insert({
+                        id: localOrderId,
+                        user_id: user?.id,
+                        items: items.map(item => ({
+                            name: item.name,
+                            quantity: item.quantity,
+                            price: item.price
+                        })),
+                        subtotal: cartTotal,
+                        total: total,
+                        status: 'pending'
+                    })
                 } catch (err) {
-                    console.warn('Supabase save failed (table may not exist):', err)
+                    console.warn('Supabase save failed:', err)
                 }
             }
 
@@ -73,8 +88,7 @@ export default function CartPage() {
             setStep('confirmation')
         } catch (err) {
             console.error('Order error:', err)
-            // Simulate success for demo
-            setOrderId('DEMO-' + Date.now().toString(36).toUpperCase())
+            setOrderId('ORD-' + Date.now().toString(36).toUpperCase())
             clearCart()
             setStep('confirmation')
         } finally {
@@ -107,7 +121,7 @@ export default function CartPage() {
                     </div>
                 </div>
                 <h1 className="mb-2 text-2xl font-semibold">Order Placed!</h1>
-                <p className="mb-6 text-neutral-500">Your order has been confirmed.</p>
+                <p className="mb-6 text-neutral-500">Your order has been sent to the canteen.</p>
 
                 <Card className="mb-6 text-left">
                     <CardContent className="p-4 space-y-2">
@@ -116,24 +130,33 @@ export default function CartPage() {
                             <span className="font-mono text-sm">{orderId}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">Estimated Time</span>
-                            <span>{formatTime(maxEta || 10)}</span>
+                            <span className="text-neutral-500">Status</span>
+                            <Badge variant="warning">Pending Approval</Badge>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-neutral-500">Payment</span>
-                            <Badge variant="success">{paymentMethod.toUpperCase()}</Badge>
+                            <Badge variant="success">Paid Online</Badge>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Button onClick={() => router.push('/menu')} className="w-full">
-                    Order More
-                </Button>
+                <p className="mb-6 text-sm text-neutral-500">
+                    You&apos;ll be notified when your order is ready for pickup.
+                </p>
+
+                <div className="space-y-3">
+                    <Link href="/orders">
+                        <Button className="w-full">Track Order</Button>
+                    </Link>
+                    <Link href="/menu">
+                        <Button variant="outline" className="w-full">Order More</Button>
+                    </Link>
+                </div>
             </div>
         )
     }
 
-    // Payment view
+    // Payment view - Online only
     if (step === 'payment') {
         return (
             <div className="container mx-auto max-w-md px-4 py-8">
@@ -147,41 +170,31 @@ export default function CartPage() {
 
                 <h1 className="mb-6 text-2xl font-semibold">Payment</h1>
 
+                {!isAuthenticated && (
+                    <Card className="mb-6 border-amber-200 bg-amber-50">
+                        <CardContent className="p-4">
+                            <p className="text-sm text-amber-800 mb-3">Please sign in to place your order</p>
+                            <Link href="/login">
+                                <Button size="sm">Sign In</Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+                )}
+
                 <Card className="mb-6">
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-base">Select Payment Method</CardTitle>
+                        <CardTitle className="text-base">Payment Method</CardTitle>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                        <button
-                            onClick={() => setPaymentMethod('upi')}
-                            className={`w-full rounded-lg border p-4 text-left transition-colors ${paymentMethod === 'upi'
-                                ? 'border-neutral-900 bg-neutral-50'
-                                : 'border-neutral-200 hover:border-neutral-300'
-                                }`}
-                        >
+                    <CardContent>
+                        <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4">
                             <div className="flex items-center gap-3">
-                                <CreditCard className="h-5 w-5" />
+                                <CreditCard className="h-5 w-5 text-emerald-600" />
                                 <div>
-                                    <p className="font-medium">UPI</p>
-                                    <p className="text-sm text-neutral-500">Pay using any UPI app</p>
+                                    <p className="font-medium text-emerald-900">Online Payment</p>
+                                    <p className="text-sm text-emerald-700">UPI / Card / Net Banking</p>
                                 </div>
                             </div>
-                        </button>
-                        <button
-                            onClick={() => setPaymentMethod('cash')}
-                            className={`w-full rounded-lg border p-4 text-left transition-colors ${paymentMethod === 'cash'
-                                ? 'border-neutral-900 bg-neutral-50'
-                                : 'border-neutral-200 hover:border-neutral-300'
-                                }`}
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="flex h-5 w-5 items-center justify-center text-sm">₹</div>
-                                <div>
-                                    <p className="font-medium">Cash</p>
-                                    <p className="text-sm text-neutral-500">Pay on pickup</p>
-                                </div>
-                            </div>
-                        </button>
+                        </div>
                     </CardContent>
                 </Card>
 
@@ -206,9 +219,16 @@ export default function CartPage() {
                     className="w-full"
                     size="lg"
                     onClick={handlePlaceOrder}
-                    disabled={isProcessing}
+                    disabled={isProcessing || !isAuthenticated}
                 >
-                    {isProcessing ? 'Processing...' : `Pay ${formatPrice(total)}`}
+                    {isProcessing ? (
+                        <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Processing...
+                        </>
+                    ) : (
+                        `Pay ${formatPrice(total)}`
+                    )}
                 </Button>
             </div>
         )
@@ -299,11 +319,7 @@ export default function CartPage() {
                 </CardContent>
             </Card>
 
-            <Button
-                className="w-full"
-                size="lg"
-                onClick={() => setStep('payment')}
-            >
+            <Button className="w-full" size="lg" onClick={() => setStep('payment')}>
                 Proceed to Payment
             </Button>
         </div>

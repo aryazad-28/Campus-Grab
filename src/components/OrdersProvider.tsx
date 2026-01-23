@@ -50,11 +50,6 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
             created_at: new Date().toISOString()
         }
         setOrders(prev => [newOrder, ...prev])
-
-        // Simulate order status updates
-        setTimeout(() => updateOrderStatus(id, 'preparing'), 3000)
-        setTimeout(() => updateOrderStatus(id, 'ready'), 8000)
-
         return id
     }
 

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { User, Mail, Phone, LogOut, Clock, ChevronRight } from 'lucide-react'
+import { User, Mail, LogOut, Clock, ChevronRight } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { Button } from '@/components/ui/button'
@@ -10,7 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function ProfilePage() {
     const router = useRouter()
-    const { user, logout, isAuthenticated, isLoading } = useAuth()
+    const { user, signOut, isAuthenticated, isLoading } = useAuth()
     const { orders } = useOrders()
 
     if (isLoading) {
@@ -26,8 +26,8 @@ export default function ProfilePage() {
         return null
     }
 
-    const handleLogout = () => {
-        logout()
+    const handleLogout = async () => {
+        await signOut()
         router.push('/')
     }
 
@@ -54,12 +54,6 @@ export default function ProfilePage() {
                         <Mail className="h-4 w-4 text-neutral-400" />
                         <span className="text-sm">{user?.email}</span>
                     </div>
-                    {user?.phone && (
-                        <div className="flex items-center gap-3">
-                            <Phone className="h-4 w-4 text-neutral-400" />
-                            <span className="text-sm">{user?.phone}</span>
-                        </div>
-                    )}
                 </CardContent>
             </Card>
 

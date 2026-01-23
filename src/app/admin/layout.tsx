@@ -1,3 +1,5 @@
+'use client'
+
 import { AdminProvider } from '@/components/AdminProvider'
 
 export default function AdminLayout({

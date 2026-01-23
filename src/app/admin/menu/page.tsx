@@ -3,9 +3,9 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Plus, Pencil, Trash2, Check, X, Loader2 } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Check, X, Loader2 } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
-import { supabase, MenuItem } from '@/lib/supabase'
+import { useMenu } from '@/components/MenuProvider'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -13,182 +13,99 @@ import { Badge } from '@/components/ui/badge'
 
 const CATEGORIES = ['Breakfast', 'Main Course', 'Snacks', 'Beverages', 'Desserts']
 
+const FOOD_IMAGES: Record<string, string> = {
+    'Breakfast': 'https://images.unsplash.com/photo-1533089860892-a7c6f0a88666?w=400&h=300&fit=crop',
+    'Main Course': 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&h=300&fit=crop',
+    'Snacks': 'https://images.unsplash.com/photo-1599490659213-e2b9527bd087?w=400&h=300&fit=crop',
+    'Beverages': 'https://images.unsplash.com/photo-1544145945-f90425340c7e?w=400&h=300&fit=crop',
+    'Desserts': 'https://images.unsplash.com/photo-1551024601-bec78aea704b?w=400&h=300&fit=crop',
+}
+
 export default function MenuManagementPage() {
     const router = useRouter()
     const { isAuthenticated, isLoading: authLoading } = useAdmin()
-    const [items, setItems] = useState<MenuItem[]>([])
-    const [isLoading, setIsLoading] = useState(true)
-    const [editingId, setEditingId] = useState<string | null>(null)
+    const { items, isLoading, addItem, deleteItem, toggleAvailability } = useMenu()
     const [showAddForm, setShowAddForm] = useState(false)
 
-    // Form state
     const [formData, setFormData] = useState({
         name: '',
         category: 'Snacks',
         price: '',
         eta_minutes: '10',
+        image_url: '',
         canteen_id: 1
     })
 
-    // Auth check
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
             router.push('/admin/login')
         }
     }, [authLoading, isAuthenticated, router])
 
-    // Fetch menu items
-    useEffect(() => {
-        fetchItems()
-    }, [])
-
-    const fetchItems = async () => {
-        if (!supabase) {
-            // Demo data if Supabase not connected
-            setItems([
-                { id: '1', name: 'Masala Dosa', category: 'Breakfast', price: 60, image_url: null, eta_minutes: 8, canteen_id: 1, available: true },
-                { id: '2', name: 'Cold Coffee', category: 'Beverages', price: 50, image_url: null, eta_minutes: 5, canteen_id: 1, available: true },
-                { id: '3', name: 'Samosa', category: 'Snacks', price: 20, image_url: null, eta_minutes: 3, canteen_id: 1, available: true },
-            ])
-            setIsLoading(false)
-            return
-        }
-
-        try {
-            const { data, error } = await supabase
-                .from('menu_items')
-                .select('*')
-                .order('created_at', { ascending: false })
-
-            if (error) {
-                console.error('Error fetching items:', error)
-                // Use demo data on error
-                setItems([])
-            } else {
-                setItems(data || [])
-            }
-        } catch (err) {
-            console.error('Fetch error:', err)
-        } finally {
-            setIsLoading(false)
-        }
-    }
-
-    const handleAdd = async () => {
+    const handleAdd = () => {
         if (!formData.name || !formData.price) return
 
-        const newItem = {
+        addItem({
             name: formData.name,
             category: formData.category,
             price: parseFloat(formData.price),
             eta_minutes: parseInt(formData.eta_minutes),
             canteen_id: formData.canteen_id,
             available: true,
-            image_url: null
-        }
+            image_url: formData.image_url || FOOD_IMAGES[formData.category] || FOOD_IMAGES['Snacks']
+        })
 
-        if (supabase) {
-            const { data, error } = await supabase
-                .from('menu_items')
-                .insert(newItem)
-                .select()
-                .single()
-
-            if (error) {
-                console.error('Error adding item:', error)
-                alert('Error adding item. Make sure the menu_items table exists in Supabase.')
-                return
-            }
-
-            setItems(prev => [data, ...prev])
-        } else {
-            // Demo mode
-            const demoItem = { ...newItem, id: Date.now().toString() } as MenuItem
-            setItems(prev => [demoItem, ...prev])
-        }
-
-        setFormData({ name: '', category: 'Snacks', price: '', eta_minutes: '10', canteen_id: 1 })
+        setFormData({ name: '', category: 'Snacks', price: '', eta_minutes: '10', image_url: '', canteen_id: 1 })
         setShowAddForm(false)
     }
 
-    const handleDelete = async (id: string) => {
-        if (!confirm('Are you sure you want to delete this item?')) return
-
-        if (supabase) {
-            const { error } = await supabase
-                .from('menu_items')
-                .delete()
-                .eq('id', id)
-
-            if (error) {
-                console.error('Error deleting:', error)
-                return
-            }
-        }
-
-        setItems(prev => prev.filter(item => item.id !== id))
-    }
-
-    const toggleAvailability = async (id: string, available: boolean) => {
-        if (supabase) {
-            const { error } = await supabase
-                .from('menu_items')
-                .update({ available: !available })
-                .eq('id', id)
-
-            if (error) {
-                console.error('Error updating:', error)
-                return
-            }
-        }
-
-        setItems(prev => prev.map(item =>
-            item.id === id ? { ...item, available: !available } : item
-        ))
+    const handleDelete = (id: string) => {
+        if (!confirm('Delete this item?')) return
+        deleteItem(id)
     }
 
     if (authLoading || !isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin" />
+            <div className="min-h-screen flex items-center justify-center bg-slate-900">
+                <Loader2 className="h-6 w-6 animate-spin text-white" />
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-neutral-50">
+        <div className="min-h-screen bg-slate-900 text-white">
             {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-neutral-200 bg-white">
-                <div className="container mx-auto flex h-16 items-center justify-between px-4">
-                    <Link href="/admin" className="flex items-center gap-2 text-neutral-500 hover:text-neutral-900">
+            <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-800">
+                <div className="container mx-auto flex h-14 items-center justify-between px-4">
+                    <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-white">
                         <ArrowLeft className="h-5 w-5" />
-                        <span>Back to Dashboard</span>
+                        <span className="hidden sm:inline">Dashboard</span>
                     </Link>
-                    <Button onClick={() => setShowAddForm(true)} className="gap-2">
+                    <h1 className="text-lg font-semibold">Menu</h1>
+                    <Button onClick={() => setShowAddForm(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 gap-1">
                         <Plus className="h-4 w-4" />
-                        Add Item
+                        <span className="hidden sm:inline">Add</span>
                     </Button>
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-8">
-                <h1 className="mb-6 text-2xl font-semibold">Menu Management</h1>
-
+            <main className="container mx-auto px-4 py-6">
                 {/* Add Form */}
                 {showAddForm && (
-                    <Card className="mb-6">
+                    <Card className="mb-6 bg-slate-800 border-slate-700">
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-lg">Add New Item</CardTitle>
+                            <CardTitle className="text-lg text-white">Add New Item</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 <Input
                                     placeholder="Item name"
                                     value={formData.name}
                                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                                    className="bg-slate-700 border-slate-600 text-white"
                                 />
                                 <select
-                                    className="h-10 rounded-lg border border-neutral-200 px-3"
+                                    className="h-10 rounded-lg border border-slate-600 bg-slate-700 px-3 text-sm text-white"
                                     value={formData.category}
                                     onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
                                 >
@@ -201,23 +118,33 @@ export default function MenuManagementPage() {
                                     placeholder="Price (₹)"
                                     value={formData.price}
                                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
+                                    className="bg-slate-700 border-slate-600 text-white"
                                 />
                                 <Input
                                     type="number"
                                     placeholder="ETA (min)"
                                     value={formData.eta_minutes}
                                     onChange={(e) => setFormData(prev => ({ ...prev, eta_minutes: e.target.value }))}
+                                    className="bg-slate-700 border-slate-600 text-white"
+                                />
+                                <Input
+                                    type="url"
+                                    placeholder="Image URL (optional)"
+                                    value={formData.image_url}
+                                    onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
+                                    className="bg-slate-700 border-slate-600 text-white"
                                 />
                                 <div className="flex gap-2">
-                                    <Button onClick={handleAdd} className="flex-1 gap-1">
+                                    <Button onClick={handleAdd} className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-1">
                                         <Check className="h-4 w-4" />
-                                        Save
+                                        Add
                                     </Button>
-                                    <Button variant="outline" onClick={() => setShowAddForm(false)}>
+                                    <Button variant="outline" onClick={() => setShowAddForm(false)} className="border-slate-600 text-white hover:bg-slate-700">
                                         <X className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
+                            <p className="mt-2 text-xs text-slate-500">Leave image URL empty to use a default image based on category</p>
                         </CardContent>
                     </Card>
                 )}
@@ -225,12 +152,12 @@ export default function MenuManagementPage() {
                 {/* Items List */}
                 {isLoading ? (
                     <div className="flex justify-center py-12">
-                        <Loader2 className="h-6 w-6 animate-spin" />
+                        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
                     </div>
                 ) : items.length === 0 ? (
                     <div className="text-center py-12">
-                        <p className="text-neutral-500 mb-4">No menu items yet</p>
-                        <Button onClick={() => setShowAddForm(true)} className="gap-2">
+                        <p className="text-slate-400 mb-4">No menu items yet</p>
+                        <Button onClick={() => setShowAddForm(true)} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
                             <Plus className="h-4 w-4" />
                             Add Your First Item
                         </Button>
@@ -238,30 +165,40 @@ export default function MenuManagementPage() {
                 ) : (
                     <div className="space-y-3">
                         {items.map(item => (
-                            <Card key={item.id} className={!item.available ? 'opacity-60' : ''}>
-                                <CardContent className="flex flex-wrap items-center gap-4 p-4">
-                                    <div className="flex-1 min-w-[200px]">
-                                        <h3 className="font-medium">{item.name}</h3>
+                            <Card key={item.id} className={`bg-slate-800 border-slate-700 ${!item.available ? 'opacity-50' : ''}`}>
+                                <CardContent className="flex flex-wrap items-center gap-3 p-3 sm:gap-4 sm:p-4">
+                                    {item.image_url && (
+                                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-700 sm:h-14 sm:w-14">
+                                            <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                                        </div>
+                                    )}
+
+                                    <div className="flex-1 min-w-[150px]">
+                                        <h3 className="font-medium text-sm text-white sm:text-base">{item.name}</h3>
                                         <div className="flex items-center gap-2 mt-1">
-                                            <Badge variant="secondary">{item.category}</Badge>
-                                            <span className="text-sm text-neutral-500">{item.eta_minutes} min</span>
+                                            <Badge variant="secondary" className="text-xs bg-slate-700 text-slate-300">{item.category}</Badge>
+                                            <span className="text-xs text-slate-500">{item.eta_minutes} min</span>
                                         </div>
                                     </div>
 
-                                    <div className="font-semibold">₹{item.price}</div>
+                                    <div className="font-semibold text-sm text-white sm:text-base">₹{item.price}</div>
 
                                     <div className="flex items-center gap-2">
                                         <Button
-                                            variant={item.available ? "outline" : "default"}
+                                            variant="outline"
                                             size="sm"
-                                            onClick={() => toggleAvailability(item.id, item.available)}
+                                            onClick={() => toggleAvailability(item.id)}
+                                            className={`text-xs sm:text-sm ${item.available
+                                                ? 'border-emerald-600 text-emerald-400 hover:bg-emerald-600/20'
+                                                : 'border-slate-600 text-slate-400 hover:bg-slate-700'
+                                                }`}
                                         >
                                             {item.available ? 'Available' : 'Unavailable'}
                                         </Button>
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            className="text-red-500 hover:text-red-600 hover:bg-red-50"
+                                            className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/20"
                                             onClick={() => handleDelete(item.id)}
                                         >
                                             <Trash2 className="h-4 w-4" />
