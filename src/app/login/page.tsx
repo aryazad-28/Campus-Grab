@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Mail, Lock, ArrowRight, User, Loader2, GraduationCap, ShieldCheck } from 'lucide-react'
@@ -51,13 +51,16 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isGoogleLoading, setIsGoogleLoading] = useState(false)
 
-    // Redirect if already logged in
+    // Redirect if already logged in as student
+    useEffect(() => {
+        if (isAuthenticated) {
+            router.push('/menu')
+        }
+        // Note: We don't auto-redirect admins so they can switch to student login
+    }, [isAuthenticated, router])
+
+    // Show nothing while redirecting for students
     if (isAuthenticated) {
-        router.push('/menu')
-        return null
-    }
-    if (isAdminAuthenticated) {
-        router.push('/admin')
         return null
     }
 
