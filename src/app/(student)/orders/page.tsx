@@ -47,7 +47,7 @@ export default function OrdersPage() {
                                 <CardContent className="p-4">
                                     <div className="mb-3 flex items-start justify-between">
                                         <div>
-                                            <p className="font-medium">{order.id}</p>
+                                            <p className="font-mono text-lg font-bold">{order.token_number || order.id}</p>
                                             <p className="text-sm text-neutral-500">{formatDate(order.created_at)}</p>
                                         </div>
                                         <Badge variant={config.variant} className="gap-1">

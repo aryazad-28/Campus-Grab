@@ -1,0 +1,47 @@
+{
+    "name": "Campus Grab",
+    "short_name": "CampusGrab",
+    "description": "Quick campus food ordering - order from your campus canteens",
+    "start_url": "/menu",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#171717",
+    "orientation": "portrait",
+    "scope": "/",
+    "icons": [
+        {
+            "src": "/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        }
+    ],
+    "categories": [
+        "food",
+        "shopping"
+    ],
+    "screenshots": [],
+    "shortcuts": [
+        {
+            "name": "View Menu",
+            "url": "/menu",
+            "description": "Browse the food menu"
+        },
+        {
+            "name": "My Orders",
+            "url": "/orders",
+            "description": "Track your orders"
+        },
+        {
+            "name": "Cart",
+            "url": "/cart",
+            "description": "View your cart"
+        }
+    ]
+}

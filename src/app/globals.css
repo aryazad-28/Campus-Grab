@@ -100,13 +100,16 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--muted-foreground);
   border-radius: 3px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--foreground);
 }
@@ -116,6 +119,63 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
 .scrollbar-hide::-webkit-scrollbar {
   display: none;
+}
+
+/* Safe area padding for notched phones (iPhone X+, etc.) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0);
+}
+
+/* Improved touch targets for mobile */
+@media (max-width: 640px) {
+
+  button,
+  [role="button"],
+  a {
+    min-height: 44px;
+  }
+
+  /* Prevent text selection on navigation */
+  nav {
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  /* Smooth scrolling on iOS */
+  .overflow-y-auto,
+  .overflow-x-auto {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+/* PWA standalone mode adjustments */
+@media (display-mode: standalone) {
+  body {
+    /* Prevent overscroll bounce on iOS */
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Prevent pull-to-refresh in standalone mode */
+html {
+  overscroll-behavior-y: contain;
+}
+
+/* Active state for touch feedback */
+@media (hover: none) {
+
+  button:active,
+  [role="button"]:active,
+  a:active {
+    opacity: 0.7;
+    transform: scale(0.98);
+    transition: transform 0.1s ease, opacity 0.1s ease;
+  }
 }

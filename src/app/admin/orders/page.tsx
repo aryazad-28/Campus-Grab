@@ -125,7 +125,7 @@ export default function AdminOrdersPage() {
                                         {/* Header */}
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <p className="font-mono text-sm text-slate-400">{order.id}</p>
+                                                <p className="font-mono text-xl font-bold text-white">{order.token_number || order.id}</p>
                                                 <p className="text-xs text-slate-500">{formatTime(order.created_at)}</p>
                                             </div>
                                             <Badge className={`${config.color} border gap-1`}>

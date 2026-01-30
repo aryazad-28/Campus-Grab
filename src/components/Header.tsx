@@ -22,10 +22,10 @@ export function Header() {
     }
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b border-neutral-200 bg-white/95 dark:bg-neutral-900/95 dark:border-neutral-800 backdrop-blur-sm transition-colors">
+        <header className="sticky top-0 z-50 w-full border-b backdrop-blur-sm transition-colors" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
             <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:h-16">
                 <Link href="/" className="flex items-center gap-2">
-                    <Utensils className="h-5 w-5 sm:h-6 sm:w-6" />
+                    <img src="/logo.png" alt="Campus Grab" className="h-8 w-8 sm:h-9 sm:w-9 rounded-full" />
                     <span className="text-base font-semibold sm:text-lg">Campus Grab</span>
                 </Link>
 

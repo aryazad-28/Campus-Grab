@@ -23,7 +23,8 @@ export default function CartPage() {
     const { user, isAuthenticated } = useAuth()
     const { trackNewOrder } = useAI()
     const [step, setStep] = useState<CheckoutStep>('cart')
-    const [orderId, setOrderId] = useState<string | null>(null)
+    const [orderToken, setOrderToken] = useState<string | null>(null)
+    const [orderTime, setOrderTime] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
 
     const tax = Math.round(cartTotal * 0.05)
@@ -51,7 +52,10 @@ export default function CartPage() {
                 estimated_time: maxEta
             })
 
-            setOrderId(localOrderId)
+            // Get the token number from the most recent order
+            const recentOrder = JSON.parse(localStorage.getItem('campus-grab-orders') || '[]')[0]
+            setOrderToken(recentOrder?.token_number || '#0001')
+            setOrderTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
 
             // Track for AI learning
             trackNewOrder({
@@ -88,7 +92,8 @@ export default function CartPage() {
             setStep('confirmation')
         } catch (err) {
             console.error('Order error:', err)
-            setOrderId('ORD-' + Date.now().toString(36).toUpperCase())
+            setOrderToken('#0001')
+            setOrderTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
             clearCart()
             setStep('confirmation')
         } finally {
@@ -126,8 +131,12 @@ export default function CartPage() {
                 <Card className="mb-6 text-left">
                     <CardContent className="p-4 space-y-2">
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">Order ID</span>
-                            <span className="font-mono text-sm">{orderId}</span>
+                            <span className="text-neutral-500">Token Number</span>
+                            <span className="font-mono text-lg font-bold">{orderToken}</span>
+                        </div>
+                        <div className="flex justify-between">
+                            <span className="text-neutral-500">Order Time</span>
+                            <span className="text-sm">{orderTime}</span>
                         </div>
                         <div className="flex justify-between">
                             <span className="text-neutral-500">Status</span>

@@ -3,7 +3,7 @@
 import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, UtensilsCrossed, LogOut, ClipboardList, Bell } from 'lucide-react'
+import { LayoutDashboard, UtensilsCrossed, LogOut, ClipboardList, Bell, BarChart3 } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { Button } from '@/components/ui/button'
@@ -124,6 +124,26 @@ export default function AdminDashboard() {
                             <Link href="/admin/menu">
                                 <Button variant="outline" className="w-full border-slate-600 text-white hover:bg-slate-700">
                                     Manage Menu
+                                </Button>
+                            </Link>
+                        </CardContent>
+                    </Card>
+
+                    {/* Analytics */}
+                    <Card className="bg-slate-800 border-slate-700 hover:border-slate-600 transition-colors">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="flex items-center gap-2 text-lg text-white">
+                                <BarChart3 className="h-5 w-5 text-purple-400" />
+                                Analytics
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-sm text-slate-400 mb-4">
+                                View sales analytics, popular items, and order statistics.
+                            </p>
+                            <Link href="/admin/analytics">
+                                <Button variant="outline" className="w-full border-slate-600 text-white hover:bg-slate-700">
+                                    View Analytics
                                 </Button>
                             </Link>
                         </CardContent>
