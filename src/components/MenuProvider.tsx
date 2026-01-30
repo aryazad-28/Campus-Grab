@@ -73,7 +73,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 
         // Real-time subscription
         if (supabase) {
-            const supabaseClient = supabase // Capture reference for cleanup
+            const supabaseClient = supabase // Store reference for cleanup function
             const channel = supabaseClient
                 .channel('menu-realtime')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, (payload) => {
