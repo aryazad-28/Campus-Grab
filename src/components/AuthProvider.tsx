@@ -23,6 +23,13 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+const USER_STORAGE_KEY = 'campus-grab-user'
+
+// Demo users for when Supabase is not configured
+const DEMO_USERS = [
+  { id: 'demo1', name: 'Demo Student', email: 'student@demo.com', password: 'demo123' },
+]
+
 function mapSupabaseUser(supabaseUser: SupabaseUser | null): User | null {
   if (!supabaseUser) return null
   return {
@@ -37,6 +44,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
+    // Check for demo user in localStorage first
+    const storedUser = localStorage.getItem(USER_STORAGE_KEY)
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser))
+        setIsLoading(false)
+        return
+      } catch {
+        localStorage.removeItem(USER_STORAGE_KEY)
+      }
+    }
+
     if (!supabase) {
       setIsLoading(false)
       return
@@ -57,8 +76,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const signUp = async (email: string, password: string, name: string) => {
+    // Demo mode when Supabase not configured
     if (!supabase) {
-      return { success: false, error: 'Authentication not configured' }
+      const newUser = { id: `user_${Date.now()}`, name, email }
+      setUser(newUser)
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser))
+      return { success: true }
     }
 
     try {
@@ -86,8 +109,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   const signIn = async (email: string, password: string) => {
+    // Demo mode when Supabase not configured
     if (!supabase) {
-      return { success: false, error: 'Authentication not configured' }
+      // Check demo users
+      const demoUser = DEMO_USERS.find(u => u.email === email && u.password === password)
+      if (demoUser) {
+        const { password: _, ...userData } = demoUser
+        setUser(userData)
+        localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(userData))
+        return { success: true }
+      }
+      // Allow any email/password in demo mode for testing
+      const newUser = { id: `user_${Date.now()}`, name: email.split('@')[0], email }
+      setUser(newUser)
+      localStorage.setItem(USER_STORAGE_KEY, JSON.stringify(newUser))
+      return { success: true }
     }
 
     try {
@@ -105,7 +141,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signInWithGoogle = async () => {
     if (!supabase) {
-      return { success: false, error: 'Authentication not configured' }
+      return { success: false, error: 'Google sign-in requires Supabase configuration' }
     }
 
     try {
@@ -131,11 +167,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabase.auth.signOut()
     }
     setUser(null)
+    localStorage.removeItem(USER_STORAGE_KEY)
   }
 
   const resetPassword = async (email: string) => {
     if (!supabase) {
-      return { success: false, error: 'Authentication not configured' }
+      return { success: false, error: 'Password reset requires Supabase configuration' }
     }
 
     try {

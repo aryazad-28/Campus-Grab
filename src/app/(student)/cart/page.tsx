@@ -8,7 +8,6 @@ import { useCart } from '@/components/CartProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { useAI } from '@/components/AIProvider'
-import { supabase } from '@/lib/supabase'
 import { formatPrice, formatTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -20,7 +19,7 @@ export default function CartPage() {
     const router = useRouter()
     const { items, updateQuantity, removeFromCart, clearCart, cartTotal, maxEta } = useCart()
     const { addOrder } = useOrders()
-    const { user, isAuthenticated } = useAuth()
+    const { isAuthenticated } = useAuth()
     const { trackNewOrder } = useAI()
     const [step, setStep] = useState<CheckoutStep>('cart')
     const [orderToken, setOrderToken] = useState<string | null>(null)
@@ -40,8 +39,8 @@ export default function CartPage() {
         setIsProcessing(true)
 
         try {
-            // Create order in local state
-            const localOrderId = addOrder({
+            // Create order — this saves to Supabase automatically via OrdersProvider
+            const newOrder = await addOrder({
                 items: items.map(item => ({
                     name: item.name,
                     quantity: item.quantity,
@@ -52,14 +51,13 @@ export default function CartPage() {
                 estimated_time: maxEta
             })
 
-            // Get the token number from the most recent order
-            const recentOrder = JSON.parse(localStorage.getItem('campus-grab-orders') || '[]')[0]
-            setOrderToken(recentOrder?.token_number || '#0001')
+            // Get token from the returned order
+            setOrderToken(newOrder.token_number)
             setOrderTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
 
             // Track for AI learning
             trackNewOrder({
-                orderId: localOrderId,
+                orderId: newOrder.id,
                 items: items.map(item => ({
                     itemId: item.id,
                     itemName: item.name,
@@ -67,26 +65,6 @@ export default function CartPage() {
                     estimatedTime: item.eta_minutes
                 }))
             })
-
-            // Save to Supabase
-            if (supabase) {
-                try {
-                    await supabase.from('orders').insert({
-                        id: localOrderId,
-                        user_id: user?.id,
-                        items: items.map(item => ({
-                            name: item.name,
-                            quantity: item.quantity,
-                            price: item.price
-                        })),
-                        subtotal: cartTotal,
-                        total: total,
-                        status: 'pending'
-                    })
-                } catch (err) {
-                    console.warn('Supabase save failed:', err)
-                }
-            }
 
             clearCart()
             setStep('confirmation')
