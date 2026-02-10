@@ -3,18 +3,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react'
 import { supabase, MenuItem } from '@/lib/supabase'
 
-// Default menu items with images
-const DEFAULT_ITEMS: MenuItem[] = [
-    { id: '1', name: 'Masala Dosa', category: 'Breakfast', price: 60, image_url: 'https://images.unsplash.com/photo-1668236543090-82eb5eaf701b?w=400&h=300&fit=crop', eta_minutes: 8, canteen_id: 1, available: true },
-    { id: '2', name: 'Veg Biryani', category: 'Main Course', price: 120, image_url: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?w=400&h=300&fit=crop', eta_minutes: 15, canteen_id: 1, available: true },
-    { id: '3', name: 'Cold Coffee', category: 'Beverages', price: 50, image_url: 'https://images.unsplash.com/photo-1461023058943-07fcbe16d735?w=400&h=300&fit=crop', eta_minutes: 5, canteen_id: 1, available: true },
-    { id: '4', name: 'Samosa', category: 'Snacks', price: 20, image_url: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?w=400&h=300&fit=crop', eta_minutes: 3, canteen_id: 2, available: true },
-    { id: '5', name: 'Idli Sambar', category: 'Breakfast', price: 40, image_url: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=400&h=300&fit=crop', eta_minutes: 6, canteen_id: 1, available: true },
-    { id: '6', name: 'Vada Pav', category: 'Snacks', price: 25, image_url: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?w=400&h=300&fit=crop', eta_minutes: 4, canteen_id: 1, available: true },
-    { id: '7', name: 'Paneer Butter Masala', category: 'Main Course', price: 140, image_url: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=400&h=300&fit=crop', eta_minutes: 12, canteen_id: 2, available: true },
-    { id: '8', name: 'Fresh Lime Soda', category: 'Beverages', price: 30, image_url: 'https://images.unsplash.com/photo-1513558161293-cdaf765ed2fd?w=400&h=300&fit=crop', eta_minutes: 3, canteen_id: 1, available: true },
-]
-
 const STORAGE_KEY = 'campus-grab-menu'
 
 interface MenuContextType {
@@ -32,7 +20,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
     const [items, setItems] = useState<MenuItem[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
-    // Load items from localStorage or Supabase
+    // Load items from Supabase or localStorage
     useEffect(() => {
         const loadItems = async () => {
             // Try Supabase first
@@ -43,7 +31,7 @@ export function MenuProvider({ children }: { children: ReactNode }) {
                         .select('*')
                         .order('created_at', { ascending: false })
 
-                    if (!error && data && data.length > 0) {
+                    if (!error && data) {
                         setItems(data)
                         setIsLoading(false)
                         return
@@ -53,18 +41,16 @@ export function MenuProvider({ children }: { children: ReactNode }) {
                 }
             }
 
-            // Fallback to localStorage
+            // Fallback to localStorage (no defaults — start empty)
             const stored = localStorage.getItem(STORAGE_KEY)
             if (stored) {
                 try {
                     setItems(JSON.parse(stored))
                 } catch {
-                    setItems(DEFAULT_ITEMS)
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_ITEMS))
+                    setItems([])
                 }
             } else {
-                setItems(DEFAULT_ITEMS)
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(DEFAULT_ITEMS))
+                setItems([])
             }
             setIsLoading(false)
         }

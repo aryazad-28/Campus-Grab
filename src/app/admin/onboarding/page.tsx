@@ -24,6 +24,11 @@ export default function AdminOnboardingPage() {
 
     // Already submitted and pending
     if (isPending || submitted) {
+        const handleSignOut = () => {
+            logout()
+            setTimeout(() => router.push('/login'), 100)
+        }
+
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
                 <Card className="w-full max-w-sm bg-slate-800 border-slate-700 text-center">
@@ -35,7 +40,7 @@ export default function AdminOnboardingPage() {
                         <p className="mb-6 text-sm text-slate-400">
                             Your canteen admin application is under review. You&apos;ll be able to access the dashboard once approved.
                         </p>
-                        <Button variant="outline" onClick={logout} className="border-slate-600 text-slate-300 hover:bg-slate-700">
+                        <Button variant="outline" onClick={handleSignOut} className="border-slate-600 text-slate-300 hover:bg-slate-700">
                             Sign out
                         </Button>
                     </CardContent>
@@ -120,7 +125,7 @@ export default function AdminOnboardingPage() {
                     </form>
 
                     <div className="mt-4 text-center">
-                        <button onClick={logout} className="text-xs text-slate-500 hover:text-slate-300">
+                        <button onClick={() => { logout(); setTimeout(() => router.push('/login'), 100) }} className="text-xs text-slate-500 hover:text-slate-300">
                             Sign out
                         </button>
                     </div>
