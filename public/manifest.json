@@ -2,7 +2,7 @@
     "name": "Campus Grab",
     "short_name": "CampusGrab",
     "description": "Quick campus food ordering - order from your campus canteens",
-    "start_url": "/menu",
+    "start_url": "/",
     "display": "standalone",
     "background_color": "#ffffff",
     "theme_color": "#171717",
