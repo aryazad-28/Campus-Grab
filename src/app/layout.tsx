@@ -6,7 +6,6 @@ import { AuthProvider } from "@/components/AuthProvider"
 import { OrdersProvider } from "@/components/OrdersProvider"
 import { MenuProvider } from "@/components/MenuProvider"
 import { AIProvider } from "@/components/AIProvider"
-import { AdminProvider } from "@/components/AdminProvider"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -52,17 +51,15 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${inter.variable} antialiased`}>
         <AuthProvider>
-          <AdminProvider>
-            <AIProvider>
-              <MenuProvider>
-                <CartProvider>
-                  <OrdersProvider>
-                    {children}
-                  </OrdersProvider>
-                </CartProvider>
-              </MenuProvider>
-            </AIProvider>
-          </AdminProvider>
+          <AIProvider>
+            <MenuProvider>
+              <CartProvider>
+                <OrdersProvider>
+                  {children}
+                </OrdersProvider>
+              </CartProvider>
+            </MenuProvider>
+          </AIProvider>
         </AuthProvider>
       </body>
     </html>

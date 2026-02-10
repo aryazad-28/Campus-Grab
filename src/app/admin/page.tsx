@@ -11,14 +11,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 
 export default function AdminDashboard() {
     const router = useRouter()
-    const { admin, isAuthenticated, isLoading, logout } = useAdmin()
+    const { admin, isAuthenticated, isPending, needsOnboarding, isLoading, logout } = useAdmin()
     const { orders } = useOrders()
 
     useEffect(() => {
-        if (!isLoading && !isAuthenticated) {
-            router.push('/admin/login')
+        if (!isLoading) {
+            if (needsOnboarding || isPending) {
+                router.push('/admin/onboarding')
+            } else if (!isAuthenticated) {
+                router.push('/admin/login')
+            }
         }
-    }, [isLoading, isAuthenticated, router])
+    }, [isLoading, isAuthenticated, isPending, needsOnboarding, router])
 
     if (isLoading || !isAuthenticated) {
         return (
@@ -30,7 +34,6 @@ export default function AdminDashboard() {
 
     const handleLogout = () => {
         logout()
-        // Small delay to ensure state is cleared before redirect
         setTimeout(() => router.push('/login'), 100)
     }
 
@@ -45,7 +48,7 @@ export default function AdminDashboard() {
                 <div className="container mx-auto flex h-14 items-center justify-between px-4">
                     <div className="flex items-center gap-2">
                         <LayoutDashboard className="h-6 w-6 text-blue-400" />
-                        <span className="text-lg font-semibold">Admin Panel</span>
+                        <span className="text-lg font-semibold">{admin?.canteen_name || 'Admin Panel'}</span>
                     </div>
                     <div className="flex items-center gap-4">
                         <span className="text-sm text-slate-400 hidden sm:block">{admin?.name}</span>
