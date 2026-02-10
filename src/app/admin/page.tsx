@@ -30,7 +30,8 @@ export default function AdminDashboard() {
 
     const handleLogout = () => {
         logout()
-        router.push('/admin/login')
+        // Small delay to ensure state is cleared before redirect
+        setTimeout(() => router.push('/login'), 100)
     }
 
     const pendingOrders = orders.filter(o => o.status === 'pending').length

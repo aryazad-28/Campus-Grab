@@ -28,7 +28,7 @@ export default function ProfilePage() {
 
     const handleLogout = async () => {
         await signOut()
-        router.push('/')
+        router.push('/login')
     }
 
     const recentOrders = orders.slice(0, 3)

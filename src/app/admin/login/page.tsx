@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Mail, Lock, ShieldCheck } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
 import { Button } from '@/components/ui/button'
@@ -41,6 +42,12 @@ export default function AdminLoginPage() {
         <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
             <Card className="w-full max-w-sm bg-slate-800 border-slate-700">
                 <CardHeader className="text-center">
+                    <Link
+                        href="/login"
+                        className="text-xs text-slate-500 hover:text-white mb-2 inline-block"
+                    >
+                        ← Back to role selection
+                    </Link>
                     <div className="mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full bg-blue-600">
                         <ShieldCheck className="h-6 w-6 text-white" />
                     </div>
