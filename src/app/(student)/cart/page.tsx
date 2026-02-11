@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Minus, Plus, Trash2, ArrowLeft, Clock, CreditCard, Loader2 } from 'lucide-react'
@@ -16,6 +16,18 @@ import { Badge } from '@/components/ui/badge'
 type CheckoutStep = 'cart' | 'payment' | 'confirmation'
 
 export default function CartPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-[50vh] items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+            </div>
+        }>
+            <CartContent />
+        </Suspense>
+    )
+}
+
+function CartContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const canteenId = searchParams.get('canteen') || (typeof window !== 'undefined' ? localStorage.getItem('campus-grab-selected-canteen') : null)
