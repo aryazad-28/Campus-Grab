@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Search, Zap, Clock, Loader2, Brain, TrendingUp, ArrowLeft, Store } from 'lucide-react'
@@ -13,6 +13,18 @@ import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default function MenuPage() {
+    return (
+        <Suspense fallback={
+            <div className="flex min-h-[50vh] items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+            </div>
+        }>
+            <MenuContent />
+        </Suspense>
+    )
+}
+
+function MenuContent() {
     const searchParams = useSearchParams()
     const router = useRouter()
     const canteenId = searchParams.get('canteen')
