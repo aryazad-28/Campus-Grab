@@ -21,12 +21,13 @@ export { supabase }
 // Database types
 export interface MenuItem {
   id: string
+  admin_id?: string
   name: string
   category: string
   price: number
   image_url: string | null
   eta_minutes: number
-  canteen_id: number
+  canteen_id?: number
   available: boolean
 }
 

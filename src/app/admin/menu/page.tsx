@@ -32,8 +32,7 @@ export default function MenuManagementPage() {
         category: 'Snacks',
         price: '',
         eta_minutes: '10',
-        image_url: '',
-        canteen_id: 1
+        image_url: ''
     })
 
     useEffect(() => {
@@ -50,12 +49,11 @@ export default function MenuManagementPage() {
             category: formData.category,
             price: parseFloat(formData.price),
             eta_minutes: parseInt(formData.eta_minutes),
-            canteen_id: formData.canteen_id,
             available: true,
             image_url: formData.image_url || FOOD_IMAGES[formData.category] || FOOD_IMAGES['Snacks']
         })
 
-        setFormData({ name: '', category: 'Snacks', price: '', eta_minutes: '10', image_url: '', canteen_id: 1 })
+        setFormData({ name: '', category: 'Snacks', price: '', eta_minutes: '10', image_url: '' })
         setShowAddForm(false)
     }
 

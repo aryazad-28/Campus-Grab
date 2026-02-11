@@ -106,23 +106,34 @@ export function MenuProvider({ children, adminId }: { children: ReactNode; admin
     }, [items, isLoading])
 
     const addItem = useCallback((itemData: Omit<MenuItem, 'id'>) => {
-        const newItem: MenuItem = {
-            ...itemData,
-            id: 'item-' + Date.now().toString(36)
-        }
-
         // Add to Supabase if available
         if (supabase) {
-            const insertData: Record<string, unknown> = { ...newItem }
-            if (adminId) {
-                insertData.admin_id = adminId
-            }
-            supabase.from('menu_items').insert(insertData).then(({ error }) => {
-                if (error) console.error('Supabase insert error:', error)
-            })
-        }
+            // Prepare payload: Clean up data (remove id, canteen_id)
+            const payload = { ...itemData } as any
+            delete payload.id
+            delete payload.canteen_id
 
-        setItems(prev => [newItem, ...prev])
+            if (adminId) {
+                payload.admin_id = adminId
+            }
+
+            supabase.from('menu_items')
+                .insert(payload)
+                .select()
+                .then(({ data, error }) => {
+                    if (error) {
+                        console.error('Supabase insert error:', error)
+                        alert('Failed to add item: ' + error.message)
+                    } else if (data) {
+                        // Add resolved item to state
+                        const savedItem = data[0] as MenuItem
+                        setItems(prev => {
+                            if (prev.some(i => i.id === savedItem.id)) return prev
+                            return [savedItem, ...prev]
+                        })
+                    }
+                })
+        }
     }, [adminId])
 
     const deleteItem = useCallback((id: string) => {
