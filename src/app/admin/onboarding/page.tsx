@@ -2,8 +2,9 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Store, Building2, MapPin, Phone, User, Loader2, CheckCircle } from 'lucide-react'
+import { Store, Building2, MapPin, Phone, User, Loader2, CheckCircle, LocateFixed } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
+import { requestUserLocation, reverseGeocode } from '@/lib/geolocation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -16,9 +17,14 @@ export default function AdminOnboardingPage() {
         canteen_name: '',
         college_name: '',
         area: '',
-        phone: ''
+        phone: '',
+        latitude: null as number | null,
+        longitude: null as number | null,
     })
     const [isLoading, setIsLoading] = useState(false)
+    const [isLocating, setIsLocating] = useState(false)
+    const [locationError, setLocationError] = useState('')
+    const [locationDetected, setLocationDetected] = useState(false)
     const [error, setError] = useState('')
     const [submitted, setSubmitted] = useState(false)
 
@@ -53,6 +59,28 @@ export default function AdminOnboardingPage() {
     if (!needsOnboarding) {
         router.push('/admin')
         return null
+    }
+
+    const handleDetectLocation = async () => {
+        setIsLocating(true)
+        setLocationError('')
+
+        try {
+            const location = await requestUserLocation()
+            const geocoded = await reverseGeocode(location.latitude, location.longitude)
+
+            setFormData(prev => ({
+                ...prev,
+                area: geocoded.area,
+                latitude: location.latitude,
+                longitude: location.longitude,
+            }))
+            setLocationDetected(true)
+        } catch (err) {
+            setLocationError(typeof err === 'string' ? err : 'Failed to detect location')
+        }
+
+        setIsLocating(false)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -103,11 +131,53 @@ export default function AdminOnboardingPage() {
                                         type={type}
                                         placeholder={placeholder}
                                         className="pl-10 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
-                                        value={formData[key as keyof typeof formData]}
+                                        value={formData[key as keyof typeof formData]?.toString() || ''}
                                         onChange={(e) => setFormData(prev => ({ ...prev, [key]: e.target.value }))}
                                         required={key !== 'phone'}
                                     />
                                 </div>
+
+                                {/* Detect Location button after Area field */}
+                                {key === 'area' && (
+                                    <div className="space-y-2">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full border-slate-600 text-slate-300 hover:bg-slate-700 gap-2"
+                                            onClick={handleDetectLocation}
+                                            disabled={isLocating}
+                                        >
+                                            {isLocating ? (
+                                                <>
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                    Detecting location...
+                                                </>
+                                            ) : locationDetected ? (
+                                                <>
+                                                    <CheckCircle className="h-3.5 w-3.5 text-emerald-400" />
+                                                    Location detected — tap to refresh
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <LocateFixed className="h-3.5 w-3.5" />
+                                                    Detect My Location
+                                                </>
+                                            )}
+                                        </Button>
+
+                                        {locationDetected && formData.latitude && formData.longitude && (
+                                            <p className="text-[11px] text-emerald-400/70 flex items-center gap-1">
+                                                <MapPin className="h-3 w-3" />
+                                                GPS: {formData.latitude.toFixed(4)}, {formData.longitude.toFixed(4)}
+                                            </p>
+                                        )}
+
+                                        {locationError && (
+                                            <p className="text-[11px] text-red-400">{locationError}</p>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                         ))}
 

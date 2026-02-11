@@ -12,6 +12,8 @@ interface AdminProfile {
     college_name: string
     area: string
     phone: string | null
+    latitude: number | null
+    longitude: number | null
     status: 'pending' | 'approved' | 'rejected'
 }
 
@@ -36,6 +38,8 @@ interface OnboardingData {
     college_name: string
     area: string
     phone: string
+    latitude?: number | null
+    longitude?: number | null
 }
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined)
@@ -167,6 +171,8 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             college_name: profile.college_name,
             area: profile.area,
             phone: profile.phone || null,
+            latitude: profile.latitude || null,
+            longitude: profile.longitude || null,
             status: 'pending'
         }).select().single()
 
