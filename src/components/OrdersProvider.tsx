@@ -64,8 +64,10 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
                         .select('*')
                         .order('created_at', { ascending: false })
 
-                    if (!error && data && data.length > 0) {
+                    if (!error && data) {
                         setOrders(data as Order[])
+                        // Clear stale localStorage since Supabase is the source of truth
+                        localStorage.removeItem(ORDERS_STORAGE_KEY)
                         return
                     }
                 } catch (err) {
@@ -73,7 +75,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
                 }
             }
 
-            // Fallback to localStorage
+            // Fallback to localStorage ONLY if Supabase failed
             const stored = localStorage.getItem(ORDERS_STORAGE_KEY)
             if (stored) {
                 try {
@@ -110,9 +112,9 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         }
     }, [])
 
-    // Also save to localStorage as backup
+    // Save to localStorage only if Supabase is not available
     useEffect(() => {
-        if (orders.length > 0) {
+        if (!supabase && orders.length > 0) {
             localStorage.setItem(ORDERS_STORAGE_KEY, JSON.stringify(orders))
         }
     }, [orders])
