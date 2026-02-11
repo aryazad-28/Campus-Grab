@@ -31,8 +31,8 @@ export function Header() {
 
                 {/* Desktop Navigation */}
                 <nav className="hidden items-center gap-2 sm:flex">
-                    <Link href="/menu">
-                        <Button variant="ghost" size="sm">Menu</Button>
+                    <Link href="/canteens">
+                        <Button variant="ghost" size="sm">Canteens</Button>
                     </Link>
 
                     {/* Theme Toggle */}
@@ -120,8 +120,8 @@ export function Header() {
             {mobileMenuOpen && (
                 <div className="border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 sm:hidden transition-colors">
                     <div className="flex flex-col gap-2">
-                        <Link href="/menu" onClick={() => setMobileMenuOpen(false)}>
-                            <Button variant="ghost" className="w-full justify-start">Menu</Button>
+                        <Link href="/canteens" onClick={() => setMobileMenuOpen(false)}>
+                            <Button variant="ghost" className="w-full justify-start">Canteens</Button>
                         </Link>
                         <Link href="/orders" onClick={() => setMobileMenuOpen(false)}>
                             <Button variant="ghost" className="w-full justify-start">My Orders</Button>

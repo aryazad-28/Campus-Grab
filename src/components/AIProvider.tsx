@@ -22,7 +22,7 @@ interface AIContextType {
     peakHourRecommendation: string
 
     // Actions
-    trackNewOrder: (order: { orderId: string; items: { itemId: string; itemName: string; canteenId: number; estimatedTime: number }[] }) => void
+    trackNewOrder: (order: { orderId: string; items: { itemId: string; itemName: string; canteenId: number | string; estimatedTime: number }[] }) => void
     markOrderComplete: (orderId: string) => void
     refreshInsights: () => void
 }
@@ -57,7 +57,7 @@ export function AIProvider({ children }: { children: ReactNode }) {
 
     const trackNewOrder = useCallback((order: {
         orderId: string;
-        items: { itemId: string; itemName: string; canteenId: number; estimatedTime: number }[]
+        items: { itemId: string; itemName: string; canteenId: number | string; estimatedTime: number }[]
     }) => {
         trackOrder(order)
     }, [])

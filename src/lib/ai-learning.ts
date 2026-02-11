@@ -6,7 +6,7 @@ export interface OrderAnalytics {
     items: {
         itemId: string
         itemName: string
-        canteenId: number
+        canteenId: number | string
         estimatedTime: number
     }[]
     orderedAt: string
@@ -27,7 +27,7 @@ export interface ItemPerformance {
 }
 
 export interface CanteenPerformance {
-    canteenId: number
+    canteenId: number | string
     avgPrepTime: number
     peakHourAvg: number // 11am-2pm, 6pm-8pm
     offPeakAvg: number
@@ -66,7 +66,7 @@ function saveAnalytics(data: OrderAnalytics[]): void {
 // Track a new order
 export function trackOrder(order: {
     orderId: string
-    items: { itemId: string; itemName: string; canteenId: number; estimatedTime: number }[]
+    items: { itemId: string; itemName: string; canteenId: number | string; estimatedTime: number }[]
 }): void {
     const now = new Date()
     const analytics: OrderAnalytics = {
@@ -166,8 +166,8 @@ export function calculateCanteenPerformance(): CanteenPerformance[] {
     const data = loadAnalytics()
     const completedOrders = data.filter(o => o.actualPrepTime !== null)
 
-    const canteenStats: Record<number, {
-        canteenId: number
+    const canteenStats: Record<string, {
+        canteenId: number | string
         allTimes: number[]
         peakTimes: number[]
         offPeakTimes: number[]

@@ -12,7 +12,7 @@ export default function HomePage() {
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        router.push('/menu')
+        router.push('/canteens')
       } else {
         router.push('/login')
       }

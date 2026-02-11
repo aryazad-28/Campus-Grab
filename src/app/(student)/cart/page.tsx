@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { Minus, Plus, Trash2, ArrowLeft, Clock, CreditCard, Loader2 } from 'lucide-react'
 import { useCart } from '@/components/CartProvider'
 import { useOrders } from '@/components/OrdersProvider'
@@ -17,6 +17,8 @@ type CheckoutStep = 'cart' | 'payment' | 'confirmation'
 
 export default function CartPage() {
     const router = useRouter()
+    const searchParams = useSearchParams()
+    const canteenId = searchParams.get('canteen') || (typeof window !== 'undefined' ? localStorage.getItem('campus-grab-selected-canteen') : null)
     const { items, updateQuantity, removeFromCart, clearCart, cartTotal, maxEta } = useCart()
     const { addOrder } = useOrders()
     const { isAuthenticated } = useAuth()
@@ -48,7 +50,8 @@ export default function CartPage() {
                 })),
                 total: total,
                 status: 'pending',
-                estimated_time: maxEta
+                estimated_time: maxEta,
+                admin_id: canteenId || undefined
             })
 
             // Get token from the returned order
@@ -61,7 +64,7 @@ export default function CartPage() {
                 items: items.map(item => ({
                     itemId: item.id,
                     itemName: item.name,
-                    canteenId: 1, // Default canteen
+                    canteenId: canteenId || '1',
                     estimatedTime: item.eta_minutes
                 }))
             })

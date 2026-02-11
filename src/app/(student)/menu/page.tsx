@@ -1,24 +1,62 @@
 'use client'
 
-import { useState, useMemo } from 'react'
-import { Search, Zap, Clock, Loader2, Brain, TrendingUp } from 'lucide-react'
+import { useState, useMemo, useEffect } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { Search, Zap, Clock, Loader2, Brain, TrendingUp, ArrowLeft, Store } from 'lucide-react'
 import { useMenu } from '@/components/MenuProvider'
 import { useAI } from '@/components/AIProvider'
+import { supabase } from '@/lib/supabase'
 import { MenuCard } from '@/components/MenuCard'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
 
 export default function MenuPage() {
+    const searchParams = useSearchParams()
+    const router = useRouter()
+    const canteenId = searchParams.get('canteen')
+
     const { items: menuItems, isLoading } = useMenu()
     const { fastestItems, bestCanteen, dataConfidence, totalOrdersAnalyzed, peakHourRecommendation } = useAI()
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
+    const [canteenName, setCanteenName] = useState<string | null>(null)
+
+    // Redirect to canteens page if no canteen selected
+    useEffect(() => {
+        if (!canteenId) {
+            router.push('/canteens')
+        }
+    }, [canteenId, router])
+
+    // Fetch canteen name
+    useEffect(() => {
+        if (!canteenId || !supabase) return
+
+        supabase
+            .from('admin_profiles')
+            .select('canteen_name')
+            .eq('id', canteenId)
+            .single()
+            .then(({ data }) => {
+                if (data) setCanteenName(data.canteen_name)
+            })
+    }, [canteenId])
+
+    // Filter items by canteen admin_id
+    const canteenItems = useMemo(() => {
+        if (!canteenId) return []
+        return menuItems.filter(item => {
+            const itemAdminId = (item as unknown as { admin_id?: string }).admin_id
+            return itemAdminId === canteenId
+        })
+    }, [menuItems, canteenId])
 
     // Only show available items to students
     const availableItems = useMemo(() => {
-        return menuItems.filter(item => item.available)
-    }, [menuItems])
+        return canteenItems.filter(item => item.available)
+    }, [canteenItems])
 
     // Get unique categories
     const categories = useMemo(() => {
@@ -54,6 +92,10 @@ export default function MenuPage() {
         })
     }, [availableItems, searchQuery, selectedCategory])
 
+    if (!canteenId) {
+        return null // Redirecting
+    }
+
     if (isLoading) {
         return (
             <div className="flex min-h-[50vh] items-center justify-center">
@@ -64,7 +106,16 @@ export default function MenuPage() {
 
     return (
         <div className="container mx-auto px-4 py-6 pb-32">
-            <h1 className="mb-4 text-xl font-semibold sm:text-2xl">Menu</h1>
+            {/* Canteen Header */}
+            <div className="mb-4 flex items-center gap-3">
+                <Link href="/canteens" className="flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors">
+                    <ArrowLeft className="h-4 w-4" />
+                </Link>
+                <div className="flex items-center gap-2">
+                    <Store className="h-5 w-5 text-emerald-500" />
+                    <h1 className="text-xl font-semibold sm:text-2xl">{canteenName || 'Menu'}</h1>
+                </div>
+            </div>
 
             {/* AI Recommendations Section */}
             <div className="mb-6 space-y-3">
@@ -181,7 +232,10 @@ export default function MenuPage() {
                 </div>
             ) : (
                 <div className="py-12 text-center text-neutral-500">
-                    No items found matching your search.
+                    {availableItems.length === 0
+                        ? 'This canteen hasn\'t added any menu items yet.'
+                        : 'No items found matching your search.'
+                    }
                 </div>
             )}
         </div>
