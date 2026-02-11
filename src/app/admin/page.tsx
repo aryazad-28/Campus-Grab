@@ -126,7 +126,7 @@ export default function AdminDashboard() {
                                 Add, edit, or remove menu items. Changes sync instantly to students.
                             </p>
                             <Link href="/admin/menu">
-                                <Button variant="outline" className="w-full border-slate-600 text-white hover:bg-slate-700">
+                                <Button variant="outline" className="w-full border-slate-600 text-emerald-400 hover:bg-slate-700">
                                     Manage Menu
                                 </Button>
                             </Link>
@@ -146,7 +146,7 @@ export default function AdminDashboard() {
                                 View sales analytics, popular items, and order statistics.
                             </p>
                             <Link href="/admin/analytics">
-                                <Button variant="outline" className="w-full border-slate-600 text-white hover:bg-slate-700">
+                                <Button variant="outline" className="w-full border-slate-600 text-purple-400 hover:bg-slate-700">
                                     View Analytics
                                 </Button>
                             </Link>
