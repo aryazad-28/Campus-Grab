@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { useRouter } from 'next/navigation'
 import { Store, Building2, MapPin, Phone, User, Loader2, CheckCircle, LocateFixed } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
@@ -8,6 +9,11 @@ import { requestUserLocation, reverseGeocode } from '@/lib/geolocation'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+
+const LocationPicker = dynamic(() => import('@/components/LocationPicker'), {
+    ssr: false,
+    loading: () => <div className="h-[300px] w-full animate-pulse bg-slate-800 rounded-lg border border-slate-700"></div>
+})
 
 export default function AdminOnboardingPage() {
     const router = useRouter()
@@ -81,6 +87,15 @@ export default function AdminOnboardingPage() {
         }
 
         setIsLocating(false)
+    }
+
+    const handleLocationSelect = (lat: number, lng: number) => {
+        setFormData(prev => ({
+            ...prev,
+            latitude: lat,
+            longitude: lng
+        }))
+        setLocationDetected(true)
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -176,6 +191,18 @@ export default function AdminOnboardingPage() {
                                         {locationError && (
                                             <p className="text-[11px] text-red-400">{locationError}</p>
                                         )}
+                                        <div className="pt-2">
+                                            <p className="mb-2 text-xs text-slate-400">
+                                                {formData.latitude && formData.longitude
+                                                    ? "Drag the pin to refine precise location:"
+                                                    : "Or click map to set location:"}
+                                            </p>
+                                            <LocationPicker
+                                                lat={formData.latitude}
+                                                lng={formData.longitude}
+                                                onLocationSelect={handleLocationSelect}
+                                            />
+                                        </div>
                                     </div>
                                 )}
                             </div>
@@ -201,6 +228,6 @@ export default function AdminOnboardingPage() {
                     </div>
                 </CardContent>
             </Card>
-        </div>
+        </div >
     )
 }
