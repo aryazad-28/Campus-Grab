@@ -12,6 +12,7 @@ export interface Order {
     created_at: string
     estimated_time: number
     completed_at?: string  // For analytics timing
+    admin_id?: string       // Scopes order to a specific canteen
 }
 
 interface OrdersContextType {
@@ -51,7 +52,7 @@ function generateTokenNumber(): string {
     return `#${String(counter).padStart(4, '0')}`
 }
 
-export function OrdersProvider({ children }: { children: ReactNode }) {
+export function OrdersProvider({ children, adminId }: { children: ReactNode; adminId?: string }) {
     const [orders, setOrders] = useState<Order[]>([])
 
     // Load orders from Supabase on mount
@@ -59,14 +60,21 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         const loadOrders = async () => {
             if (supabase) {
                 try {
-                    const { data, error } = await supabase
+                    let query = supabase
                         .from('orders')
                         .select('*')
                         .order('created_at', { ascending: false })
 
+                    // If adminId provided, filter by it
+                    if (adminId) {
+                        query = query.eq('admin_id', adminId)
+                    }
+
+                    const { data, error } = await query
+
                     if (!error && data) {
                         setOrders(data as Order[])
-                        // Clear stale localStorage since Supabase is the source of truth
+                        // Clear stale localStorage since Supabase is source of truth
                         localStorage.removeItem(ORDERS_STORAGE_KEY)
                         return
                     }
@@ -94,14 +102,16 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
                 .channel('orders-realtime')
                 .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'orders' }, (payload) => {
                     const newOrder = payload.new as Order
+                    // Only process events for this admin's orders
+                    if (adminId && newOrder.admin_id !== adminId) return
                     setOrders(prev => {
-                        // Avoid duplicates (we already added it optimistically)
                         if (prev.some(o => o.id === newOrder.id)) return prev
                         return [newOrder, ...prev]
                     })
                 })
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
                     const updated = payload.new as Order
+                    if (adminId && updated.admin_id !== adminId) return
                     setOrders(prev => prev.map(o => o.id === updated.id ? updated : o))
                 })
                 .subscribe()
@@ -110,7 +120,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
                 supabase!.removeChannel(channel)
             }
         }
-    }, [])
+    }, [adminId])
 
     // Save to localStorage only if Supabase is not available
     useEffect(() => {
@@ -135,7 +145,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         // Save to Supabase
         if (supabase) {
             try {
-                const { error } = await supabase.from('orders').insert({
+                const insertData: Record<string, unknown> = {
                     id: newOrder.id,
                     token_number: newOrder.token_number,
                     items: newOrder.items,
@@ -144,7 +154,15 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
                     status: newOrder.status,
                     created_at: newOrder.created_at,
                     completed_at: newOrder.completed_at || null
-                })
+                }
+                // Include admin_id if provided (from order data or prop)
+                if (newOrder.admin_id) {
+                    insertData.admin_id = newOrder.admin_id
+                } else if (adminId) {
+                    insertData.admin_id = adminId
+                }
+
+                const { error } = await supabase.from('orders').insert(insertData)
                 if (error) {
                     console.error('Supabase order insert error:', error)
                 }
@@ -154,7 +172,7 @@ export function OrdersProvider({ children }: { children: ReactNode }) {
         }
 
         return newOrder
-    }, [])
+    }, [adminId])
 
     const updateOrderStatus = useCallback((id: string, status: Order['status']) => {
         const completed_at = status === 'completed' ? new Date().toISOString() : undefined

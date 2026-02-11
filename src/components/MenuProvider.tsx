@@ -16,7 +16,7 @@ interface MenuContextType {
 
 const MenuContext = createContext<MenuContextType | undefined>(undefined)
 
-export function MenuProvider({ children }: { children: ReactNode }) {
+export function MenuProvider({ children, adminId }: { children: ReactNode; adminId?: string }) {
     const [items, setItems] = useState<MenuItem[]>([])
     const [isLoading, setIsLoading] = useState(true)
 
@@ -26,13 +26,22 @@ export function MenuProvider({ children }: { children: ReactNode }) {
             // Try Supabase first
             if (supabase) {
                 try {
-                    const { data, error } = await supabase
+                    let query = supabase
                         .from('menu_items')
                         .select('*')
                         .order('created_at', { ascending: false })
 
+                    // If adminId provided, filter by it
+                    if (adminId) {
+                        query = query.eq('admin_id', adminId)
+                    }
+
+                    const { data, error } = await query
+
                     if (!error && data) {
                         setItems(data)
+                        // Clear stale localStorage
+                        localStorage.removeItem(STORAGE_KEY)
                         setIsLoading(false)
                         return
                     }
@@ -59,16 +68,26 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 
         // Real-time subscription
         if (supabase) {
-            const supabaseClient = supabase // Store reference for cleanup function
+            const supabaseClient = supabase
             const channel = supabaseClient
                 .channel('menu-realtime')
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'menu_items' }, (payload) => {
+                    const newItem = payload.new as MenuItem & { admin_id?: string }
+                    const oldItem = payload.old as MenuItem & { admin_id?: string }
+
+                    // Only process events for this admin's items
+                    if (adminId && payload.eventType !== 'DELETE' && newItem.admin_id !== adminId) return
+                    if (adminId && payload.eventType === 'DELETE' && oldItem.admin_id !== adminId) return
+
                     if (payload.eventType === 'INSERT') {
-                        setItems(prev => [payload.new as MenuItem, ...prev])
+                        setItems(prev => {
+                            if (prev.some(i => i.id === newItem.id)) return prev
+                            return [newItem, ...prev]
+                        })
                     } else if (payload.eventType === 'UPDATE') {
-                        setItems(prev => prev.map(item => item.id === (payload.new as MenuItem).id ? payload.new as MenuItem : item))
+                        setItems(prev => prev.map(item => item.id === newItem.id ? newItem : item))
                     } else if (payload.eventType === 'DELETE') {
-                        setItems(prev => prev.filter(item => item.id !== (payload.old as MenuItem).id))
+                        setItems(prev => prev.filter(item => item.id !== oldItem.id))
                     }
                 })
                 .subscribe()
@@ -77,11 +96,11 @@ export function MenuProvider({ children }: { children: ReactNode }) {
                 supabaseClient.removeChannel(channel)
             }
         }
-    }, [])
+    }, [adminId])
 
-    // Save to localStorage whenever items change
+    // Save to localStorage only if Supabase is not available
     useEffect(() => {
-        if (!isLoading) {
+        if (!supabase && !isLoading) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
         }
     }, [items, isLoading])
@@ -94,13 +113,17 @@ export function MenuProvider({ children }: { children: ReactNode }) {
 
         // Add to Supabase if available
         if (supabase) {
-            supabase.from('menu_items').insert(newItem).then(({ error }) => {
+            const insertData: Record<string, unknown> = { ...newItem }
+            if (adminId) {
+                insertData.admin_id = adminId
+            }
+            supabase.from('menu_items').insert(insertData).then(({ error }) => {
                 if (error) console.error('Supabase insert error:', error)
             })
         }
 
         setItems(prev => [newItem, ...prev])
-    }, [])
+    }, [adminId])
 
     const deleteItem = useCallback((id: string) => {
         if (supabase) {
