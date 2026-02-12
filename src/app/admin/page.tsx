@@ -67,7 +67,7 @@ export default function AdminDashboard() {
 
             {/* Main Content */}
             <main className="container mx-auto px-4 py-8">
-                <h1 className="mb-6 text-2xl font-semibold">{t('welcome', { name: admin?.name })}</h1>
+                <h1 className="mb-6 text-2xl font-semibold">{t('welcome', { name: admin?.name || '' })}</h1>
 
                 {/* Stats Cards */}
                 <div className="grid gap-4 mb-8 sm:grid-cols-3">
