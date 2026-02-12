@@ -88,10 +88,8 @@ CREATE TABLE IF NOT EXISTS orders (
     status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'preparing', 'ready', 'completed')),
     payment_method TEXT DEFAULT 'online',
     created_at TIMESTAMPTZ DEFAULT NOW(),
-    completed_at TIMESTAMPTZ,
-    
-    -- Ensure token uniqueness per day
-    CONSTRAINT unique_token_per_day UNIQUE (token_number, DATE(created_at))
+    completed_at TIMESTAMPTZ
+    -- Token uniqueness is enforced by unique index below (idx_orders_token_date)
 );
 
 -- Function to generate daily token number
@@ -160,7 +158,8 @@ CREATE INDEX IF NOT EXISTS idx_orders_created_at ON orders(created_at DESC);
 CREATE INDEX IF NOT EXISTS idx_orders_admin_id ON orders(admin_id);
 CREATE INDEX IF NOT EXISTS idx_orders_canteen_id ON orders(canteen_id);
 CREATE INDEX IF NOT EXISTS idx_orders_date ON orders(DATE(created_at));
-CREATE INDEX IF NOT EXISTS idx_orders_token_date ON orders(token_number, DATE(created_at));
+-- Unique index to prevent duplicate tokens on the same day
+CREATE UNIQUE INDEX IF NOT EXISTS idx_orders_token_date_unique ON orders(token_number, DATE(created_at));
 
 -- Menu items indexes
 CREATE INDEX IF NOT EXISTS idx_menu_available ON menu_items(available);
