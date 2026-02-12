@@ -1,10 +1,30 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## 🚀 Scalability
+
+**Campus Grab supports 100+ concurrent orders** with:
+- Database-level token generation using PostgreSQL sequences
+- Retry logic with exponential backoff
+- Optimized database indexes for high-traffic scenarios
+
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for full details.
+
 ## Getting Started
 
-First, run the development server:
+First, set up your environment:
 
 ```bash
+# Copy environment template
+cp .env.example .env.local
+
+# Add your Supabase credentials to .env.local
+# Get them from https://app.supabase.com
+```
+
+Then run the development server:
+
+```bash
+npm install
 npm run dev
 # or
 yarn dev
@@ -20,6 +40,12 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## 📚 Documentation
+
+- [Deployment Guide](docs/DEPLOYMENT.md) - Setup, scalability, and deployment instructions
+- [GitHub Setup](docs/GITHUB_SETUP.md) - Connect your repository to GitHub
+- [Load Testing](scripts/load-test.js) - Test concurrent order handling
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
@@ -34,5 +60,7 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+---
 
 Developed independently by the authors. Deployed on institutional infrastructure for academic demonstration purposes only.
