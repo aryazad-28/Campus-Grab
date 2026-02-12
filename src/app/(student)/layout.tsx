@@ -3,7 +3,7 @@
 import { Header } from "@/components/Header"
 import { CurrentOrderBanner } from "@/components/CurrentOrderBanner"
 import { ThemeProvider } from "@/components/ThemeProvider"
-import { MobileNav } from "@/components/MobileNav"
+
 
 export default function StudentLayout({
     children,
@@ -17,7 +17,6 @@ export default function StudentLayout({
                 {children}
             </main>
             <CurrentOrderBanner />
-            <MobileNav />
         </ThemeProvider>
     )
 }
