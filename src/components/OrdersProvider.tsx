@@ -25,32 +25,10 @@ interface OrdersContextType {
 const OrdersContext = createContext<OrdersContextType | undefined>(undefined)
 
 const ORDERS_STORAGE_KEY = 'campus-grab-orders'
-const ORDER_COUNTER_KEY = 'campus-grab-order-counter'
-const ORDER_DATE_KEY = 'campus-grab-order-date'
 
-// Get today's date as YYYY-MM-DD string
-function getTodayDateString(): string {
-    const now = new Date()
-    return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-}
+// Token generation is now handled server-side by the database trigger
+// See supabase/schema.sql for implementation
 
-// Generate daily sequential token number
-function generateTokenNumber(): string {
-    const today = getTodayDateString()
-    const storedDate = localStorage.getItem(ORDER_DATE_KEY)
-    let counter = 1
-
-    if (storedDate === today) {
-        const storedCounter = localStorage.getItem(ORDER_COUNTER_KEY)
-        counter = storedCounter ? parseInt(storedCounter, 10) + 1 : 1
-    } else {
-        localStorage.setItem(ORDER_DATE_KEY, today)
-        counter = 1
-    }
-
-    localStorage.setItem(ORDER_COUNTER_KEY, counter.toString())
-    return `#${String(counter).padStart(4, '0')}`
-}
 
 export function OrdersProvider({ children, adminId }: { children: ReactNode; adminId?: string }) {
     const [orders, setOrders] = useState<Order[]>([])
@@ -130,49 +108,107 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
     }, [orders])
 
     const addOrder = useCallback(async (orderData: Omit<Order, 'id' | 'token_number' | 'created_at'>): Promise<Order> => {
-        const id = 'ORD-' + Date.now().toString(36).toUpperCase()
-        const token_number = generateTokenNumber()
+        // For concurrent safety, we'll use the Supabase Edge Function or direct insert
+        // The database trigger will auto-generate the token number
+
+        if (supabase) {
+            try {
+                // Method 1: Use Edge Function (recommended for production)
+                // Uncomment this block when Edge Function is deployed
+                /*
+                const { data: functionData, error: functionError } = await supabase.functions.invoke('create-order', {
+                    body: {
+                        items: orderData.items,
+                        total: orderData.total,
+                        estimated_time: orderData.estimated_time,
+                        status: orderData.status,
+                        admin_id: orderData.admin_id || adminId,
+                    }
+                });
+
+                if (functionError) throw functionError;
+                if (!functionData?.order) throw new Error('No order returned from function');
+                
+                const newOrder = functionData.order as Order;
+                setOrders(prev => [newOrder, ...prev]);
+                return newOrder;
+                */
+
+                // Method 2: Direct insert (fallback - database trigger generates token)
+                const insertData: Record<string, unknown> = {
+                    items: orderData.items,
+                    total: orderData.total,
+                    estimated_time: orderData.estimated_time,
+                    status: orderData.status,
+                    completed_at: orderData.completed_at || null
+                }
+
+                // Include admin_id if provided (from order data or prop)
+                if (orderData.admin_id) {
+                    insertData.admin_id = orderData.admin_id
+                } else if (adminId) {
+                    insertData.admin_id = adminId
+                }
+
+                // Retry logic for concurrent safety
+                let retries = 3;
+                let lastError: any = null;
+
+                while (retries > 0) {
+                    const { data, error } = await supabase
+                        .from('orders')
+                        .insert(insertData)
+                        .select()
+                        .single()
+
+                    if (!error && data) {
+                        const newOrder = data as Order;
+                        // Add to local state optimistically
+                        setOrders(prev => {
+                            // Prevent duplicates
+                            if (prev.some(o => o.id === newOrder.id)) return prev;
+                            return [newOrder, ...prev];
+                        });
+                        return newOrder;
+                    }
+
+                    lastError = error;
+
+                    // If it's a unique constraint violation, retry with exponential backoff
+                    if (error?.code === '23505') { // PostgreSQL unique violation
+                        retries--;
+                        if (retries > 0) {
+                            // Exponential backoff: 100ms, 200ms, 400ms
+                            await new Promise(resolve => setTimeout(resolve, 100 * Math.pow(2, 3 - retries)));
+                            continue;
+                        }
+                    }
+
+                    // For other errors, don't retry
+                    throw error;
+                }
+
+                throw lastError || new Error('Failed to create order after retries');
+
+            } catch (err) {
+                console.error('Supabase order save failed:', err);
+                throw err; // Propagate error to caller
+            }
+        }
+
+        // Fallback to client-side ID generation (only if Supabase not available)
+        const id = 'ORD-' + Date.now().toString(36).toUpperCase() + '-' + Math.random().toString(36).substring(2, 9);
+        const token_number = `#OFFLINE-${Date.now()}`;
         const newOrder: Order = {
             ...orderData,
             id,
             token_number,
             created_at: new Date().toISOString()
-        }
+        };
 
-        // Add optimistically to local state
-        setOrders(prev => [newOrder, ...prev])
-
-        // Save to Supabase
-        if (supabase) {
-            try {
-                const insertData: Record<string, unknown> = {
-                    id: newOrder.id,
-                    token_number: newOrder.token_number,
-                    items: newOrder.items,
-                    total: newOrder.total,
-                    estimated_time: newOrder.estimated_time,
-                    status: newOrder.status,
-                    created_at: newOrder.created_at,
-                    completed_at: newOrder.completed_at || null
-                }
-                // Include admin_id if provided (from order data or prop)
-                if (newOrder.admin_id) {
-                    insertData.admin_id = newOrder.admin_id
-                } else if (adminId) {
-                    insertData.admin_id = adminId
-                }
-
-                const { error } = await supabase.from('orders').insert(insertData)
-                if (error) {
-                    console.error('Supabase order insert error:', error)
-                }
-            } catch (err) {
-                console.error('Supabase order save failed:', err)
-            }
-        }
-
-        return newOrder
-    }, [adminId])
+        setOrders(prev => [newOrder, ...prev]);
+        return newOrder;
+    }, [adminId]);
 
     const updateOrderStatus = useCallback((id: string, status: Order['status']) => {
         const completed_at = status === 'completed' ? new Date().toISOString() : undefined
