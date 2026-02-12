@@ -10,7 +10,13 @@ import { useAI } from '@/components/AIProvider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useTranslations } from 'next-intl'
+
+const STATUS_CONFIG: Record<Order['status'], { label: string; icon: typeof Clock; color: string; nextStatus?: Order['status']; nextLabel?: string }> = {
+    pending: { label: 'New Order', icon: Clock, color: 'bg-amber-100 text-amber-800 border-amber-200', nextStatus: 'preparing', nextLabel: 'Accept & Start' },
+    preparing: { label: 'Preparing', icon: ChefHat, color: 'bg-blue-100 text-blue-800 border-blue-200', nextStatus: 'ready', nextLabel: 'Mark Ready' },
+    ready: { label: 'Ready', icon: Package, color: 'bg-emerald-100 text-emerald-800 border-emerald-200', nextStatus: 'completed', nextLabel: 'Complete' },
+    completed: { label: 'Completed', icon: CheckCircle, color: 'bg-neutral-100 text-neutral-600 border-neutral-200' }
+}
 
 export default function AdminOrdersPage() {
     const router = useRouter()
@@ -18,15 +24,6 @@ export default function AdminOrdersPage() {
     const { orders, updateOrderStatus } = useOrders()
     const { markOrderComplete } = useAI()
     const [filter, setFilter] = useState<Order['status'] | 'all'>('all')
-    const t = useTranslations('Admin')
-
-    // Moved configuration inside component to use translations
-    const STATUS_CONFIG: Record<Order['status'], { label: string; icon: typeof Clock; color: string; nextStatus?: Order['status']; nextLabel?: string }> = {
-        pending: { label: t('newOrders'), icon: Clock, color: 'bg-amber-100 text-amber-800 border-amber-200', nextStatus: 'preparing', nextLabel: t('acceptStart') },
-        preparing: { label: t('preparing'), icon: ChefHat, color: 'bg-blue-100 text-blue-800 border-blue-200', nextStatus: 'ready', nextLabel: t('markReady') },
-        ready: { label: t('ready'), icon: Package, color: 'bg-emerald-100 text-emerald-800 border-emerald-200', nextStatus: 'completed', nextLabel: t('complete') },
-        completed: { label: t('completed'), icon: CheckCircle, color: 'bg-neutral-100 text-neutral-600 border-neutral-200' }
-    }
 
     useEffect(() => {
         if (!authLoading && !isAuthenticated) {
@@ -62,9 +59,9 @@ export default function AdminOrdersPage() {
                 <div className="container mx-auto flex h-14 items-center justify-between px-4">
                     <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-white">
                         <ArrowLeft className="h-5 w-5" />
-                        <span className="hidden sm:inline">{t('dashboard')}</span>
+                        <span className="hidden sm:inline">Dashboard</span>
                     </Link>
-                    <h1 className="text-lg font-semibold">{t('orders')}</h1>
+                    <h1 className="text-lg font-semibold">Orders</h1>
                     <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white" onClick={() => window.location.reload()}>
                         <RefreshCw className="h-5 w-5" />
                     </Button>
@@ -113,8 +110,8 @@ export default function AdminOrdersPage() {
             <main className="container mx-auto px-4 py-6">
                 {filteredOrders.length === 0 ? (
                     <div className="text-center py-16">
-                        <p className="text-slate-400 mb-2">{t('noOrders')}</p>
-                        <p className="text-sm text-slate-500">{t('noOrdersHint')}</p>
+                        <p className="text-slate-400 mb-2">No orders</p>
+                        <p className="text-sm text-slate-500">Orders will appear here when students place them</p>
                     </div>
                 ) : (
                     <div className="space-y-4">

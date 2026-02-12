@@ -7,16 +7,20 @@ import { useAuth } from '@/components/AuthProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useTranslations } from 'next-intl'
+import LanguageSwitcher from '@/components/LanguageSwitcher'
 
 export default function ProfilePage() {
     const router = useRouter()
     const { user, signOut, isAuthenticated, isLoading } = useAuth()
     const { orders } = useOrders()
+    const t = useTranslations('Profile')
+    const tCommon = useTranslations('Common')
 
     if (isLoading) {
         return (
             <div className="container mx-auto flex min-h-[calc(100vh-4rem)] items-center justify-center">
-                <p className="text-neutral-500">Loading...</p>
+                <p className="text-neutral-500">{tCommon('loading')}</p>
             </div>
         )
     }
@@ -47,7 +51,7 @@ export default function ProfilePage() {
             {/* User Info */}
             <Card className="mb-6">
                 <CardHeader className="pb-3">
-                    <CardTitle className="text-base">Account Details</CardTitle>
+                    <CardTitle className="text-base">{t('title')}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                     <div className="flex items-center gap-3">
@@ -57,12 +61,25 @@ export default function ProfilePage() {
                 </CardContent>
             </Card>
 
+            {/* Language Settings */}
+            <Card className="mb-6">
+                <CardHeader className="flex flex-row items-center justify-between pb-3">
+                    <CardTitle className="text-base">{t('language')}</CardTitle>
+                </CardHeader>
+                <CardContent>
+                    <div className="flex items-center justify-between">
+                        <span className="text-sm text-neutral-500">{t('selectLanguage')}</span>
+                        <LanguageSwitcher />
+                    </div>
+                </CardContent>
+            </Card>
+
             {/* Recent Orders */}
             <Card className="mb-6">
                 <CardHeader className="flex flex-row items-center justify-between pb-3">
-                    <CardTitle className="text-base">Recent Orders</CardTitle>
+                    <CardTitle className="text-base">{t('recentOrders')}</CardTitle>
                     <Link href="/orders" className="text-sm text-neutral-500 hover:text-neutral-900">
-                        View all
+                        {tCommon('viewAll')}
                     </Link>
                 </CardHeader>
                 <CardContent>
@@ -78,7 +95,7 @@ export default function ProfilePage() {
                                         <Clock className="h-4 w-4 text-neutral-400" />
                                         <div>
                                             <p className="text-sm font-medium">{order.id}</p>
-                                            <p className="text-xs text-neutral-500">{order.items.length} items • ₹{order.total}</p>
+                                            <p className="text-xs text-neutral-500">{tCommon('items', { count: order.items.length })} • {tCommon('currency', { amount: order.total })}</p>
                                         </div>
                                     </div>
                                     <ChevronRight className="h-4 w-4 text-neutral-400" />
@@ -87,7 +104,7 @@ export default function ProfilePage() {
                         </div>
                     ) : (
                         <p className="text-center text-sm text-neutral-500 py-4">
-                            No orders yet
+                            {tCommon('noOrders')}
                         </p>
                     )}
                 </CardContent>
@@ -100,7 +117,7 @@ export default function ProfilePage() {
                 onClick={handleLogout}
             >
                 <LogOut className="h-4 w-4" />
-                Sign Out
+                {tCommon('signOut')}
             </Button>
         </div>
     )

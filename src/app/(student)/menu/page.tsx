@@ -11,6 +11,7 @@ import { MenuCard } from '@/components/MenuCard'
 import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent } from '@/components/ui/card'
+import { useTranslations } from 'next-intl'
 
 export default function MenuPage() {
     return (
@@ -25,6 +26,7 @@ export default function MenuPage() {
 }
 
 function MenuContent() {
+    const t = useTranslations('Menu')
     const searchParams = useSearchParams()
     const router = useRouter()
     const canteenId = searchParams.get('canteen')
@@ -125,7 +127,7 @@ function MenuContent() {
                 </Link>
                 <div className="flex items-center gap-2">
                     <Store className="h-5 w-5 text-emerald-500" />
-                    <h1 className="text-xl font-semibold sm:text-2xl">{canteenName || 'Menu'}</h1>
+                    <h1 className="text-xl font-semibold sm:text-2xl">{canteenName || t('title')}</h1>
                 </div>
             </div>
 
@@ -135,9 +137,9 @@ function MenuContent() {
                 {totalOrdersAnalyzed > 0 && (
                     <div className="flex items-center gap-2 text-xs text-neutral-500">
                         <Brain className="h-3.5 w-3.5" />
-                        <span>AI learning from {totalOrdersAnalyzed} orders</span>
+                        <span>{t('aiLearning', { count: totalOrdersAnalyzed })}</span>
                         <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                            {dataConfidence} confidence
+                            {t('confidence', { level: dataConfidence })}
                         </Badge>
                     </div>
                 )}
@@ -156,14 +158,14 @@ function MenuContent() {
                                 </div>
                                 <div className="min-w-0">
                                     <p className={`text-xs ${isAIRecommendation ? 'text-purple-700' : 'text-emerald-700'} sm:text-sm`}>
-                                        {isAIRecommendation ? 'AI Pick — Fastest' : 'Fastest Option'}
+                                        {isAIRecommendation ? t('aiPick') : t('fastestOption')}
                                     </p>
                                     <p className="truncate text-sm font-medium sm:text-base">
                                         {recommendedFastest.name} — {recommendedFastest.eta_minutes} min
                                     </p>
                                     {isAIRecommendation && fastestItems[0] && (
                                         <p className="text-[10px] text-purple-600">
-                                            Actual avg: {fastestItems[0].avgActualTime} min ({fastestItems[0].orderCount} orders)
+                                            {t('actualAvg', { time: fastestItems[0].avgActualTime, count: fastestItems[0].orderCount })}
                                         </p>
                                     )}
                                 </div>
@@ -178,13 +180,13 @@ function MenuContent() {
                                     <Clock className="h-4 w-4 text-blue-600 sm:h-5 sm:w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-xs text-blue-700 sm:text-sm">Best Canteen</p>
+                                    <p className="text-xs text-blue-700 sm:text-sm">{t('bestCanteen')}</p>
                                     <p className="text-sm font-medium sm:text-base">
-                                        Canteen {bestCanteen.canteenId} — avg {bestCanteen.avgPrepTime} min
+                                        Canteen {bestCanteen.canteenId} — {t('avgTime', { time: bestCanteen.avgPrepTime })}
                                     </p>
                                     {bestCanteen.reliabilityScore > 0 && (
                                         <p className="text-[10px] text-blue-600">
-                                            {Math.round(bestCanteen.reliabilityScore * 100)}% on-time delivery
+                                            {t('onTimeDelivery', { score: Math.round(bestCanteen.reliabilityScore * 100) })}
                                         </p>
                                     )}
                                 </div>
@@ -208,7 +210,7 @@ function MenuContent() {
                     <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                     <Input
                         type="search"
-                        placeholder="Search menu..."
+                        placeholder={t('searchPlaceholder')}
                         className="pl-10"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
@@ -220,7 +222,7 @@ function MenuContent() {
                         className="cursor-pointer shrink-0 px-3 py-1.5"
                         onClick={() => setSelectedCategory(null)}
                     >
-                        All
+                        {t('allCategories')}
                     </Badge>
                     {categories.map(category => (
                         <Badge
@@ -245,8 +247,8 @@ function MenuContent() {
             ) : (
                 <div className="py-12 text-center text-neutral-500">
                     {availableItems.length === 0
-                        ? 'This canteen hasn\'t added any menu items yet.'
-                        : 'No items found matching your search.'
+                        ? t('noItems')
+                        : t('noMatches')
                     }
                 </div>
             )}

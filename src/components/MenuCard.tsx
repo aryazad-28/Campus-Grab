@@ -9,12 +9,14 @@ import { formatPrice, formatTime } from '@/lib/utils'
 import { Card, CardContent } from './ui/card'
 import { Badge } from './ui/badge'
 import { Button } from './ui/button'
+import { useTranslations } from 'next-intl'
 
 interface MenuCardProps {
     item: MenuItem
 }
 
 export function MenuCard({ item }: MenuCardProps) {
+    const t = useTranslations('Menu')
     const { addToCart } = useCart()
     const [added, setAdded] = useState(false)
 
@@ -42,7 +44,7 @@ export function MenuCard({ item }: MenuCardProps) {
                     />
                 ) : (
                     <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                        No image
+                        {t('noImage')}
                     </div>
                 )}
                 <Badge className="absolute right-2 top-2 text-xs" variant="secondary">
@@ -71,12 +73,12 @@ export function MenuCard({ item }: MenuCardProps) {
                         {added ? (
                             <>
                                 <Check className="h-3.5 w-3.5" />
-                                Added
+                                {t('added')}
                             </>
                         ) : (
                             <>
                                 <Plus className="h-3.5 w-3.5" />
-                                Add
+                                {t('add')}
                             </>
                         )}
                     </Button>

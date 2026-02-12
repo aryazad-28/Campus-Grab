@@ -10,6 +10,7 @@ import { useAuth } from '@/components/AuthProvider'
 import { useAI } from '@/components/AIProvider'
 import { formatPrice, formatTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
+import { useTranslations } from 'next-intl'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
@@ -29,6 +30,8 @@ export default function CartPage() {
 
 function CartContent() {
     const router = useRouter()
+    const t = useTranslations('Cart')
+    const tCommon = useTranslations('Common')
     const searchParams = useSearchParams()
     const canteenId = searchParams.get('canteen') || (typeof window !== 'undefined' ? localStorage.getItem('campus-grab-selected-canteen') : null)
     const { items, updateQuantity, removeFromCart, clearCart, cartTotal, maxEta } = useCart()
@@ -63,7 +66,8 @@ function CartContent() {
                 total: total,
                 status: 'pending',
                 estimated_time: maxEta,
-                admin_id: canteenId || undefined
+                admin_id: canteenId || undefined,
+                payment_method: 'online'
             })
 
             // Get token from the returned order
@@ -83,12 +87,10 @@ function CartContent() {
 
             clearCart()
             setStep('confirmation')
-        } catch (err) {
+        } catch (err: any) {
             console.error('Order error:', err)
-            setOrderToken('#0001')
-            setOrderTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
-            clearCart()
-            setStep('confirmation')
+            alert(err.message || 'Failed to place order. Please try again.')
+            // Do not clear cart or proceed to confirmation on error
         } finally {
             setIsProcessing(false)
         }
@@ -98,10 +100,10 @@ function CartContent() {
     if (items.length === 0 && step === 'cart') {
         return (
             <div className="container mx-auto px-4 py-16 text-center">
-                <h1 className="mb-4 text-2xl font-semibold">Your cart is empty</h1>
-                <p className="mb-8 text-neutral-500">Add some items from the menu to get started.</p>
+                <h1 className="mb-4 text-2xl font-semibold">{t('emptyTitle')}</h1>
+                <p className="mb-8 text-neutral-500">{t('emptySubtitle')}</p>
                 <Link href="/menu">
-                    <Button>Browse Menu</Button>
+                    <Button>{t('browseMenu')}</Button>
                 </Link>
             </div>
         )
@@ -118,40 +120,40 @@ function CartContent() {
                         </svg>
                     </div>
                 </div>
-                <h1 className="mb-2 text-2xl font-semibold">Order Placed!</h1>
-                <p className="mb-6 text-neutral-500">Your order has been sent to the canteen.</p>
+                <h1 className="mb-2 text-2xl font-semibold">{t('orderPlaced')}</h1>
+                <p className="mb-6 text-neutral-500">{t('orderSent')}</p>
 
                 <Card className="mb-6 text-left">
                     <CardContent className="p-4 space-y-2">
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">Token Number</span>
+                            <span className="text-neutral-500">{t('tokenNumber')}</span>
                             <span className="font-mono text-lg font-bold">{orderToken}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">Order Time</span>
+                            <span className="text-neutral-500">{t('orderTime')}</span>
                             <span className="text-sm">{orderTime}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">Status</span>
-                            <Badge variant="warning">Pending Approval</Badge>
+                            <span className="text-neutral-500">{t('status')}</span>
+                            <Badge variant="warning">{t('pendingApproval')}</Badge>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">Payment</span>
-                            <Badge variant="success">Paid Online</Badge>
+                            <span className="text-neutral-500">{t('payment')}</span>
+                            <Badge variant="success">{t('paidOnline')}</Badge>
                         </div>
                     </CardContent>
                 </Card>
 
                 <p className="mb-6 text-sm text-neutral-500">
-                    You&apos;ll be notified when your order is ready for pickup.
+                    {t('notificationHint')}
                 </p>
 
                 <div className="space-y-3">
                     <Link href="/orders">
-                        <Button className="w-full">Track Order</Button>
+                        <Button className="w-full">{t('trackOrder')}</Button>
                     </Link>
                     <Link href="/menu">
-                        <Button variant="outline" className="w-full">Order More</Button>
+                        <Button variant="outline" className="w-full">{t('orderMore')}</Button>
                     </Link>
                 </div>
             </div>
@@ -167,17 +169,17 @@ function CartContent() {
                     className="mb-6 flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900"
                 >
                     <ArrowLeft className="h-4 w-4" />
-                    Back to cart
+                    {t('backToCart')}
                 </button>
 
-                <h1 className="mb-6 text-2xl font-semibold">Payment</h1>
+                <h1 className="mb-6 text-2xl font-semibold">{t('paymentTitle')}</h1>
 
                 {!isAuthenticated && (
                     <Card className="mb-6 border-amber-200 bg-amber-50">
                         <CardContent className="p-4">
-                            <p className="text-sm text-amber-800 mb-3">Please sign in to place your order</p>
+                            <p className="text-sm text-amber-800 mb-3">{t('signInPrompt')}</p>
                             <Link href="/login">
-                                <Button size="sm">Sign In</Button>
+                                <Button size="sm">{t('signIn')}</Button>
                             </Link>
                         </CardContent>
                     </Card>
@@ -185,15 +187,15 @@ function CartContent() {
 
                 <Card className="mb-6">
                     <CardHeader className="pb-3">
-                        <CardTitle className="text-base">Payment Method</CardTitle>
+                        <CardTitle className="text-base">{t('paymentMethod')}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4">
                             <div className="flex items-center gap-3">
                                 <CreditCard className="h-5 w-5 text-emerald-600" />
                                 <div>
-                                    <p className="font-medium text-emerald-900">Online Payment</p>
-                                    <p className="text-sm text-emerald-700">UPI / Card / Net Banking</p>
+                                    <p className="font-medium text-emerald-900">{t('onlinePayment')}</p>
+                                    <p className="text-sm text-emerald-700">{t('paymentDesc')}</p>
                                 </div>
                             </div>
                         </div>
@@ -203,15 +205,15 @@ function CartContent() {
                 <Card className="mb-6">
                     <CardContent className="p-4 space-y-2">
                         <div className="flex justify-between text-sm">
-                            <span className="text-neutral-500">Subtotal</span>
+                            <span className="text-neutral-500">{t('subtotal')}</span>
                             <span>{formatPrice(cartTotal)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-neutral-500">Tax (5%)</span>
+                            <span className="text-neutral-500">{t('tax')}</span>
                             <span>{formatPrice(tax)}</span>
                         </div>
                         <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">
-                            <span>Total</span>
+                            <span>{t('total')}</span>
                             <span>{formatPrice(total)}</span>
                         </div>
                     </CardContent>
@@ -226,10 +228,10 @@ function CartContent() {
                     {isProcessing ? (
                         <>
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Processing...
+                            {t('processing')}
                         </>
                     ) : (
-                        `Pay ${formatPrice(total)}`
+                        `${t('pay')} ${formatPrice(total)}`
                     )}
                 </Button>
             </div>
@@ -241,10 +243,10 @@ function CartContent() {
         <div className="container mx-auto max-w-2xl px-4 py-8">
             <Link href="/menu" className="mb-6 flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900">
                 <ArrowLeft className="h-4 w-4" />
-                Continue shopping
+                {t('continueShopping')}
             </Link>
 
-            <h1 className="mb-6 text-2xl font-semibold">Your Cart</h1>
+            <h1 className="mb-6 text-2xl font-semibold">{t('yourCart')}</h1>
 
             <div className="space-y-4 mb-6">
                 {items.map(item => (
@@ -297,7 +299,7 @@ function CartContent() {
                 <CardContent className="flex items-center gap-3 p-4">
                     <Clock className="h-5 w-5 text-blue-600" />
                     <div>
-                        <p className="text-sm text-blue-700">Estimated preparation time</p>
+                        <p className="text-sm text-blue-700">{t('estimatedTime')}</p>
                         <p className="font-medium">{formatTime(maxEta)}</p>
                     </div>
                 </CardContent>
@@ -307,22 +309,22 @@ function CartContent() {
             <Card className="mb-6">
                 <CardContent className="p-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                        <span className="text-neutral-500">Subtotal</span>
+                        <span className="text-neutral-500">{t('subtotal')}</span>
                         <span>{formatPrice(cartTotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span className="text-neutral-500">Tax (5%)</span>
+                        <span className="text-neutral-500">{t('tax')}</span>
                         <span>{formatPrice(tax)}</span>
                     </div>
                     <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">
-                        <span>Total</span>
+                        <span>{t('total')}</span>
                         <span>{formatPrice(total)}</span>
                     </div>
                 </CardContent>
             </Card>
 
             <Button className="w-full" size="lg" onClick={() => setStep('payment')}>
-                Proceed to Payment
+                {t('proceedToPayment')}
             </Button>
         </div>
     )

@@ -6,16 +6,26 @@ import { useOrders, Order } from '@/components/OrdersProvider'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
-const STATUS_CONFIG: Record<Order['status'], { label: string; icon: typeof Clock; variant: 'default' | 'secondary' | 'success' | 'warning' }> = {
-    pending: { label: 'Received', icon: Clock, variant: 'warning' },
-    preparing: { label: 'Preparing', icon: ChefHat, variant: 'secondary' },
-    ready: { label: 'Ready', icon: Package, variant: 'success' },
-    completed: { label: 'Completed', icon: CheckCircle, variant: 'default' }
+const STATUS_CONFIG: Record<Order['status'], { icon: typeof Clock; variant: 'default' | 'secondary' | 'success' | 'warning' }> = {
+    pending: { icon: Clock, variant: 'warning' },
+    preparing: { icon: ChefHat, variant: 'secondary' },
+    ready: { icon: Package, variant: 'success' },
+    completed: { icon: CheckCircle, variant: 'default' }
 }
 
 export default function OrdersPage() {
     const { orders, updateOrderStatus } = useOrders()
+    const t = useTranslations('Orders')
+    const tCommon = useTranslations('Common')
+
+    const statusLabels: Record<Order['status'], string> = {
+        pending: t('received'),
+        preparing: t('preparing'),
+        ready: t('ready'),
+        completed: t('completed')
+    }
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString)
@@ -31,10 +41,10 @@ export default function OrdersPage() {
         <div className="container mx-auto max-w-2xl px-4 py-8">
             <Link href="/profile" className="mb-6 flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900">
                 <ArrowLeft className="h-4 w-4" />
-                Back to profile
+                {t('backToProfile')}
             </Link>
 
-            <h1 className="mb-6 text-2xl font-semibold">Order History</h1>
+            <h1 className="mb-6 text-2xl font-semibold">{t('title')}</h1>
 
             {orders.length > 0 ? (
                 <div className="space-y-4">
@@ -52,7 +62,7 @@ export default function OrdersPage() {
                                         </div>
                                         <Badge variant={config.variant} className="gap-1">
                                             <Icon className="h-3 w-3" />
-                                            {config.label}
+                                            {statusLabels[order.status]}
                                         </Badge>
                                     </div>
 
@@ -66,7 +76,7 @@ export default function OrdersPage() {
                                     </div>
 
                                     <div className="flex items-center justify-between border-t border-neutral-200 pt-3">
-                                        <span className="font-medium">Total</span>
+                                        <span className="font-medium">{t('total')}</span>
                                         <span className="font-semibold">₹{order.total}</span>
                                     </div>
 
@@ -76,7 +86,7 @@ export default function OrdersPage() {
                                             onClick={() => updateOrderStatus(order.id, 'completed')}
                                             className="mt-3 w-full rounded-lg bg-emerald-500 py-2 text-sm font-medium text-white hover:bg-emerald-600"
                                         >
-                                            Mark as Picked Up
+                                            {t('markPickedUp')}
                                         </button>
                                     )}
                                 </CardContent>
@@ -86,9 +96,9 @@ export default function OrdersPage() {
                 </div>
             ) : (
                 <div className="py-16 text-center">
-                    <p className="mb-4 text-neutral-500">No orders yet</p>
+                    <p className="mb-4 text-neutral-500">{tCommon('noOrders')}</p>
                     <Link href="/menu" className="text-neutral-900 underline hover:no-underline">
-                        Browse the menu
+                        {t('browseMenu')}
                     </Link>
                 </div>
             )}

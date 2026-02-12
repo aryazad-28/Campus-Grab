@@ -6,6 +6,8 @@ import { AuthProvider } from "@/components/AuthProvider"
 import { OrdersProvider } from "@/components/OrdersProvider"
 import { MenuProvider } from "@/components/MenuProvider"
 import { AIProvider } from "@/components/AIProvider"
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 
 const inter = Inter({
   subsets: ["latin"],
@@ -42,25 +44,30 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="en">
+    <html lang={locale}>
       <body className={`${inter.variable} antialiased`}>
-        <AuthProvider>
-          <AIProvider>
-            <MenuProvider>
-              <CartProvider>
-                <OrdersProvider>
-                  {children}
-                </OrdersProvider>
-              </CartProvider>
-            </MenuProvider>
-          </AIProvider>
-        </AuthProvider>
+        <NextIntlClientProvider messages={messages}>
+          <AuthProvider>
+            <AIProvider>
+              <MenuProvider>
+                <CartProvider>
+                  <OrdersProvider>
+                    {children}
+                  </OrdersProvider>
+                </CartProvider>
+              </MenuProvider>
+            </AIProvider>
+          </AuthProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   )

@@ -8,14 +8,11 @@ import { useAdmin } from '@/components/AdminProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useTranslations } from 'next-intl'
 
 export default function AdminDashboard() {
     const router = useRouter()
     const { admin, isAuthenticated, isPending, needsOnboarding, isLoading, logout } = useAdmin()
     const { orders } = useOrders()
-    const t = useTranslations('Admin')
-    const tCommon = useTranslations('Common')
 
     useEffect(() => {
         if (!isLoading) {
@@ -30,7 +27,7 @@ export default function AdminDashboard() {
     if (isLoading || !isAuthenticated) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-slate-900">
-                <p className="text-slate-400">{tCommon('loading')}</p>
+                <p className="text-slate-400">Loading...</p>
             </div>
         )
     }
@@ -51,15 +48,13 @@ export default function AdminDashboard() {
                 <div className="container mx-auto flex h-14 items-center justify-between px-4">
                     <div className="flex items-center gap-2">
                         <LayoutDashboard className="h-6 w-6 text-blue-400" />
-                        <span className="text-lg font-semibold">{admin?.canteen_name || t('dashboard')}</span>
+                        <span className="text-lg font-semibold">{admin?.canteen_name || 'Admin Panel'}</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/profile" className="text-sm text-slate-400 hover:text-white hidden sm:block transition-colors">
-                            {admin?.name}
-                        </Link>
+                        <span className="text-sm text-slate-400 hidden sm:block">{admin?.name}</span>
                         <Button variant="ghost" size="sm" onClick={handleLogout} className="text-slate-400 hover:text-white gap-2">
                             <LogOut className="h-4 w-4" />
-                            <span className="hidden sm:inline">{tCommon('signOut')}</span>
+                            <span className="hidden sm:inline">Logout</span>
                         </Button>
                     </div>
                 </div>
@@ -67,26 +62,26 @@ export default function AdminDashboard() {
 
             {/* Main Content */}
             <main className="container mx-auto px-4 py-8">
-                <h1 className="mb-6 text-2xl font-semibold">{t('welcome', { name: admin?.name })}</h1>
+                <h1 className="mb-6 text-2xl font-semibold">Welcome, {admin?.name}</h1>
 
                 {/* Stats Cards */}
                 <div className="grid gap-4 mb-8 sm:grid-cols-3">
                     <Card className="bg-amber-500/10 border-amber-500/30">
                         <CardContent className="p-4 text-center">
                             <p className="text-3xl font-bold text-amber-400">{pendingOrders}</p>
-                            <p className="text-sm text-amber-300">{t('newOrders')}</p>
+                            <p className="text-sm text-amber-300">New Orders</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-blue-500/10 border-blue-500/30">
                         <CardContent className="p-4 text-center">
                             <p className="text-3xl font-bold text-blue-400">{preparingOrders}</p>
-                            <p className="text-sm text-blue-300">{t('preparing')}</p>
+                            <p className="text-sm text-blue-300">Preparing</p>
                         </CardContent>
                     </Card>
                     <Card className="bg-emerald-500/10 border-emerald-500/30">
                         <CardContent className="p-4 text-center">
                             <p className="text-3xl font-bold text-emerald-400">{readyOrders}</p>
-                            <p className="text-sm text-emerald-300">{t('ready')}</p>
+                            <p className="text-sm text-emerald-300">Ready</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -98,7 +93,7 @@ export default function AdminDashboard() {
                         <CardHeader className="pb-3">
                             <CardTitle className="flex items-center gap-2 text-lg text-white">
                                 <ClipboardList className="h-5 w-5 text-blue-400" />
-                                {t('orders')}
+                                Orders
                                 {pendingOrders > 0 && (
                                     <span className="ml-auto flex h-6 w-6 items-center justify-center rounded-full bg-amber-500 text-xs font-bold text-black">
                                         {pendingOrders}
@@ -108,11 +103,11 @@ export default function AdminDashboard() {
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-slate-400 mb-4">
-                                {t('ordersDesc')}
+                                View and manage incoming orders. Update status as you prepare them.
                             </p>
                             <Link href="/admin/orders">
                                 <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                                    {t('viewOrders')}
+                                    View Orders
                                 </Button>
                             </Link>
                         </CardContent>
@@ -123,16 +118,16 @@ export default function AdminDashboard() {
                         <CardHeader className="pb-3">
                             <CardTitle className="flex items-center gap-2 text-lg text-white">
                                 <UtensilsCrossed className="h-5 w-5 text-emerald-400" />
-                                {t('menu')}
+                                Menu
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-slate-400 mb-4">
-                                {t('menuDesc')}
+                                Add, edit, or remove menu items. Changes sync instantly to students.
                             </p>
                             <Link href="/admin/menu">
                                 <Button variant="outline" className="w-full border-slate-600 text-emerald-400 hover:bg-slate-700">
-                                    {t('manageMenu')}
+                                    Manage Menu
                                 </Button>
                             </Link>
                         </CardContent>
@@ -143,16 +138,16 @@ export default function AdminDashboard() {
                         <CardHeader className="pb-3">
                             <CardTitle className="flex items-center gap-2 text-lg text-white">
                                 <BarChart3 className="h-5 w-5 text-purple-400" />
-                                {t('analytics')}
+                                Analytics
                             </CardTitle>
                         </CardHeader>
                         <CardContent>
                             <p className="text-sm text-slate-400 mb-4">
-                                {t('analyticsDesc')}
+                                View sales analytics, popular items, and order statistics.
                             </p>
                             <Link href="/admin/analytics">
                                 <Button variant="outline" className="w-full border-slate-600 text-purple-400 hover:bg-slate-700">
-                                    {t('viewAnalytics')}
+                                    View Analytics
                                 </Button>
                             </Link>
                         </CardContent>

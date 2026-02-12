@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Search, MapPin, Store, Clock, Loader2, LocateFixed, Navigation } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase'
 import { requestUserLocation, calculateDistance, formatDistance, type UserLocation } from '@/lib/geolocation'
 import { Input } from '@/components/ui/input'
@@ -23,6 +24,7 @@ interface CanteenInfo {
 
 export default function CanteensPage() {
     const router = useRouter()
+    const t = useTranslations('Canteens')
     const [canteens, setCanteens] = useState<CanteenInfo[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [searchQuery, setSearchQuery] = useState('')
@@ -123,15 +125,15 @@ export default function CanteensPage() {
     return (
         <div className="container mx-auto px-4 py-6 pb-32">
             <div className="mb-6">
-                <h1 className="text-xl font-semibold sm:text-2xl mb-1">Canteens Near You</h1>
-                <p className="text-sm text-neutral-500">Select a canteen to browse their menu</p>
+                <h1 className="text-xl font-semibold sm:text-2xl mb-1">{t('title')}</h1>
+                <p className="text-sm text-neutral-500">{t('subtitle')}</p>
             </div>
 
             {/* Location Status Banner */}
             {locationStatus === 'requesting' && (
                 <div className="mb-4 flex items-center gap-2 rounded-lg bg-blue-50 dark:bg-blue-900/20 px-4 py-3 text-sm text-blue-700 dark:text-blue-300">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    <span>Getting your location to find nearby canteens...</span>
+                    <span>{t('locationRequesting')}</span>
                 </div>
             )}
 
@@ -139,7 +141,7 @@ export default function CanteensPage() {
                 <div className="mb-4 flex items-center justify-between gap-2 rounded-lg bg-amber-50 dark:bg-amber-900/20 px-4 py-3 text-sm text-amber-700 dark:text-amber-300">
                     <div className="flex items-center gap-2">
                         <LocateFixed className="h-4 w-4 shrink-0" />
-                        <span>Enable location to see nearby canteens</span>
+                        <span>{t('locationDenied')}</span>
                     </div>
                     <Button
                         variant="ghost"
@@ -164,7 +166,7 @@ export default function CanteensPage() {
             {locationStatus === 'granted' && (
                 <div className="mb-4 flex items-center gap-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 px-4 py-2.5 text-xs text-emerald-600 dark:text-emerald-400">
                     <Navigation className="h-3.5 w-3.5" />
-                    <span>Showing canteens sorted by distance</span>
+                    <span>{t('locationGranted')}</span>
                 </div>
             )}
 
@@ -173,7 +175,7 @@ export default function CanteensPage() {
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                 <Input
                     type="search"
-                    placeholder="Search by name, college, or area..."
+                    placeholder={t('searchPlaceholder')}
                     className="pl-10"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
@@ -215,7 +217,7 @@ export default function CanteensPage() {
 
                                             <Badge variant="secondary" className="text-[10px] px-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400">
                                                 <Clock className="h-2.5 w-2.5 mr-0.5" />
-                                                Open
+                                                {t('open')}
                                             </Badge>
                                         </div>
                                     </div>
@@ -228,10 +230,10 @@ export default function CanteensPage() {
                 <div className="py-16 text-center">
                     <Store className="mx-auto h-12 w-12 text-neutral-300 dark:text-neutral-600 mb-4" />
                     <h2 className="text-lg font-medium text-neutral-600 dark:text-neutral-400 mb-2">
-                        {searchQuery ? 'No canteens found' : 'No canteens available yet'}
+                        {searchQuery ? t('noCanteensFound') : t('noCanteensAvailable')}
                     </h2>
                     <p className="text-sm text-neutral-400">
-                        {searchQuery ? 'Try a different search term' : 'Check back later — canteens are being set up'}
+                        {searchQuery ? t('searchHint') : t('checkBackHint')}
                     </p>
                 </div>
             )}

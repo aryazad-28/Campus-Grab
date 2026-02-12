@@ -11,6 +11,7 @@ export interface Order {
     status: 'pending' | 'preparing' | 'ready' | 'completed'
     created_at: string
     estimated_time: number
+    payment_method: string
     completed_at?: string  // For analytics timing
     admin_id?: string       // Scopes order to a specific canteen
 }
@@ -35,22 +36,7 @@ function getTodayDateString(): string {
 }
 
 // Generate daily sequential token number
-function generateTokenNumber(): string {
-    const today = getTodayDateString()
-    const storedDate = localStorage.getItem(ORDER_DATE_KEY)
-    let counter = 1
-
-    if (storedDate === today) {
-        const storedCounter = localStorage.getItem(ORDER_COUNTER_KEY)
-        counter = storedCounter ? parseInt(storedCounter, 10) + 1 : 1
-    } else {
-        localStorage.setItem(ORDER_DATE_KEY, today)
-        counter = 1
-    }
-
-    localStorage.setItem(ORDER_COUNTER_KEY, counter.toString())
-    return `#${String(counter).padStart(4, '0')}`
-}
+// Token generation logic moved to database function 'create_order'
 
 export function OrdersProvider({ children, adminId }: { children: ReactNode; adminId?: string }) {
     const [orders, setOrders] = useState<Order[]>([])
@@ -130,48 +116,71 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
     }, [orders])
 
     const addOrder = useCallback(async (orderData: Omit<Order, 'id' | 'token_number' | 'created_at'>): Promise<Order> => {
-        const id = 'ORD-' + Date.now().toString(36).toUpperCase()
-        const token_number = generateTokenNumber()
+        // Fallback ID and token for optimistic update / offline
+        // Note: Real token number will be assigned by server
+        const tempId = 'ORD-' + Date.now().toString(36).toUpperCase()
+        const tempToken = '#PEND'
+
         const newOrder: Order = {
             ...orderData,
-            id,
-            token_number,
+            id: tempId,
+            token_number: tempToken,
             created_at: new Date().toISOString()
         }
 
-        // Add optimistically to local state
+        // Add optimistically (will be updated by Realtime or response)
         setOrders(prev => [newOrder, ...prev])
 
-        // Save to Supabase
         if (supabase) {
             try {
-                const insertData: Record<string, unknown> = {
-                    id: newOrder.id,
-                    token_number: newOrder.token_number,
-                    items: newOrder.items,
-                    total: newOrder.total,
-                    estimated_time: newOrder.estimated_time,
-                    status: newOrder.status,
-                    created_at: newOrder.created_at,
-                    completed_at: newOrder.completed_at || null
-                }
-                // Include admin_id if provided (from order data or prop)
-                if (newOrder.admin_id) {
-                    insertData.admin_id = newOrder.admin_id
-                } else if (adminId) {
-                    insertData.admin_id = adminId
+                // Use RPC call for atomic token generation
+                const rpcParams = {
+                    p_id: tempId, // Pass the ID we generated
+                    p_admin_id: newOrder.admin_id || adminId,
+                    p_items: newOrder.items,
+                    p_total: newOrder.total,
+                    p_estimated_time: newOrder.estimated_time,
+                    p_status: newOrder.status,
+                    p_payment_method: newOrder.payment_method
                 }
 
-                const { error } = await supabase.from('orders').insert(insertData)
-                if (error) {
-                    console.error('Supabase order insert error:', error)
+                console.log('Attempting create_order RPC via addOrder. Params:', JSON.stringify(rpcParams, null, 2))
+
+                if (!rpcParams.p_admin_id) {
+                    console.error('ABORTING RPC: Missing p_admin_id (canteen ID).')
+                    throw new Error('Missing admin_id/canteen_id. Cannot place order.')
                 }
-            } catch (err) {
+
+                const { data, error } = await supabase.rpc('create_order', rpcParams)
+
+                if (error) {
+                    console.error('Supabase create_order RPC error:', error)
+                    // Revert optimistic update on error
+                    setOrders(prev => prev.filter(o => o.id !== tempId))
+                    throw error
+                }
+
+                if (data) {
+                    // Replace temp order with real one from DB
+                    const confirmOrder = data as Order
+                    setOrders(prev => prev.map(o => o.id === tempId ? confirmOrder : o))
+                    return confirmOrder
+                }
+            } catch (err: any) {
                 console.error('Supabase order save failed:', err)
+                if (err?.message) console.error('Error Message:', err.message)
+                if (err?.details) console.error('Error Details:', err.details)
+
+                // Revert optimistic update
+                setOrders(prev => prev.filter(o => o.id !== tempId))
+                throw err // Re-throw to caller so UI knows it failed
             }
         }
 
-        return newOrder
+        // If Supabase is not available (shouldn't happen in production for this critical path), throw error?
+        // Or return newOrder if offline mode is truly supported (but RPC implies online).
+        // For now, if supabase exists but we fell through (no data?), it's an error.
+        throw new Error('Failed to create order on server.')
     }, [adminId])
 
     const updateOrderStatus = useCallback((id: string, status: Order['status']) => {

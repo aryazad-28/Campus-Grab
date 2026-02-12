@@ -10,7 +10,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { useTranslations } from 'next-intl'
 
 const CATEGORIES = ['Breakfast', 'Main Course', 'Snacks', 'Beverages', 'Desserts']
 
@@ -25,7 +24,6 @@ const FOOD_IMAGES: Record<string, string> = {
 export default function MenuManagementPage() {
     const router = useRouter()
     const { isAuthenticated, isLoading: authLoading } = useAdmin()
-    const t = useTranslations('Admin')
     const { items, isLoading, addItem, deleteItem, toggleAvailability } = useMenu()
     const [showAddForm, setShowAddForm] = useState(false)
 
@@ -79,12 +77,12 @@ export default function MenuManagementPage() {
                 <div className="container mx-auto flex h-14 items-center justify-between px-4">
                     <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-white">
                         <ArrowLeft className="h-5 w-5" />
-                        <span className="hidden sm:inline">{t('dashboard')}</span>
+                        <span className="hidden sm:inline">Dashboard</span>
                     </Link>
-                    <h1 className="text-lg font-semibold">{t('menu')}</h1>
+                    <h1 className="text-lg font-semibold">Menu</h1>
                     <Button onClick={() => setShowAddForm(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 gap-1">
                         <Plus className="h-4 w-4" />
-                        <span className="hidden sm:inline">{t('add')}</span>
+                        <span className="hidden sm:inline">Add</span>
                     </Button>
                 </div>
             </header>
@@ -94,12 +92,12 @@ export default function MenuManagementPage() {
                 {showAddForm && (
                     <Card className="mb-6 bg-slate-800 border-slate-700">
                         <CardHeader className="pb-3">
-                            <CardTitle className="text-lg text-white">{t('addNewItem')}</CardTitle>
+                            <CardTitle className="text-lg text-white">Add New Item</CardTitle>
                         </CardHeader>
                         <CardContent>
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 <Input
-                                    placeholder={t('itemName')}
+                                    placeholder="Item name"
                                     value={formData.name}
                                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                                     className="bg-slate-700 border-slate-600 text-white"
@@ -115,21 +113,21 @@ export default function MenuManagementPage() {
                                 </select>
                                 <Input
                                     type="number"
-                                    placeholder={t('price')}
+                                    placeholder="Price (₹)"
                                     value={formData.price}
                                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
                                     className="bg-slate-700 border-slate-600 text-white"
                                 />
                                 <Input
                                     type="number"
-                                    placeholder={t('eta')}
+                                    placeholder="ETA (min)"
                                     value={formData.eta_minutes}
                                     onChange={(e) => setFormData(prev => ({ ...prev, eta_minutes: e.target.value }))}
                                     className="bg-slate-700 border-slate-600 text-white"
                                 />
                                 <Input
                                     type="url"
-                                    placeholder={t('imageOptional')}
+                                    placeholder="Image URL (optional)"
                                     value={formData.image_url}
                                     onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
                                     className="bg-slate-700 border-slate-600 text-white"
@@ -137,14 +135,14 @@ export default function MenuManagementPage() {
                                 <div className="flex gap-2">
                                     <Button onClick={handleAdd} className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-1">
                                         <Check className="h-4 w-4" />
-                                        {t('add')}
+                                        Add
                                     </Button>
                                     <Button variant="outline" onClick={() => setShowAddForm(false)} className="border-slate-600 text-white hover:bg-slate-700">
                                         <X className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
-                            <p className="mt-2 text-xs text-slate-500">{t('defaultImage')}</p>
+                            <p className="mt-2 text-xs text-slate-500">Leave image URL empty to use a default image based on category</p>
                         </CardContent>
                     </Card>
                 )}
@@ -156,10 +154,10 @@ export default function MenuManagementPage() {
                     </div>
                 ) : items.length === 0 ? (
                     <div className="text-center py-12">
-                        <p className="text-slate-400 mb-4">{t('noItems')}</p>
+                        <p className="text-slate-400 mb-4">No menu items yet</p>
                         <Button onClick={() => setShowAddForm(true)} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
                             <Plus className="h-4 w-4" />
-                            {t('addFirstItem')}
+                            Add Your First Item
                         </Button>
                     </div>
                 ) : (
@@ -193,7 +191,7 @@ export default function MenuManagementPage() {
                                                 : 'border-slate-600 text-slate-400 hover:bg-slate-700'
                                                 }`}
                                         >
-                                            {item.available ? t('available') : t('unavailable')}
+                                            {item.available ? 'Available' : 'Unavailable'}
                                         </Button>
                                         <Button
                                             variant="ghost"

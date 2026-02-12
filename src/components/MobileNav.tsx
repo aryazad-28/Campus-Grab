@@ -6,16 +6,19 @@ import { Home, ShoppingCart, ClipboardList, User, Store } from 'lucide-react'
 import { useCart } from './CartProvider'
 import { cn } from '@/lib/utils'
 
+import { useTranslations } from 'next-intl'
+
 const navItems = [
-    { href: '/canteens', icon: Store, label: 'Canteens' },
-    { href: '/cart', icon: ShoppingCart, label: 'Cart' },
-    { href: '/orders', icon: ClipboardList, label: 'Orders' },
-    { href: '/profile', icon: User, label: 'Profile' },
+    { href: '/canteens', icon: Store, label: 'canteens' },
+    { href: '/cart', icon: ShoppingCart, label: 'cart' },
+    { href: '/orders', icon: ClipboardList, label: 'orders' },
+    { href: '/profile', icon: User, label: 'profile' },
 ]
 
 export function MobileNav() {
     const pathname = usePathname()
     const { cartCount } = useCart()
+    const t = useTranslations('Navigation')
 
     return (
         <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white/95 backdrop-blur-sm dark:bg-neutral-900/95 dark:border-neutral-800 sm:hidden safe-area-bottom">
@@ -50,7 +53,7 @@ export function MobileNav() {
                                 "text-[10px] font-medium",
                                 isActive && "font-semibold"
                             )}>
-                                {label}
+                                {t(label)}
                             </span>
                             {isActive && (
                                 <div className="absolute -top-1 left-1/2 -translate-x-1/2 w-8 h-1 rounded-full bg-neutral-900 dark:bg-white" />
