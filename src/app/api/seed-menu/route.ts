@@ -93,19 +93,17 @@ export async function GET() {
 
         const adminId = bunkSpot.id
 
-        // Check if items already exist for this admin
-        const { data: existing } = await supabase
+        // Delete ALL existing items for this admin (force re-seed)
+        const { error: deleteError } = await supabase
             .from('menu_items')
-            .select('id')
+            .delete()
             .eq('admin_id', adminId)
-            .limit(1)
 
-        if (existing && existing.length > 0) {
+        if (deleteError) {
             return NextResponse.json({
-                message: `Menu items already exist for ${bunkSpot.canteen_name} (${adminId}). Delete them first if you want to re-seed.`,
-                adminId,
-                canteen: bunkSpot.canteen_name
-            })
+                error: 'Failed to delete old menu items',
+                details: deleteError.message
+            }, { status: 500 })
         }
 
         // Insert all items
