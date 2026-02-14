@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
 import { createClient } from '@supabase/supabase-js'
 
-// Initialize Supabase client
-const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
-
 export async function POST(request: NextRequest) {
     try {
         // Validate environment variables first
@@ -18,6 +12,12 @@ export async function POST(request: NextRequest) {
                 { status: 500 }
             )
         }
+
+        // Initialize Supabase client
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        )
 
         const body = await request.json()
         console.log('Received request body:', { orderId: body.orderId, canteenId: body.canteenId })
