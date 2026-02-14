@@ -6,7 +6,11 @@
         "noOrders": "अद्याप कोणतीही ऑर्डर नाही",
         "items": "{count} वस्तू",
         "currency": "₹{amount}",
-        "tryAgain": "पुन्हा प्रयत्न करा"
+        "tryAgain": "पुन्हा प्रयत्न करा",
+        "today": "आज",
+        "yesterday": "काल",
+        "total": "एकूण",
+        "back": "मागे"
     },
     "Navigation": {
         "canteens": "कँटीन",
@@ -15,6 +19,13 @@
         "cart": "कार्ट",
         "orders": "ऑर्डर्स",
         "profile": "प्रोफाईल"
+    },
+    "Header": {
+        "brandName": "Campus Grab",
+        "canteens": "कँटीन",
+        "signIn": "साइन इन",
+        "darkMode": "डार्क मोडवर स्विच करा",
+        "lightMode": "लाइट मोडवर स्विच करा"
     },
     "Canteens": {
         "title": "तुमच्या जवळील कँटीन",
@@ -70,7 +81,37 @@
         "ready": "तयार",
         "completed": "पूर्ण झाले",
         "markPickedUp": "पिक अप केले म्हणून चिन्हांकित करा",
-        "browseMenu": "मेनू पहा"
+        "browseMenu": "मेनू पहा",
+        "browseCanteens": "कँटीन शोधा",
+        "orderTracking": "ऑर्डर ट्रॅकिंग",
+        "orderStatus": "ऑर्डर स्थिती",
+        "orderDetails": "ऑर्डर तपशील",
+        "orderReceived": "ऑर्डर प्राप्त झाली",
+        "readyForPickup": "पिकअपसाठी तयार",
+        "pickedUp": "पिक अप झाले",
+        "inProgress": "प्रगतीत...",
+        "beingCooked": "बनवले जात आहे",
+        "waitingAtCounter": "काउंटरवर वाट पाहत आहे",
+        "otherActiveOrders": "इतर सक्रिय ऑर्डर्स",
+        "pastOrders": "मागील ऑर्डर्स",
+        "noOrdersYet": "अद्याप कोणतीही ऑर्डर नाही",
+        "filterByMonth": "महिन्यानुसार फिल्टर करा",
+        "allMonths": "सर्व महिने",
+        "january": "जानेवारी",
+        "february": "फेब्रुवारी",
+        "march": "मार्च",
+        "april": "एप्रिल",
+        "may": "मे",
+        "june": "जून",
+        "july": "जुलै",
+        "august": "ऑगस्ट",
+        "september": "सप्टेंबर",
+        "october": "ऑक्टोबर",
+        "november": "नोव्हेंबर",
+        "december": "डिसेंबर",
+        "ordersCount": "{count} ऑर्डर्स",
+        "revenue": "महसूल",
+        "loadingHistory": "ऑर्डर इतिहास लोड होत आहे..."
     },
     "Profile": {
         "title": "खाते तपशील",
@@ -134,6 +175,14 @@
         "canteenName": "कँटीनचे नाव",
         "college": "कॉलेज",
         "phone": "फोन",
-        "email": "ईमेल"
+        "email": "ईमेल",
+        "orderHistory": "ऑर्डर इतिहास",
+        "selectMonth": "महिना निवडा",
+        "selectDate": "तारीख निवडा",
+        "dailyRevenue": "दैनिक महसूल",
+        "monthlyRevenue": "मासिक महसूल",
+        "totalOrders": "एकूण ऑर्डर्स",
+        "viewDetails": "तपशील पहा",
+        "backToMonthView": "महिन्याच्या दृश्याकडे परत जा"
     }
 }

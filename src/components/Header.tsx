@@ -6,10 +6,12 @@ import { useCart } from './CartProvider'
 import { useAuth } from './AuthProvider'
 import { useTheme } from './ThemeProvider'
 import { Button } from './ui/button'
+import { useTranslations } from 'next-intl'
 
 export function Header() {
     const { cartCount } = useCart()
     const { isAuthenticated, user } = useAuth()
+    const t = useTranslations('Header')
 
     let themeContext: { theme: 'light' | 'dark'; toggleTheme: () => void } | null = null
     try {
@@ -35,7 +37,7 @@ export function Header() {
                 {/* Desktop Navigation */}
                 <nav className="hidden items-center gap-2 sm:flex">
                     <Link href="/canteens">
-                        <Button variant="ghost" size="sm">Canteens</Button>
+                        <Button variant="ghost" size="sm">{t('canteens')}</Button>
                     </Link>
 
                     {themeContext && (
@@ -44,7 +46,7 @@ export function Header() {
                             size="icon"
                             className="h-9 w-9"
                             onClick={themeContext.toggleTheme}
-                            title={themeContext.theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+                            title={themeContext.theme === 'light' ? t('darkMode') : t('lightMode')}
                         >
                             {themeContext.theme === 'light' ? (
                                 <Moon className="h-4 w-4" />
@@ -74,7 +76,7 @@ export function Header() {
                         </Link>
                     ) : (
                         <Link href="/login">
-                            <Button size="sm">Sign In</Button>
+                            <Button size="sm">{t('signIn')}</Button>
                         </Link>
                     )}
                 </nav>

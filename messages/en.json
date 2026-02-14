@@ -6,7 +6,11 @@
         "noOrders": "No orders yet",
         "items": "{count} items",
         "currency": "₹{amount}",
-        "tryAgain": "Try Again"
+        "tryAgain": "Try Again",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "total": "Total",
+        "back": "Back"
     },
     "Navigation": {
         "canteens": "Canteens",
@@ -15,6 +19,13 @@
         "cart": "Cart",
         "orders": "Orders",
         "profile": "Profile"
+    },
+    "Header": {
+        "brandName": "Campus Grab",
+        "canteens": "Canteens",
+        "signIn": "Sign In",
+        "darkMode": "Switch to dark mode",
+        "lightMode": "Switch to light mode"
     },
     "Canteens": {
         "title": "Canteens Near You",
@@ -70,7 +81,37 @@
         "ready": "Ready",
         "completed": "Completed",
         "markPickedUp": "Mark as Picked Up",
-        "browseMenu": "Browse the menu"
+        "browseMenu": "Browse the menu",
+        "browseCanteens": "Browse canteens",
+        "orderTracking": "Order Tracking",
+        "orderStatus": "Order Status",
+        "orderDetails": "Order Details",
+        "orderReceived": "Order Received",
+        "readyForPickup": "Ready for Pickup",
+        "pickedUp": "Picked Up",
+        "inProgress": "In progress...",
+        "beingCooked": "Being cooked",
+        "waitingAtCounter": "Waiting at counter",
+        "otherActiveOrders": "Other Active Orders",
+        "pastOrders": "Past Orders",
+        "noOrdersYet": "No orders yet",
+        "filterByMonth": "Filter by month",
+        "allMonths": "All Months",
+        "january": "January",
+        "february": "February",
+        "march": "March",
+        "april": "April",
+        "may": "May",
+        "june": "June",
+        "july": "July",
+        "august": "August",
+        "september": "September",
+        "october": "October",
+        "november": "November",
+        "december": "December",
+        "ordersCount": "{count} orders",
+        "revenue": "Revenue",
+        "loadingHistory": "Loading order history..."
     },
     "Profile": {
         "title": "Account Details",
@@ -134,6 +175,14 @@
         "canteenName": "Canteen Name",
         "college": "College",
         "phone": "Phone",
-        "email": "Email"
+        "email": "Email",
+        "orderHistory": "Order History",
+        "selectMonth": "Select Month",
+        "selectDate": "Select Date",
+        "dailyRevenue": "Daily Revenue",
+        "monthlyRevenue": "Monthly Revenue",
+        "totalOrders": "Total Orders",
+        "viewDetails": "View Details",
+        "backToMonthView": "Back to Month View"
     }
 }
