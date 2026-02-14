@@ -15,6 +15,8 @@ interface AdminProfile {
     latitude: number | null
     longitude: number | null
     status: 'pending' | 'approved' | 'rejected'
+    razorpay_key_id: string | null
+    razorpay_key_secret: string | null
 }
 
 interface AdminContextType {

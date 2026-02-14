@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next"
 import { Inter } from "next/font/google"
+import Script from "next/script"
 import "./globals.css"
 import { CartProvider } from "@/components/CartProvider"
 import { AuthProvider } from "@/components/AuthProvider"
@@ -68,6 +69,7 @@ export default async function RootLayout({
             </AIProvider>
           </AuthProvider>
         </NextIntlClientProvider>
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="lazyOnload" />
       </body>
     </html>
   )

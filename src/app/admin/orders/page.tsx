@@ -42,13 +42,15 @@ export default function AdminOrdersPage() {
         )
     }
 
-    const filteredOrders = filter === 'all'
-        ? orders
-        : orders.filter(o => o.status === filter)
+    // Filter out 'pending' orders - only show paid orders (preparing and above)
+    const paidOrders = orders.filter(o => o.status !== 'pending')
 
-    const pendingCount = orders.filter(o => o.status === 'pending').length
-    const preparingCount = orders.filter(o => o.status === 'preparing').length
-    const readyCount = orders.filter(o => o.status === 'ready').length
+    const filteredOrders = filter === 'all'
+        ? paidOrders
+        : paidOrders.filter(o => o.status === filter)
+
+    const preparingCount = paidOrders.filter(o => o.status === 'preparing').length
+    const readyCount = paidOrders.filter(o => o.status === 'ready').length
 
     const formatTime = (dateString: string) => {
         const date = new Date(dateString)
@@ -80,15 +82,7 @@ export default function AdminOrdersPage() {
                         onClick={() => setFilter('all')}
                         className={filter === 'all' ? 'bg-slate-600' : 'text-slate-400'}
                     >
-                        All ({orders.length})
-                    </Button>
-                    <Button
-                        variant={filter === 'pending' ? 'default' : 'ghost'}
-                        size="sm"
-                        onClick={() => setFilter('pending')}
-                        className={filter === 'pending' ? 'bg-amber-600' : 'text-slate-400'}
-                    >
-                        New ({pendingCount})
+                        All ({paidOrders.length})
                     </Button>
                     <Button
                         variant={filter === 'preparing' ? 'default' : 'ghost'}

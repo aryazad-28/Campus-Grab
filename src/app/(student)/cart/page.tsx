@@ -53,10 +53,15 @@ function CartContent() {
             return
         }
 
+        if (!canteenId) {
+            alert('Please select a canteen first')
+            return
+        }
+
         setIsProcessing(true)
 
         try {
-            // Create order — this saves to Supabase automatically via OrdersProvider
+            // Step 1: Create order in database (status: pending)
             const newOrder = await addOrder({
                 items: items.map(item => ({
                     name: item.name,
@@ -66,35 +71,108 @@ function CartContent() {
                 total: total,
                 status: 'pending',
                 estimated_time: maxEta,
-                admin_id: canteenId || undefined,
+                admin_id: canteenId,
                 payment_method: 'online'
             })
 
-            // Get token from the returned order
-            setOrderToken(newOrder.token_number)
-            setOrderTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
-
-            // Track for AI learning
-            trackNewOrder({
-                orderId: newOrder.id,
-                items: items.map(item => ({
-                    itemId: item.id,
-                    itemName: item.name,
-                    canteenId: canteenId || '1',
-                    estimatedTime: item.eta_minutes
-                }))
+            // Step 2: Create Razorpay order via API
+            const razorpayRes = await fetch('/api/razorpay/create-order', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    orderId: newOrder.id,
+                    canteenId: canteenId,
+                }),
             })
 
-            clearCart()
-            setStep('confirmation')
+            if (!razorpayRes.ok) {
+                const error = await razorpayRes.json()
+                throw new Error(error.error || 'Failed to create payment order')
+            }
+
+            const razorpayData = await razorpayRes.json()
+
+            // Step 3: Open Razorpay Checkout (UPI only)
+            const options = {
+                key: razorpayData.key_id,
+                amount: razorpayData.amount,
+                currency: razorpayData.currency,
+                name: razorpayData.canteen_name,
+                description: `Order #${newOrder.token_number}`,
+                order_id: razorpayData.razorpay_order_id,
+                method: {
+                    upi: true,
+                    card: false,
+                    netbanking: false,
+                    wallet: false,
+                },
+                prefill: {
+                    name: '', // Add user name if available
+                    contact: '', // Add user phone if available  
+                    email: '', // Add user email if available
+                },
+                handler: async function (response: any) {
+                    try {
+                        // Step 4: Verify payment on server
+                        const verifyRes = await fetch('/api/razorpay/verify-payment', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                razorpay_order_id: response.razorpay_order_id,
+                                razorpay_payment_id: response.razorpay_payment_id,
+                                razorpay_signature: response.razorpay_signature,
+                                orderId: newOrder.id,
+                            }),
+                        })
+
+                        if (!verifyRes.ok) {
+                            throw new Error('Payment verification failed')
+                        }
+
+                        // Payment successful
+                        setOrderToken(newOrder.token_number)
+                        setOrderTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
+
+                        // Track for AI learning
+                        trackNewOrder({
+                            orderId: newOrder.id,
+                            items: items.map(item => ({
+                                itemId: item.id,
+                                itemName: item.name,
+                                canteenId: canteenId,
+                                estimatedTime: item.eta_minutes
+                            }))
+                        })
+
+                        clearCart()
+                        setStep('confirmation')
+                    } catch (error: any) {
+                        console.error('Payment verification error:', error)
+                        alert('Payment verification failed. Please contact support.')
+                    } finally {
+                        setIsProcessing(false)
+                    }
+                },
+                modal: {
+                    ondismiss: function () {
+                        setIsProcessing(false)
+                        alert('Payment cancelled. Your order is still pending.')
+                    }
+                },
+                theme: {
+                    color: '#10b981'
+                }
+            }
+
+            const rzp = new (window as any).Razorpay(options)
+            rzp.open()
         } catch (err: any) {
-            console.error('Order error:', err)
-            alert(err.message || 'Failed to place order. Please try again.')
-            // Do not clear cart or proceed to confirmation on error
-        } finally {
+            console.error('Order/Payment error:', err)
+            alert(err.message || 'Failed to initiate payment. Please try again.')
             setIsProcessing(false)
         }
     }
+
 
     // Empty cart view
     if (items.length === 0 && step === 'cart') {
