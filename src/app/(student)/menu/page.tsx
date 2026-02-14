@@ -147,8 +147,8 @@ function MenuContent() {
                     <button
                         onClick={() => setSelectedCategory(null)}
                         className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedCategory === null
-                                ? 'bg-red-500 text-white'
-                                : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]'
+                            ? 'bg-red-500 text-white'
+                            : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]'
                             }`}
                     >
                         All
@@ -158,8 +158,8 @@ function MenuContent() {
                             key={category}
                             onClick={() => setSelectedCategory(category)}
                             className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
-                                    ? 'bg-red-500 text-white'
-                                    : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]'
+                                ? 'bg-red-500 text-white'
+                                : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]'
                                 }`}
                         >
                             {category}
@@ -179,14 +179,54 @@ function MenuContent() {
                     />
                 </div>
 
-                {/* Menu Grid */}
+                {/* Menu Sections by Category */}
                 {filteredItems.length > 0 ? (
-                    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
-                        {filteredItems.map((item, index) => (
-                            <div key={item.id} className={`animate-fade-in-up delay-${Math.min(index + 1, 8)}`}>
-                                <MenuCard item={item} />
-                            </div>
-                        ))}
+                    <div className="space-y-8">
+                        {(() => {
+                            // Group items by category
+                            const grouped: Record<string, typeof filteredItems> = {}
+                            filteredItems.forEach(item => {
+                                if (!grouped[item.category]) grouped[item.category] = []
+                                grouped[item.category].push(item)
+                            })
+
+                            const categoryEmojis: Record<string, string> = {
+                                'Burgers': '🍔',
+                                'Classic Pizzas': '🍕',
+                                'Special Pizzas': '🍕',
+                                'Momos': '🥟',
+                                'Appetizers': '🍟',
+                                'Pastas': '🍝',
+                                'Brownies': '🍫',
+                                'Beverages': '🥤',
+                                'Coffee': '☕',
+                            }
+
+                            return Object.entries(grouped).map(([category, items], sectionIndex) => (
+                                <div key={category} className={`animate-fade-in-up delay-${Math.min(sectionIndex + 1, 4)}`}>
+                                    {/* Section Header */}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-lg">
+                                            {categoryEmojis[category] || '🍽️'}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-bold">{category}</h3>
+                                            <p className="text-xs text-[var(--muted-foreground)]">{items.length} item{items.length !== 1 ? 's' : ''}</p>
+                                        </div>
+                                        <div className="h-px flex-1 bg-[var(--border)]" />
+                                    </div>
+
+                                    {/* Items Grid */}
+                                    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                                        {items.map((item, index) => (
+                                            <div key={item.id} className={`animate-fade-in-up delay-${Math.min(index + 1, 8)}`}>
+                                                <MenuCard item={item} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))
+                        })()}
                     </div>
                 ) : (
                     <div className="py-12 text-center text-[var(--muted-foreground)] animate-fade-in">
