@@ -1,34 +1,53 @@
 @import "tailwindcss";
 
-/* Light theme (default) */
+/* ============================================
+   CAMPUS GRAB — Dark-Mode-First Design
+   Matching Figma: Dark bg, red primary, green accents
+   ============================================ */
+
+/* Light theme */
 :root {
   --background: #fafafa;
-  --foreground: #171717;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #171717;
+  --card-foreground: #0f172a;
+  --card-elevated: #f8f8f8;
   --border: #e5e5e5;
   --muted: #f5f5f5;
   --muted-foreground: #737373;
-  --accent: #171717;
-  --accent-foreground: #fafafa;
+  --primary: #DC2626;
+  --primary-foreground: #ffffff;
+  --success: #22C55E;
+  --warning: #F59E0B;
+  --glow-brand: 0 4px 24px rgba(220, 38, 38, 0.2);
 }
 
-/* Dark theme */
+/* Dark theme — the PRIMARY look */
 .dark {
-  --background: #0a0a0a;
-  --foreground: #fafafa;
-  --card: #171717;
-  --card-foreground: #fafafa;
-  --border: #262626;
-  --muted: #262626;
+  --background: #121212;
+  --foreground: #f5f5f5;
+  --card: #1E1E1E;
+  --card-foreground: #f5f5f5;
+  --card-elevated: #252525;
+  --border: #2a2a2a;
+  --muted: #1a1a1a;
   --muted-foreground: #a3a3a3;
-  --accent: #fafafa;
-  --accent-foreground: #171717;
+  --primary: #EF4444;
+  --primary-foreground: #ffffff;
+  --success: #22C55E;
+  --warning: #FBBF24;
+  --glow-brand: 0 4px 24px rgba(239, 68, 68, 0.15);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-card: var(--card);
+  --color-card-elevated: var(--card-elevated);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
   --font-sans: "Inter", system-ui, sans-serif;
 }
 
@@ -41,39 +60,252 @@ body {
   transition: background-color 0.3s, color 0.3s;
 }
 
-/* Dark mode card styles */
+/* ============================================
+   ANIMATIONS
+   ============================================ */
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInBottom {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4);
+  }
+
+  50% {
+    box-shadow: 0 0 0 8px rgba(220, 38, 38, 0);
+  }
+}
+
+@keyframes pulseDot {
+
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+
+@keyframes bounceIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  50% {
+    transform: scale(1.1);
+  }
+
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes float {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+/* Animation utilities */
+.animate-fade-in-up {
+  animation: fadeInUp 0.4s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-in-bottom {
+  animation: slideInBottom 0.4s ease-out forwards;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.3s ease-out forwards;
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.4s ease-out forwards;
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+.animate-pulse-dot {
+  animation: pulseDot 1.5s ease-in-out infinite;
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Staggered delays */
+.delay-1 {
+  animation-delay: 0.05s;
+}
+
+.delay-2 {
+  animation-delay: 0.1s;
+}
+
+.delay-3 {
+  animation-delay: 0.15s;
+}
+
+.delay-4 {
+  animation-delay: 0.2s;
+}
+
+.delay-5 {
+  animation-delay: 0.25s;
+}
+
+.delay-6 {
+  animation-delay: 0.3s;
+}
+
+.delay-7 {
+  animation-delay: 0.35s;
+}
+
+.delay-8 {
+  animation-delay: 0.4s;
+}
+
+/* ============================================
+   UTILITIES
+   ============================================ */
+
+.glass {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.dark .glass {
+  background: rgba(18, 18, 18, 0.9);
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%);
+  background-size: 400% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+.glow-brand {
+  box-shadow: var(--glow-brand);
+}
+
+/* ============================================
+   DARK MODE OVERRIDES
+   ============================================ */
+
 .dark .bg-white {
   background-color: var(--card) !important;
 }
 
-.dark .border-neutral-200 {
+.dark .border-neutral-200,
+.dark .border-slate-200 {
   border-color: var(--border) !important;
 }
 
-.dark .text-neutral-900 {
+.dark .text-neutral-900,
+.dark .text-slate-900 {
   color: var(--foreground) !important;
 }
 
 .dark .text-neutral-500,
-.dark .text-neutral-400 {
+.dark .text-neutral-400,
+.dark .text-slate-500,
+.dark .text-slate-400 {
   color: var(--muted-foreground) !important;
 }
 
 .dark .bg-neutral-50,
-.dark .bg-neutral-100 {
+.dark .bg-neutral-100,
+.dark .bg-slate-50,
+.dark .bg-slate-100 {
   background-color: var(--muted) !important;
 }
 
-/* Card component dark mode */
 .dark [data-slot="card"] {
   background-color: var(--card);
   border-color: var(--border);
 }
 
-/* Input dark mode */
 .dark input,
 .dark select {
-  background-color: var(--muted);
+  background-color: var(--card-elevated);
   border-color: var(--border);
   color: var(--foreground);
 }
@@ -82,20 +314,10 @@ body {
   color: var(--muted-foreground);
 }
 
-/* Badge styles */
-.dark .bg-emerald-50 {
-  background-color: rgba(16, 185, 129, 0.1) !important;
-}
+/* ============================================
+   SCROLLBAR
+   ============================================ */
 
-.dark .bg-blue-50 {
-  background-color: rgba(59, 130, 246, 0.1) !important;
-}
-
-.dark .bg-purple-50 {
-  background-color: rgba(168, 85, 247, 0.1) !important;
-}
-
-/* Minimal scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -110,11 +332,6 @@ body {
   border-radius: 3px;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--foreground);
-}
-
-/* Hide scrollbar for horizontal scroll */
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;
@@ -124,7 +341,10 @@ body {
   display: none;
 }
 
-/* Safe area padding for notched phones (iPhone X+, etc.) */
+/* ============================================
+   MOBILE
+   ============================================ */
+
 .safe-area-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0);
 }
@@ -133,7 +353,6 @@ body {
   padding-top: env(safe-area-inset-top, 0);
 }
 
-/* Improved touch targets for mobile */
 @media (max-width: 640px) {
 
   button,
@@ -142,40 +361,34 @@ body {
     min-height: 44px;
   }
 
-  /* Prevent text selection on navigation */
   nav {
     -webkit-user-select: none;
     user-select: none;
   }
 
-  /* Smooth scrolling on iOS */
   .overflow-y-auto,
   .overflow-x-auto {
     -webkit-overflow-scrolling: touch;
   }
 }
 
-/* PWA standalone mode adjustments */
 @media (display-mode: standalone) {
   body {
-    /* Prevent overscroll bounce on iOS */
     overscroll-behavior-y: none;
   }
 }
 
-/* Prevent pull-to-refresh in standalone mode */
 html {
   overscroll-behavior-y: contain;
 }
 
-/* Active state for touch feedback */
 @media (hover: none) {
 
   button:active,
   [role="button"]:active,
   a:active {
     opacity: 0.7;
-    transform: scale(0.98);
+    transform: scale(0.97);
     transition: transform 0.1s ease, opacity 0.1s ease;
   }
 }

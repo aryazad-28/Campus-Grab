@@ -3,21 +3,21 @@
 import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Search, Zap, Clock, Loader2, Brain, TrendingUp, ArrowLeft, Store } from 'lucide-react'
+import Image from 'next/image'
+import { Search, Zap, Clock, Loader2, Brain, TrendingUp, ArrowLeft, Star } from 'lucide-react'
 import { useMenu } from '@/components/MenuProvider'
 import { useAI } from '@/components/AIProvider'
 import { supabase } from '@/lib/supabase'
 import { MenuCard } from '@/components/MenuCard'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
-import { Card, CardContent } from '@/components/ui/card'
-import { useTranslations } from 'next-intl'
+import { SkeletonGrid } from '@/components/SkeletonCard'
+import { formatPrice, formatTime } from '@/lib/utils'
 
 export default function MenuPage() {
     return (
         <Suspense fallback={
             <div className="flex min-h-[50vh] items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-red-500" />
             </div>
         }>
             <MenuContent />
@@ -26,7 +26,6 @@ export default function MenuPage() {
 }
 
 function MenuContent() {
-    const t = useTranslations('Menu')
     const searchParams = useSearchParams()
     const router = useRouter()
     const canteenId = searchParams.get('canteen')
@@ -37,28 +36,16 @@ function MenuContent() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
     const [canteenName, setCanteenName] = useState<string | null>(null)
 
-    // Redirect to canteens page if no canteen selected
     useEffect(() => {
-        if (!canteenId) {
-            router.push('/canteens')
-        }
+        if (!canteenId) router.push('/canteens')
     }, [canteenId, router])
 
-    // Fetch canteen name
     useEffect(() => {
         if (!canteenId || !supabase) return
-
-        supabase
-            .from('admin_profiles')
-            .select('canteen_name')
-            .eq('id', canteenId)
-            .single()
-            .then(({ data }) => {
-                if (data) setCanteenName(data.canteen_name)
-            })
+        supabase.from('admin_profiles').select('canteen_name').eq('id', canteenId).single()
+            .then(({ data }) => { if (data) setCanteenName(data.canteen_name) })
     }, [canteenId])
 
-    // Filter items by canteen admin_id
     const canteenItems = useMemo(() => {
         if (!canteenId) return []
         return menuItems.filter(item => {
@@ -67,37 +54,19 @@ function MenuContent() {
         })
     }, [menuItems, canteenId])
 
-    // Only show available items to students
-    const availableItems = useMemo(() => {
-        return canteenItems.filter(item => item.available)
-    }, [canteenItems])
+    const availableItems = useMemo(() => canteenItems.filter(item => item.available), [canteenItems])
 
-    // Get unique categories
     const categories = useMemo(() => {
         const cats = [...new Set(availableItems.map(item => item.category))]
         return cats.sort()
     }, [availableItems])
 
-    // Fallback: Static fastest item (used when AI has no data)
-    const staticFastestItem = useMemo(() => {
-        if (availableItems.length === 0) return null
-        return availableItems.reduce((fastest, item) =>
-            item.eta_minutes < fastest.eta_minutes ? item : fastest
-        )
+    const fastItems = useMemo(() => {
+        return [...availableItems]
+            .sort((a, b) => a.eta_minutes - b.eta_minutes)
+            .slice(0, 3)
     }, [availableItems])
 
-    // AI-learned fastest item (if we have data)
-    const aiFastestItem = useMemo(() => {
-        if (fastestItems.length === 0) return null
-        const topAI = fastestItems[0]
-        return availableItems.find(item => item.id === topAI.itemId) || null
-    }, [fastestItems, availableItems])
-
-    // Use AI recommendation if available, otherwise fallback to static
-    const recommendedFastest = aiFastestItem || staticFastestItem
-    const isAIRecommendation = aiFastestItem !== null && dataConfidence !== 'low'
-
-    // Filter items
     const filteredItems = useMemo(() => {
         return availableItems.filter(item => {
             const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -106,152 +75,168 @@ function MenuContent() {
         })
     }, [availableItems, searchQuery, selectedCategory])
 
-    if (!canteenId) {
-        return null // Redirecting
-    }
+    if (!canteenId) return null
 
     if (isLoading) {
         return (
-            <div className="flex min-h-[50vh] items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+            <div className="container mx-auto px-4 py-6 pb-32">
+                <div className="mb-6 h-48 rounded-2xl skeleton" />
+                <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                    <SkeletonGrid count={8} variant="menu" />
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="container mx-auto px-4 py-6 pb-32">
-            {/* Canteen Header */}
-            <div className="mb-4 flex items-center gap-3">
-                <Link href="/canteens" className="flex items-center gap-1 text-sm text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors">
+        <div className="pb-32">
+            {/* Hero Banner — like Figma canteen page */}
+            <div className="relative h-52 bg-[var(--card-elevated)] overflow-hidden animate-fade-in">
+                <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] via-transparent to-transparent z-10" />
+                <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                    <span className="text-6xl">🍽️</span>
+                </div>
+
+                {/* Back button */}
+                <Link href="/canteens" className="absolute top-4 left-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors">
                     <ArrowLeft className="h-4 w-4" />
                 </Link>
-                <div className="flex items-center gap-2">
-                    <Store className="h-5 w-5 text-emerald-500" />
-                    <h1 className="text-xl font-semibold sm:text-2xl">{canteenName || t('title')}</h1>
+
+                {/* Canteen name overlay at bottom */}
+                <div className="absolute bottom-4 left-4 right-4 z-20">
+                    <h1 className="text-xl font-bold text-white sm:text-2xl">{canteenName || 'Menu'}</h1>
+                    <p className="text-sm text-white/70">{canteenName ? 'Main campus dining with diverse cuisines' : ''}</p>
+                    <div className="flex items-center gap-3 mt-2">
+                        <div className="flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5 text-yellow-400 fill-yellow-400" />
+                            <span className="text-xs font-medium text-white">4.5</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                            <Clock className="h-3.5 w-3.5 text-white/60" />
+                            <span className="text-xs text-white/70">~12 min</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            {/* AI Recommendations Section */}
-            <div className="mb-6 space-y-3">
-                {/* AI Badge */}
-                {totalOrdersAnalyzed > 0 && (
-                    <div className="flex items-center gap-2 text-xs text-neutral-500">
-                        <Brain className="h-3.5 w-3.5" />
-                        <span>{t('aiLearning', { count: totalOrdersAnalyzed })}</span>
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                            {t('confidence', { level: dataConfidence })}
-                        </Badge>
+            <div className="container mx-auto px-4 py-4">
+                {/* Fastest Items — horizontal scroll like Figma */}
+                {fastItems.length > 0 && (
+                    <div className="mb-6 animate-fade-in-up">
+                        <div className="flex items-center gap-2 mb-3">
+                            <div className="flex h-6 w-6 items-center justify-center rounded-full bg-green-500/10">
+                                <Zap className="h-3.5 w-3.5 text-green-500" />
+                            </div>
+                            <div>
+                                <h2 className="text-base font-semibold">Fastest Items</h2>
+                                <p className="text-xs text-[var(--muted-foreground)]">Ready in under 10 min</p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
+                            {fastItems.map((item) => (
+                                <div key={item.id} className="shrink-0 w-[140px]">
+                                    <MenuCard item={item} />
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
-                {/* Recommendation Cards */}
-                <div className="grid gap-3 sm:grid-cols-2">
-                    {recommendedFastest && (
-                        <Card className={`${isAIRecommendation ? 'border-purple-200 bg-purple-50' : 'border-emerald-200 bg-emerald-50'}`}>
-                            <CardContent className="flex items-center gap-3 p-3 sm:p-4">
-                                <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${isAIRecommendation ? 'bg-purple-100' : 'bg-emerald-100'} sm:h-10 sm:w-10`}>
-                                    {isAIRecommendation ? (
-                                        <TrendingUp className="h-4 w-4 text-purple-600 sm:h-5 sm:w-5" />
-                                    ) : (
-                                        <Zap className="h-4 w-4 text-emerald-600 sm:h-5 sm:w-5" />
-                                    )}
-                                </div>
-                                <div className="min-w-0">
-                                    <p className={`text-xs ${isAIRecommendation ? 'text-purple-700' : 'text-emerald-700'} sm:text-sm`}>
-                                        {isAIRecommendation ? t('aiPick') : t('fastestOption')}
-                                    </p>
-                                    <p className="truncate text-sm font-medium sm:text-base">
-                                        {recommendedFastest.name} — {recommendedFastest.eta_minutes} min
-                                    </p>
-                                    {isAIRecommendation && fastestItems[0] && (
-                                        <p className="text-[10px] text-purple-600">
-                                            {t('actualAvg', { time: fastestItems[0].avgActualTime, count: fastestItems[0].orderCount })}
-                                        </p>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
-
-                    {bestCanteen && (
-                        <Card className="border-blue-200 bg-blue-50">
-                            <CardContent className="flex items-center gap-3 p-3 sm:p-4">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-100 sm:h-10 sm:w-10">
-                                    <Clock className="h-4 w-4 text-blue-600 sm:h-5 sm:w-5" />
-                                </div>
-                                <div>
-                                    <p className="text-xs text-blue-700 sm:text-sm">{t('bestCanteen')}</p>
-                                    <p className="text-sm font-medium sm:text-base">
-                                        Canteen {bestCanteen.canteenId} — {t('avgTime', { time: bestCanteen.avgPrepTime })}
-                                    </p>
-                                    {bestCanteen.reliabilityScore > 0 && (
-                                        <p className="text-[10px] text-blue-600">
-                                            {t('onTimeDelivery', { score: Math.round(bestCanteen.reliabilityScore * 100) })}
-                                        </p>
-                                    )}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    )}
+                {/* Category pills — red active like Figma */}
+                <div className="flex gap-2 overflow-x-auto pb-3 -mx-4 px-4 mb-4 scrollbar-hide animate-fade-in-up delay-1">
+                    <button
+                        onClick={() => setSelectedCategory(null)}
+                        className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedCategory === null
+                            ? 'bg-red-500 text-white'
+                            : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]'
+                            }`}
+                    >
+                        All
+                    </button>
+                    {categories.map(category => (
+                        <button
+                            key={category}
+                            onClick={() => setSelectedCategory(category)}
+                            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
+                                ? 'bg-red-500 text-white'
+                                : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]'
+                                }`}
+                        >
+                            {category}
+                        </button>
+                    ))}
                 </div>
 
-                {/* Peak Hour Insight */}
-                {peakHourRecommendation && (
-                    <p className="text-xs text-neutral-500 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {peakHourRecommendation}
-                    </p>
-                )}
-            </div>
-
-            {/* Search & Filters */}
-            <div className="mb-6 space-y-3">
-                <div className="relative">
-                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                {/* Search */}
+                <div className="relative mb-5 animate-fade-in-up delay-2">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
                     <Input
                         type="search"
-                        placeholder={t('searchPlaceholder')}
-                        className="pl-10"
+                        placeholder="Search menu..."
+                        className="pl-10 rounded-xl"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                     />
                 </div>
-                <div className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
-                    <Badge
-                        variant={selectedCategory === null ? "default" : "outline"}
-                        className="cursor-pointer shrink-0 px-3 py-1.5"
-                        onClick={() => setSelectedCategory(null)}
-                    >
-                        {t('allCategories')}
-                    </Badge>
-                    {categories.map(category => (
-                        <Badge
-                            key={category}
-                            variant={selectedCategory === category ? "default" : "outline"}
-                            className="cursor-pointer shrink-0 px-3 py-1.5"
-                            onClick={() => setSelectedCategory(category)}
-                        >
-                            {category}
-                        </Badge>
-                    ))}
-                </div>
-            </div>
 
-            {/* Menu Grid */}
-            {filteredItems.length > 0 ? (
-                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                    {filteredItems.map(item => (
-                        <MenuCard key={item.id} item={item} />
-                    ))}
-                </div>
-            ) : (
-                <div className="py-12 text-center text-neutral-500">
-                    {availableItems.length === 0
-                        ? t('noItems')
-                        : t('noMatches')
-                    }
-                </div>
-            )}
+                {/* Menu Sections by Category */}
+                {filteredItems.length > 0 ? (
+                    <div className="space-y-8">
+                        {(() => {
+                            // Group items by category
+                            const grouped: Record<string, typeof filteredItems> = {}
+                            filteredItems.forEach(item => {
+                                if (!grouped[item.category]) grouped[item.category] = []
+                                grouped[item.category].push(item)
+                            })
+
+                            const categoryEmojis: Record<string, string> = {
+                                'Burgers': '🍔',
+                                'Classic Pizzas': '🍕',
+                                'Special Pizzas': '🍕',
+                                'Momos': '🥟',
+                                'Appetizers': '🍟',
+                                'Pastas': '🍝',
+                                'Brownies': '🍫',
+                                'Beverages': '🥤',
+                                'Coffee': '☕',
+                            }
+
+                            return Object.entries(grouped).map(([category, items], sectionIndex) => (
+                                <div key={category} className={`animate-fade-in-up delay-${Math.min(sectionIndex + 1, 4)}`}>
+                                    {/* Section Header */}
+                                    <div className="flex items-center gap-3 mb-4">
+                                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-red-500/10 text-lg">
+                                            {categoryEmojis[category] || '🍽️'}
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="text-lg font-bold">{category}</h3>
+                                            <p className="text-xs text-[var(--muted-foreground)]">{items.length} item{items.length !== 1 ? 's' : ''}</p>
+                                        </div>
+                                        <div className="h-px flex-1 bg-[var(--border)]" />
+                                    </div>
+
+                                    {/* Items Grid */}
+                                    <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
+                                        {items.map((item, index) => (
+                                            <div key={item.id} className={`animate-fade-in-up delay-${Math.min(index + 1, 8)}`}>
+                                                <MenuCard item={item} />
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))
+                        })()}
+                    </div>
+                ) : (
+                    <div className="py-12 text-center text-[var(--muted-foreground)] animate-fade-in">
+                        {availableItems.length === 0
+                            ? 'This canteen hasn\'t added any menu items yet.'
+                            : 'No items found matching your search.'
+                        }
+                    </div>
+                )}
+            </div>
         </div>
     )
 }

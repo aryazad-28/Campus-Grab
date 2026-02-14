@@ -48,14 +48,13 @@ export default function LoginPage() {
     const [isGoogleLoading, setIsGoogleLoading] = useState(false)
     const [showStudentForm, setShowStudentForm] = useState(false)
 
-    // Redirect if already logged in as student
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && window.location.pathname === '/login') {
             router.push('/menu')
         }
     }, [isAuthenticated, router])
 
-    if (isAuthenticated) return null
+    if (isAuthenticated && typeof window !== 'undefined' && window.location.pathname === '/login') return null
 
     const handleStudentSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -100,29 +99,35 @@ export default function LoginPage() {
     // Role Selection Screen
     if (!showStudentForm) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-neutral-50 dark:bg-neutral-900">
-                {/* Brand Header with Logo */}
-                <div className="text-center mb-10">
+            <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-8 overflow-hidden">
+                {/* Gradient Mesh Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-red-50 via-white to-indigo-50 dark:from-[#0F0F0F] dark:via-[#0F0F0F] dark:to-[#1a0a0a]" />
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-red-400/10 dark:bg-red-900/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-indigo-400/10 dark:bg-indigo-900/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+
+                {/* Content */}
+                <div className="relative z-10 text-center mb-10 animate-fade-in-up">
                     <div className="flex items-center justify-center gap-3 mb-3">
                         <img
                             src="/logo.png"
                             alt="Campus Grab"
                             className="h-14 w-14 rounded-2xl shadow-lg"
                         />
-                        <h1 className="text-4xl font-bold tracking-tight text-white">Campus Grab</h1>
+                        <h1 className="text-4xl font-bold tracking-tight bg-gradient-to-r from-[#991B1B] to-[#DC2626] bg-clip-text text-transparent">
+                            Campus Grab
+                        </h1>
                     </div>
-                    <p className="text-lg text-neutral-500 dark:text-neutral-400">
+                    <p className="text-lg text-slate-500 dark:text-slate-400">
                         Skip the queue. Grab your food faster.
                     </p>
                 </div>
 
-                {/* Role Selection Cards */}
-                <div className="w-full max-w-md space-y-4">
-                    <p className="text-center text-sm text-neutral-500 mb-4">Continue as</p>
+                <div className="relative z-10 w-full max-w-md space-y-4">
+                    <p className="text-center text-sm text-slate-500 mb-4 animate-fade-in-up delay-1">Continue as</p>
 
                     <button
                         onClick={() => setShowStudentForm(true)}
-                        className="w-full p-6 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-neutral-900 dark:hover:border-white transition-all duration-200 group"
+                        className="w-full p-6 rounded-2xl border-2 border-slate-200 dark:border-[#2D2D2D] bg-white/80 dark:bg-[#1A1A1A]/80 backdrop-blur-sm hover:border-red-400 dark:hover:border-red-800 hover:shadow-lg transition-all duration-300 group animate-fade-in-up delay-2"
                     >
                         <div className="flex items-center gap-4">
                             <div className="h-14 w-14 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
@@ -130,29 +135,29 @@ export default function LoginPage() {
                             </div>
                             <div className="text-left">
                                 <h3 className="text-xl font-semibold">Student</h3>
-                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                <p className="text-sm text-slate-500 dark:text-slate-400">
                                     Order food from campus canteens
                                 </p>
                             </div>
-                            <ArrowRight className="ml-auto h-5 w-5 text-neutral-400 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="ml-auto h-5 w-5 text-slate-400 group-hover:translate-x-1 group-hover:text-red-500 transition-all" />
                         </div>
                     </button>
 
                     <button
                         onClick={() => router.push('/admin/login')}
-                        className="w-full p-6 rounded-2xl border-2 border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 hover:border-neutral-900 dark:hover:border-white transition-all duration-200 group"
+                        className="w-full p-6 rounded-2xl border-2 border-slate-200 dark:border-[#2D2D2D] bg-white/80 dark:bg-[#1A1A1A]/80 backdrop-blur-sm hover:border-indigo-400 dark:hover:border-indigo-800 hover:shadow-lg transition-all duration-300 group animate-fade-in-up delay-3"
                     >
                         <div className="flex items-center gap-4">
-                            <div className="h-14 w-14 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                <ShieldCheck className="h-7 w-7 text-blue-600 dark:text-blue-400" />
+                            <div className="h-14 w-14 rounded-xl bg-indigo-100 dark:bg-indigo-900/30 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                <ShieldCheck className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
                             </div>
                             <div className="text-left">
                                 <h3 className="text-xl font-semibold">Canteen Admin</h3>
-                                <p className="text-sm text-neutral-500 dark:text-neutral-400">
+                                <p className="text-sm text-slate-500 dark:text-slate-400">
                                     Manage orders and menu items
                                 </p>
                             </div>
-                            <ArrowRight className="ml-auto h-5 w-5 text-neutral-400 group-hover:translate-x-1 transition-transform" />
+                            <ArrowRight className="ml-auto h-5 w-5 text-slate-400 group-hover:translate-x-1 group-hover:text-indigo-500 transition-all" />
                         </div>
                     </button>
                 </div>
@@ -162,25 +167,31 @@ export default function LoginPage() {
 
     // Student Login Form
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center px-4 py-8 bg-neutral-50 dark:bg-neutral-900">
+        <div className="relative min-h-screen flex flex-col items-center justify-center px-4 py-8 overflow-hidden">
+            {/* Gradient Mesh Background */}
+            <div className="absolute inset-0 bg-gradient-to-br from-red-50 via-white to-slate-50 dark:from-[#0F0F0F] dark:via-[#0F0F0F] dark:to-[#1a0a0a]" />
+            <div className="absolute top-0 left-0 w-[400px] h-[400px] bg-red-400/10 dark:bg-red-900/10 rounded-full blur-3xl -translate-y-1/3" />
+
             {/* Brand Header */}
-            <div className="text-center mb-8">
+            <div className="relative z-10 text-center mb-8 animate-fade-in-up">
                 <div className="flex items-center justify-center gap-3 mb-2">
                     <img
                         src="/logo.png"
                         alt="Campus Grab"
                         className="h-10 w-10 rounded-xl"
                     />
-                    <h1 className="text-3xl font-bold tracking-tight text-white">Campus Grab</h1>
+                    <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-[#991B1B] to-[#DC2626] bg-clip-text text-transparent">
+                        Campus Grab
+                    </h1>
                 </div>
-                <p className="text-neutral-500 dark:text-neutral-400">Skip the queue. Grab your food faster.</p>
+                <p className="text-slate-500 dark:text-slate-400">Skip the queue. Grab your food faster.</p>
             </div>
 
-            <Card className="w-full max-w-sm">
+            <Card className="relative z-10 w-full max-w-sm bg-white/80 dark:bg-[#1A1A1A]/80 backdrop-blur-sm border-slate-200 dark:border-[#2D2D2D] animate-fade-in-up delay-1">
                 <CardHeader className="text-center">
                     <button
                         onClick={() => setShowStudentForm(false)}
-                        className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white mb-2"
+                        className="text-xs text-slate-500 hover:text-red-600 dark:hover:text-red-400 mb-2 transition-colors"
                     >
                         ← Back to role selection
                     </button>
@@ -210,10 +221,10 @@ export default function LoginPage() {
 
                     <div className="relative my-4">
                         <div className="absolute inset-0 flex items-center">
-                            <div className="w-full border-t border-neutral-200 dark:border-neutral-700" />
+                            <div className="w-full border-t border-slate-200 dark:border-[#2D2D2D]" />
                         </div>
                         <div className="relative flex justify-center text-xs uppercase">
-                            <span className="bg-white dark:bg-neutral-800 px-2 text-neutral-500">or</span>
+                            <span className="bg-white dark:bg-[#1A1A1A] px-2 text-slate-500">or</span>
                         </div>
                     </div>
 
@@ -222,7 +233,7 @@ export default function LoginPage() {
                             <div className="space-y-2">
                                 <label className="text-sm font-medium" htmlFor="name">Name</label>
                                 <div className="relative">
-                                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                                    <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                     <Input
                                         id="name"
                                         type="text"
@@ -239,7 +250,7 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-medium" htmlFor="email">Email</label>
                             <div className="relative">
-                                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                 <Input
                                     id="email"
                                     type="email"
@@ -255,7 +266,7 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-medium" htmlFor="password">Password</label>
                             <div className="relative">
-                                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                 <Input
                                     id="password"
                                     type="password"
@@ -268,7 +279,7 @@ export default function LoginPage() {
                                 />
                             </div>
                             {mode === 'signin' && (
-                                <Link href="/forgot-password" className="text-xs text-neutral-500 hover:text-neutral-900 dark:hover:text-white">
+                                <Link href="/forgot-password" className="text-xs text-slate-500 hover:text-red-600 dark:hover:text-red-400 transition-colors">
                                     Forgot password?
                                 </Link>
                             )}
@@ -293,7 +304,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => { setMode('signup'); setMessage(null) }}
-                                    className="font-medium underline"
+                                    className="font-medium text-red-600 dark:text-red-400 underline hover:no-underline"
                                 >
                                     Sign up
                                 </button>
@@ -304,7 +315,7 @@ export default function LoginPage() {
                                 <button
                                     type="button"
                                     onClick={() => { setMode('signin'); setMessage(null) }}
-                                    className="font-medium underline"
+                                    className="font-medium text-red-600 dark:text-red-400 underline hover:no-underline"
                                 >
                                     Sign in
                                 </button>

@@ -6,17 +6,12 @@ import { useState } from 'react'
 import { MenuItem } from '@/lib/supabase'
 import { useCart } from './CartProvider'
 import { formatPrice, formatTime } from '@/lib/utils'
-import { Card, CardContent } from './ui/card'
-import { Badge } from './ui/badge'
-import { Button } from './ui/button'
-import { useTranslations } from 'next-intl'
 
 interface MenuCardProps {
     item: MenuItem
 }
 
 export function MenuCard({ item }: MenuCardProps) {
-    const t = useTranslations('Menu')
     const { addToCart } = useCart()
     const [added, setAdded] = useState(false)
 
@@ -28,62 +23,52 @@ export function MenuCard({ item }: MenuCardProps) {
             eta_minutes: item.eta_minutes
         })
         setAdded(true)
-        setTimeout(() => setAdded(false), 1500)
+        setTimeout(() => setAdded(false), 1200)
     }
 
     return (
-        <Card className="overflow-hidden transition-shadow hover:shadow-md active:shadow-sm">
-            {/* Image - smaller on mobile */}
-            <div className="relative aspect-[16/10] overflow-hidden bg-neutral-100 sm:aspect-[4/3]">
+        <div className="group">
+            {/* Food Image with time badge */}
+            <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#252525] dark:bg-[#252525] mb-2.5">
                 {item.image_url ? (
                     <Image
                         src={item.image_url}
                         alt={item.name}
                         fill
-                        className="object-cover"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                 ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                        {t('noImage')}
+                    <div className="flex h-full items-center justify-center bg-[#1E1E1E]">
+                        <span className="text-4xl">🍽️</span>
                     </div>
                 )}
-                <Badge className="absolute right-2 top-2 text-xs" variant="secondary">
-                    {item.category}
-                </Badge>
+
+                {/* Time badge - top right like Figma */}
+                <div className="absolute top-2 right-2 flex items-center gap-0.5 rounded-full bg-green-500/90 px-2 py-0.5 text-[10px] font-semibold text-white backdrop-blur-sm">
+                    <Clock className="h-2.5 w-2.5" />
+                    {item.eta_minutes}m
+                </div>
             </div>
 
-            {/* Content - larger touch targets */}
-            <CardContent className="p-3 sm:p-4">
-                <div className="mb-2 flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-medium leading-tight sm:text-base">{item.name}</h3>
-                    <span className="shrink-0 text-sm font-semibold sm:text-base">{formatPrice(item.price)}</span>
+            {/* Name + Price + Add button row */}
+            <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-medium leading-tight truncate">{item.name}</h3>
+                    <span className="text-sm font-semibold text-red-500">{formatPrice(item.price)}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-xs text-neutral-500 sm:text-sm">
-                        <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                        <span>{formatTime(item.eta_minutes)}</span>
-                    </div>
-                    {/* Larger button for mobile touch */}
-                    <Button
-                        size="sm"
-                        onClick={handleAdd}
-                        className="h-9 min-w-[80px] gap-1 text-xs sm:h-8 sm:text-sm"
-                        disabled={added}
-                    >
-                        {added ? (
-                            <>
-                                <Check className="h-3.5 w-3.5" />
-                                {t('added')}
-                            </>
-                        ) : (
-                            <>
-                                <Plus className="h-3.5 w-3.5" />
-                                {t('add')}
-                            </>
-                        )}
-                    </Button>
-                </div>
-            </CardContent>
-        </Card>
+
+                {/* Circular red + button (matching Figma exactly) */}
+                <button
+                    onClick={handleAdd}
+                    disabled={added}
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all active:scale-90 ${added
+                            ? 'bg-green-500 text-white'
+                            : 'bg-red-500 text-white hover:bg-red-600'
+                        }`}
+                >
+                    {added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                </button>
+            </div>
+        </div>
     )
 }

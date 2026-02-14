@@ -3,7 +3,7 @@
 import { Header } from "@/components/Header"
 import { CurrentOrderBanner } from "@/components/CurrentOrderBanner"
 import { ThemeProvider } from "@/components/ThemeProvider"
-import { MobileNav } from "@/components/MobileNav"
+import { BottomNav } from "@/components/BottomNav"
 
 export default function StudentLayout({
     children,
@@ -13,11 +13,11 @@ export default function StudentLayout({
     return (
         <ThemeProvider>
             <Header />
-            <main className="min-h-[calc(100vh-4rem)] pb-24 sm:pb-8">
+            <main className="min-h-[calc(100vh-4rem)] pb-20 sm:pb-8">
                 {children}
             </main>
             <CurrentOrderBanner />
-            <MobileNav />
+            <BottomNav />
         </ThemeProvider>
     )
 }
