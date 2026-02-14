@@ -4,16 +4,18 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#F75412]/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97]",
+    "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500/50 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 active:scale-[0.97]",
     {
         variants: {
             variant: {
-                default: "bg-gradient-to-r from-[#C33811] via-[#F75412] to-[#FB882C] text-white shadow-md hover:shadow-lg hover:brightness-110 active:brightness-95",
-                secondary: "bg-[#fdf5f0] text-[#C33811] border border-[#f0e0d6] hover:bg-[#fff0e6] dark:bg-[#241a15] dark:text-[#FB882C] dark:border-[#2d1f1a] dark:hover:bg-[#2d1f1a]",
-                outline: "border border-[#f0e0d6] dark:border-[#2d1f1a] bg-transparent hover:bg-[#fdf5f0] dark:hover:bg-[#241a15] text-[#1a0a05] dark:text-[#faf5f2]",
-                ghost: "hover:bg-[#fdf5f0] dark:hover:bg-[#241a15] text-[#1a0a05] dark:text-[#faf5f2]",
-                destructive: "bg-[#dc2626] text-white hover:bg-[#b91c1c] shadow-sm",
-                brand: "bg-gradient-to-r from-[#6D0C14] via-[#C33811] to-[#F75412] text-white shadow-lg hover:shadow-xl hover:brightness-110 glow-brand",
+                default: "bg-gradient-to-r from-[#991B1B] via-[#DC2626] to-[#EF4444] text-white shadow-md hover:shadow-lg hover:brightness-110 active:brightness-95",
+                secondary: "bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 dark:hover:bg-slate-700",
+                outline: "border border-slate-200 dark:border-slate-700 bg-transparent hover:bg-slate-50 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200",
+                ghost: "hover:bg-slate-100 dark:hover:bg-slate-800/50 text-slate-700 dark:text-slate-200",
+                destructive: "bg-red-600 text-white hover:bg-red-700 shadow-sm",
+                brand: "bg-gradient-to-r from-[#7F1D1D] via-[#991B1B] to-[#DC2626] text-white shadow-lg hover:shadow-xl hover:brightness-110 glow-brand",
+                indigo: "bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md hover:shadow-lg hover:brightness-110",
+                emerald: "bg-gradient-to-r from-emerald-600 to-emerald-500 text-white shadow-md hover:shadow-lg hover:brightness-110",
             },
             size: {
                 default: "h-10 px-4 py-2",

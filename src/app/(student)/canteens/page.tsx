@@ -103,13 +103,13 @@ export default function CanteensPage() {
         <div className="container mx-auto px-4 py-6 pb-32">
             <div className="mb-6 animate-fade-in-up">
                 <h1 className="text-xl font-bold sm:text-2xl mb-1">
-                    <span className="bg-gradient-to-r from-[#C33811] to-[#F75412] bg-clip-text text-transparent">Canteens</span> Near You
+                    <span className="bg-gradient-to-r from-[#991B1B] to-[#DC2626] bg-clip-text text-transparent">Canteens</span> Near You
                 </h1>
-                <p className="text-sm text-[#8a7060]">Select a canteen to browse their menu</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400">Select a canteen to browse their menu</p>
             </div>
 
             {locationStatus === 'requesting' && (
-                <div className="mb-4 flex items-center gap-2 rounded-xl bg-[#fdf5f0] dark:bg-[#241a15] px-4 py-3 text-sm text-[#C33811] animate-fade-in">
+                <div className="mb-4 flex items-center gap-2 rounded-xl bg-indigo-50 dark:bg-indigo-900/20 px-4 py-3 text-sm text-indigo-700 dark:text-indigo-300 animate-fade-in">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     <span>Getting your location to find nearby canteens...</span>
                 </div>
@@ -149,7 +149,7 @@ export default function CanteensPage() {
             )}
 
             <div className="relative mb-6 animate-fade-in-up delay-1">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8a7060]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                 <Input
                     type="search"
                     placeholder="Search by name, college, or area..."
@@ -168,7 +168,7 @@ export default function CanteensPage() {
                     {filteredCanteens.map((canteen, index) => (
                         <Card
                             key={canteen.id}
-                            className={`cursor-pointer hover:border-[#FB882C] dark:hover:border-[#FB882C] hover:shadow-md transition-all active:scale-[0.98] animate-fade-in-up delay-${Math.min(index + 1, 8)}`}
+                            className={`cursor-pointer hover:border-red-300 dark:hover:border-red-800 hover:shadow-md transition-all active:scale-[0.98] animate-fade-in-up delay-${Math.min(index + 1, 8)}`}
                             onClick={() => {
                                 localStorage.setItem('campus-grab-selected-canteen', canteen.id)
                                 router.push(`/menu?canteen=${canteen.id}`)
@@ -176,19 +176,19 @@ export default function CanteensPage() {
                         >
                             <CardContent className="p-4">
                                 <div className="flex items-start gap-3">
-                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#F75412]/10 to-[#FB882C]/10 dark:from-[#F75412]/20 dark:to-[#FB882C]/20">
-                                        <Store className="h-6 w-6 text-[#F75412]" />
+                                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/10">
+                                        <Store className="h-6 w-6 text-red-600 dark:text-red-400" />
                                     </div>
                                     <div className="flex-1 min-w-0">
                                         <h3 className="font-semibold text-base truncate">{canteen.canteen_name}</h3>
-                                        <p className="text-sm text-[#8a7060] truncate">{canteen.college_name}</p>
+                                        <p className="text-sm text-slate-500 dark:text-slate-400 truncate">{canteen.college_name}</p>
                                         <div className="flex items-center gap-3 mt-2 flex-wrap">
-                                            <span className="flex items-center gap-1 text-xs text-[#8a7060]">
+                                            <span className="flex items-center gap-1 text-xs text-slate-500 dark:text-slate-400">
                                                 <MapPin className="h-3 w-3" />
                                                 {canteen.area}
                                             </span>
                                             {canteen.distance !== undefined && (
-                                                <Badge variant="secondary" className="text-[10px] px-1.5">
+                                                <Badge variant="indigo" className="text-[10px] px-1.5">
                                                     <Navigation className="h-2.5 w-2.5 mr-0.5" />
                                                     {formatDistance(canteen.distance)}
                                                 </Badge>
@@ -206,11 +206,11 @@ export default function CanteensPage() {
                 </div>
             ) : (
                 <div className="py-16 text-center animate-fade-in">
-                    <Store className="mx-auto h-12 w-12 text-[#8a7060] mb-4 opacity-40" />
+                    <Store className="mx-auto h-12 w-12 text-slate-400 mb-4 opacity-40" />
                     <h2 className="text-lg font-medium mb-2">
                         {searchQuery ? 'No canteens found' : 'No canteens available yet'}
                     </h2>
-                    <p className="text-sm text-[#8a7060]">
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
                         {searchQuery ? 'Try a different search term' : 'Check back later — canteens are being set up'}
                     </p>
                 </div>

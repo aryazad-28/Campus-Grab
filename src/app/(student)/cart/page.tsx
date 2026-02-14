@@ -3,7 +3,7 @@
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Minus, Plus, Trash2, ArrowLeft, Clock, CreditCard, Loader2 } from 'lucide-react'
+import { Minus, Plus, Trash2, ArrowLeft, Clock, CreditCard, Loader2, ShoppingBag, Check } from 'lucide-react'
 import { useCart } from '@/components/CartProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { useAuth } from '@/components/AuthProvider'
@@ -20,7 +20,7 @@ export default function CartPage() {
     return (
         <Suspense fallback={
             <div className="flex min-h-[50vh] items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-red-500" />
             </div>
         }>
             <CartContent />
@@ -56,7 +56,6 @@ function CartContent() {
         setIsProcessing(true)
 
         try {
-            // Create order — this saves to Supabase automatically via OrdersProvider
             const newOrder = await addOrder({
                 items: items.map(item => ({
                     name: item.name,
@@ -70,11 +69,9 @@ function CartContent() {
                 payment_method: 'online'
             })
 
-            // Get token from the returned order
             setOrderToken(newOrder.token_number)
             setOrderTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
 
-            // Track for AI learning
             trackNewOrder({
                 orderId: newOrder.id,
                 items: items.map(item => ({
@@ -90,7 +87,6 @@ function CartContent() {
         } catch (err: any) {
             console.error('Order error:', err)
             alert(err.message || 'Failed to place order. Please try again.')
-            // Do not clear cart or proceed to confirmation on error
         } finally {
             setIsProcessing(false)
         }
@@ -99,9 +95,14 @@ function CartContent() {
     // Empty cart view
     if (items.length === 0 && step === 'cart') {
         return (
-            <div className="container mx-auto px-4 py-16 text-center">
-                <h1 className="mb-4 text-2xl font-semibold">{t('emptyTitle')}</h1>
-                <p className="mb-8 text-neutral-500">{t('emptySubtitle')}</p>
+            <div className="container mx-auto px-4 py-16 text-center animate-fade-in-up">
+                <div className="mb-6 flex justify-center">
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 animate-float">
+                        <ShoppingBag className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+                    </div>
+                </div>
+                <h1 className="mb-2 text-2xl font-semibold">{t('emptyTitle')}</h1>
+                <p className="mb-8 text-slate-500 dark:text-slate-400">{t('emptySubtitle')}</p>
                 <Link href="/menu">
                     <Button>{t('browseMenu')}</Button>
                 </Link>
@@ -113,42 +114,40 @@ function CartContent() {
     if (step === 'confirmation') {
         return (
             <div className="container mx-auto max-w-md px-4 py-16 text-center">
-                <div className="mb-6 flex justify-center">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
-                        <svg className="h-8 w-8 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
+                <div className="mb-6 flex justify-center animate-bounce-in">
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                        <Check className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
                     </div>
                 </div>
-                <h1 className="mb-2 text-2xl font-semibold">{t('orderPlaced')}</h1>
-                <p className="mb-6 text-neutral-500">{t('orderSent')}</p>
+                <h1 className="mb-2 text-2xl font-semibold animate-fade-in-up delay-1">{t('orderPlaced')}</h1>
+                <p className="mb-6 text-slate-500 dark:text-slate-400 animate-fade-in-up delay-2">{t('orderSent')}</p>
 
-                <Card className="mb-6 text-left">
+                <Card className="mb-6 text-left animate-fade-in-up delay-3">
                     <CardContent className="p-4 space-y-2">
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">{t('tokenNumber')}</span>
-                            <span className="font-mono text-lg font-bold">{orderToken}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{t('tokenNumber')}</span>
+                            <span className="font-mono text-lg font-bold text-red-600 dark:text-red-400">{orderToken}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">{t('orderTime')}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{t('orderTime')}</span>
                             <span className="text-sm">{orderTime}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">{t('status')}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{t('status')}</span>
                             <Badge variant="warning">{t('pendingApproval')}</Badge>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">{t('payment')}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{t('payment')}</span>
                             <Badge variant="success">{t('paidOnline')}</Badge>
                         </div>
                     </CardContent>
                 </Card>
 
-                <p className="mb-6 text-sm text-neutral-500">
+                <p className="mb-6 text-sm text-slate-500 dark:text-slate-400 animate-fade-in-up delay-4">
                     {t('notificationHint')}
                 </p>
 
-                <div className="space-y-3">
+                <div className="space-y-3 animate-fade-in-up delay-5">
                     <Link href="/orders">
                         <Button className="w-full">{t('trackOrder')}</Button>
                     </Link>
@@ -160,24 +159,24 @@ function CartContent() {
         )
     }
 
-    // Payment view - Online only
+    // Payment view
     if (step === 'payment') {
         return (
-            <div className="container mx-auto max-w-md px-4 py-8">
+            <div className="container mx-auto max-w-md px-4 py-8 pb-32">
                 <button
                     onClick={() => setStep('cart')}
-                    className="mb-6 flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900"
+                    className="mb-6 flex items-center gap-2 text-sm text-slate-500 hover:text-red-600 transition-colors"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     {t('backToCart')}
                 </button>
 
-                <h1 className="mb-6 text-2xl font-semibold">{t('paymentTitle')}</h1>
+                <h1 className="mb-6 text-2xl font-semibold animate-fade-in-up">{t('paymentTitle')}</h1>
 
                 {!isAuthenticated && (
-                    <Card className="mb-6 border-amber-200 bg-amber-50">
+                    <Card className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800/40 dark:bg-amber-900/10 animate-fade-in-up delay-1">
                         <CardContent className="p-4">
-                            <p className="text-sm text-amber-800 mb-3">{t('signInPrompt')}</p>
+                            <p className="text-sm text-amber-800 dark:text-amber-300 mb-3">{t('signInPrompt')}</p>
                             <Link href="/login">
                                 <Button size="sm">{t('signIn')}</Button>
                             </Link>
@@ -185,36 +184,36 @@ function CartContent() {
                     </Card>
                 )}
 
-                <Card className="mb-6">
+                <Card className="mb-6 animate-fade-in-up delay-2">
                     <CardHeader className="pb-3">
                         <CardTitle className="text-base">{t('paymentMethod')}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4">
+                        <div className="rounded-xl border border-emerald-300 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10 p-4">
                             <div className="flex items-center gap-3">
-                                <CreditCard className="h-5 w-5 text-emerald-600" />
+                                <CreditCard className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                                 <div>
-                                    <p className="font-medium text-emerald-900">{t('onlinePayment')}</p>
-                                    <p className="text-sm text-emerald-700">{t('paymentDesc')}</p>
+                                    <p className="font-medium text-emerald-900 dark:text-emerald-300">{t('onlinePayment')}</p>
+                                    <p className="text-sm text-emerald-700 dark:text-emerald-400">{t('paymentDesc')}</p>
                                 </div>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Card className="mb-6">
+                <Card className="mb-6 animate-fade-in-up delay-3">
                     <CardContent className="p-4 space-y-2">
                         <div className="flex justify-between text-sm">
-                            <span className="text-neutral-500">{t('subtotal')}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{t('subtotal')}</span>
                             <span>{formatPrice(cartTotal)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-neutral-500">{t('tax')}</span>
+                            <span className="text-slate-500 dark:text-slate-400">{t('tax')}</span>
                             <span>{formatPrice(tax)}</span>
                         </div>
-                        <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">
+                        <div className="border-t border-slate-200 dark:border-[#2D2D2D] pt-2 flex justify-between font-medium">
                             <span>{t('total')}</span>
-                            <span>{formatPrice(total)}</span>
+                            <span className="text-red-600 dark:text-red-400">{formatPrice(total)}</span>
                         </div>
                     </CardContent>
                 </Card>
@@ -240,51 +239,53 @@ function CartContent() {
 
     // Cart view
     return (
-        <div className="container mx-auto max-w-2xl px-4 py-8">
-            <Link href="/menu" className="mb-6 flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900">
+        <div className="container mx-auto max-w-2xl px-4 py-8 pb-32">
+            <Link href="/menu" className="mb-6 flex items-center gap-2 text-sm text-slate-500 hover:text-red-600 transition-colors animate-fade-in">
                 <ArrowLeft className="h-4 w-4" />
                 {t('continueShopping')}
             </Link>
 
-            <h1 className="mb-6 text-2xl font-semibold">{t('yourCart')}</h1>
+            <h1 className="mb-6 text-2xl font-semibold animate-fade-in-up">
+                <span className="bg-gradient-to-r from-[#991B1B] to-[#DC2626] bg-clip-text text-transparent">{t('yourCart')}</span>
+            </h1>
 
             <div className="space-y-4 mb-6">
-                {items.map(item => (
-                    <Card key={item.id}>
+                {items.map((item, index) => (
+                    <Card key={item.id} className={`animate-fade-in-up delay-${Math.min(index + 1, 8)}`}>
                         <CardContent className="flex items-center gap-4 p-4">
-                            <div className="flex-1">
-                                <h3 className="font-medium">{item.name}</h3>
-                                <p className="text-sm text-neutral-500">{formatPrice(item.price)} each</p>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-medium truncate">{item.name}</h3>
+                                <p className="text-sm text-slate-500 dark:text-slate-400">{formatPrice(item.price)} each</p>
                             </div>
 
                             <div className="flex items-center gap-2">
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="h-8 w-8"
+                                    className="h-8 w-8 rounded-full hover:border-red-300 hover:text-red-600 active:scale-90 transition-all"
                                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
                                 >
-                                    <Minus className="h-4 w-4" />
+                                    <Minus className="h-3 w-3" />
                                 </Button>
-                                <span className="w-8 text-center">{item.quantity}</span>
+                                <span className="w-8 text-center font-medium">{item.quantity}</span>
                                 <Button
                                     variant="outline"
                                     size="icon"
-                                    className="h-8 w-8"
+                                    className="h-8 w-8 rounded-full hover:border-emerald-300 hover:text-emerald-600 active:scale-90 transition-all"
                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
                                 >
-                                    <Plus className="h-4 w-4" />
+                                    <Plus className="h-3 w-3" />
                                 </Button>
                             </div>
 
-                            <div className="w-20 text-right font-medium">
+                            <div className="w-20 text-right font-medium text-red-600 dark:text-red-400">
                                 {formatPrice(item.price * item.quantity)}
                             </div>
 
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-neutral-400 hover:text-red-500"
+                                className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-90 transition-all"
                                 onClick={() => removeFromCart(item.id)}
                             >
                                 <Trash2 className="h-4 w-4" />
@@ -295,35 +296,35 @@ function CartContent() {
             </div>
 
             {/* Estimated Time */}
-            <Card className="mb-6 border-blue-200 bg-blue-50">
+            <Card className="mb-6 border-indigo-200 dark:border-indigo-800/40 bg-indigo-50 dark:bg-indigo-900/10 animate-fade-in-up delay-3">
                 <CardContent className="flex items-center gap-3 p-4">
-                    <Clock className="h-5 w-5 text-blue-600" />
+                    <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
                     <div>
-                        <p className="text-sm text-blue-700">{t('estimatedTime')}</p>
+                        <p className="text-sm text-indigo-700 dark:text-indigo-300">{t('estimatedTime')}</p>
                         <p className="font-medium">{formatTime(maxEta)}</p>
                     </div>
                 </CardContent>
             </Card>
 
             {/* Summary */}
-            <Card className="mb-6">
+            <Card className="mb-6 animate-fade-in-up delay-4">
                 <CardContent className="p-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                        <span className="text-neutral-500">{t('subtotal')}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{t('subtotal')}</span>
                         <span>{formatPrice(cartTotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span className="text-neutral-500">{t('tax')}</span>
+                        <span className="text-slate-500 dark:text-slate-400">{t('tax')}</span>
                         <span>{formatPrice(tax)}</span>
                     </div>
-                    <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">
+                    <div className="border-t border-slate-200 dark:border-[#2D2D2D] pt-2 flex justify-between font-medium">
                         <span>{t('total')}</span>
-                        <span>{formatPrice(total)}</span>
+                        <span className="text-red-600 dark:text-red-400 text-lg">{formatPrice(total)}</span>
                     </div>
                 </CardContent>
             </Card>
 
-            <Button className="w-full" size="lg" onClick={() => setStep('payment')}>
+            <Button className="w-full animate-fade-in-up delay-5" size="lg" onClick={() => setStep('payment')}>
                 {t('proceedToPayment')}
             </Button>
         </div>
