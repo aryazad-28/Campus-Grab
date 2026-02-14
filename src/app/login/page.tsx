@@ -49,12 +49,12 @@ export default function LoginPage() {
     const [showStudentForm, setShowStudentForm] = useState(false)
 
     useEffect(() => {
-        if (isAuthenticated) {
+        if (isAuthenticated && window.location.pathname === '/login') {
             router.push('/menu')
         }
     }, [isAuthenticated, router])
 
-    if (isAuthenticated) return null
+    if (isAuthenticated && typeof window !== 'undefined' && window.location.pathname === '/login') return null
 
     const handleStudentSubmit = async (e: React.FormEvent) => {
         e.preventDefault()

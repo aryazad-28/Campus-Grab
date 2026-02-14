@@ -12,7 +12,13 @@ export default function HomePage() {
   useEffect(() => {
     if (!isLoading) {
       if (isAuthenticated) {
-        router.push('/canteens')
+        // Check if this user has an admin profile stored
+        const adminData = localStorage.getItem('campus-grab-admin')
+        if (adminData) {
+          router.push('/admin')
+        } else {
+          router.push('/canteens')
+        }
       } else {
         router.push('/login')
       }
@@ -25,3 +31,4 @@ export default function HomePage() {
     </div>
   )
 }
+
