@@ -2,6 +2,7 @@
 
 import { useState, Suspense } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Minus, Plus, Trash2, ArrowLeft, Clock, CreditCard, Loader2, ShoppingBag, Check } from 'lucide-react'
 import { useCart } from '@/components/CartProvider'
@@ -11,7 +12,6 @@ import { useAI } from '@/components/AIProvider'
 import { formatPrice, formatTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 
 type CheckoutStep = 'cart' | 'payment' | 'confirmation'
@@ -48,40 +48,23 @@ function CartContent() {
 
     const handlePlaceOrder = async () => {
         if (items.length === 0) return
-        if (!isAuthenticated) {
-            router.push('/login')
-            return
-        }
-
+        if (!isAuthenticated) { router.push('/login'); return }
         setIsProcessing(true)
-
         try {
             const newOrder = await addOrder({
-                items: items.map(item => ({
-                    name: item.name,
-                    quantity: item.quantity,
-                    price: item.price
-                })),
+                items: items.map(item => ({ name: item.name, quantity: item.quantity, price: item.price })),
                 total: total,
                 status: 'pending',
                 estimated_time: maxEta,
                 admin_id: canteenId || undefined,
                 payment_method: 'online'
             })
-
             setOrderToken(newOrder.token_number)
             setOrderTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
-
             trackNewOrder({
                 orderId: newOrder.id,
-                items: items.map(item => ({
-                    itemId: item.id,
-                    itemName: item.name,
-                    canteenId: canteenId || '1',
-                    estimatedTime: item.eta_minutes
-                }))
+                items: items.map(item => ({ itemId: item.id, itemName: item.name, canteenId: canteenId || '1', estimatedTime: item.eta_minutes }))
             })
-
             clearCart()
             setStep('confirmation')
         } catch (err: any) {
@@ -92,17 +75,17 @@ function CartContent() {
         }
     }
 
-    // Empty cart view
+    // Empty cart
     if (items.length === 0 && step === 'cart') {
         return (
             <div className="container mx-auto px-4 py-16 text-center animate-fade-in-up">
                 <div className="mb-6 flex justify-center">
-                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 animate-float">
-                        <ShoppingBag className="h-10 w-10 text-slate-300 dark:text-slate-600" />
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[var(--card)] animate-float">
+                        <ShoppingBag className="h-10 w-10 text-[var(--muted-foreground)] opacity-40" />
                     </div>
                 </div>
-                <h1 className="mb-2 text-2xl font-semibold">{t('emptyTitle')}</h1>
-                <p className="mb-8 text-slate-500 dark:text-slate-400">{t('emptySubtitle')}</p>
+                <h1 className="mb-2 text-xl font-semibold">{t('emptyTitle')}</h1>
+                <p className="mb-8 text-[var(--muted-foreground)]">{t('emptySubtitle')}</p>
                 <Link href="/menu">
                     <Button>{t('browseMenu')}</Button>
                 </Link>
@@ -110,44 +93,38 @@ function CartContent() {
         )
     }
 
-    // Order confirmation view
+    // Confirmation
     if (step === 'confirmation') {
         return (
             <div className="container mx-auto max-w-md px-4 py-16 text-center">
                 <div className="mb-6 flex justify-center animate-bounce-in">
-                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                        <Check className="h-8 w-8 text-emerald-600 dark:text-emerald-400" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-green-500/10">
+                        <Check className="h-8 w-8 text-green-500" />
                     </div>
                 </div>
-                <h1 className="mb-2 text-2xl font-semibold animate-fade-in-up delay-1">{t('orderPlaced')}</h1>
-                <p className="mb-6 text-slate-500 dark:text-slate-400 animate-fade-in-up delay-2">{t('orderSent')}</p>
+                <h1 className="mb-2 text-xl font-semibold animate-fade-in-up delay-1">{t('orderPlaced')}</h1>
+                <p className="mb-6 text-[var(--muted-foreground)] animate-fade-in-up delay-2">{t('orderSent')}</p>
 
-                <Card className="mb-6 text-left animate-fade-in-up delay-3">
-                    <CardContent className="p-4 space-y-2">
-                        <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">{t('tokenNumber')}</span>
-                            <span className="font-mono text-lg font-bold text-red-600 dark:text-red-400">{orderToken}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">{t('orderTime')}</span>
-                            <span className="text-sm">{orderTime}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">{t('status')}</span>
-                            <Badge variant="warning">{t('pendingApproval')}</Badge>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500 dark:text-slate-400">{t('payment')}</span>
-                            <Badge variant="success">{t('paidOnline')}</Badge>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="mb-6 rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 space-y-3 text-left animate-fade-in-up delay-3">
+                    <div className="flex justify-between">
+                        <span className="text-[var(--muted-foreground)]">{t('tokenNumber')}</span>
+                        <span className="font-mono text-lg font-bold text-red-500">{orderToken}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-[var(--muted-foreground)]">{t('orderTime')}</span>
+                        <span className="text-sm">{orderTime}</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-[var(--muted-foreground)]">{t('status')}</span>
+                        <Badge variant="warning">{t('pendingApproval')}</Badge>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-[var(--muted-foreground)]">{t('payment')}</span>
+                        <Badge variant="success">{t('paidOnline')}</Badge>
+                    </div>
+                </div>
 
-                <p className="mb-6 text-sm text-slate-500 dark:text-slate-400 animate-fade-in-up delay-4">
-                    {t('notificationHint')}
-                </p>
-
-                <div className="space-y-3 animate-fade-in-up delay-5">
+                <div className="space-y-3 animate-fade-in-up delay-4">
                     <Link href="/orders">
                         <Button className="w-full">{t('trackOrder')}</Button>
                     </Link>
@@ -159,174 +136,148 @@ function CartContent() {
         )
     }
 
-    // Payment view
+    // Payment
     if (step === 'payment') {
         return (
             <div className="container mx-auto max-w-md px-4 py-8 pb-32">
-                <button
-                    onClick={() => setStep('cart')}
-                    className="mb-6 flex items-center gap-2 text-sm text-slate-500 hover:text-red-600 transition-colors"
-                >
+                <button onClick={() => setStep('cart')} className="mb-6 flex items-center gap-2 text-sm text-[var(--muted-foreground)] hover:text-red-500 transition-colors">
                     <ArrowLeft className="h-4 w-4" />
                     {t('backToCart')}
                 </button>
 
-                <h1 className="mb-6 text-2xl font-semibold animate-fade-in-up">{t('paymentTitle')}</h1>
+                <h1 className="mb-6 text-xl font-semibold">{t('paymentTitle')}</h1>
 
                 {!isAuthenticated && (
-                    <Card className="mb-6 border-amber-200 bg-amber-50 dark:border-amber-800/40 dark:bg-amber-900/10 animate-fade-in-up delay-1">
-                        <CardContent className="p-4">
-                            <p className="text-sm text-amber-800 dark:text-amber-300 mb-3">{t('signInPrompt')}</p>
-                            <Link href="/login">
-                                <Button size="sm">{t('signIn')}</Button>
-                            </Link>
-                        </CardContent>
-                    </Card>
+                    <div className="mb-6 rounded-2xl bg-amber-500/10 border border-amber-500/20 p-4">
+                        <p className="text-sm text-amber-500 mb-3">{t('signInPrompt')}</p>
+                        <Link href="/login"><Button size="sm">{t('signIn')}</Button></Link>
+                    </div>
                 )}
 
-                <Card className="mb-6 animate-fade-in-up delay-2">
-                    <CardHeader className="pb-3">
-                        <CardTitle className="text-base">{t('paymentMethod')}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <div className="rounded-xl border border-emerald-300 dark:border-emerald-800/40 bg-emerald-50 dark:bg-emerald-900/10 p-4">
-                            <div className="flex items-center gap-3">
-                                <CreditCard className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-                                <div>
-                                    <p className="font-medium text-emerald-900 dark:text-emerald-300">{t('onlinePayment')}</p>
-                                    <p className="text-sm text-emerald-700 dark:text-emerald-400">{t('paymentDesc')}</p>
-                                </div>
+                <div className="mb-6 rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4">
+                    <h3 className="text-sm font-medium mb-3">{t('paymentMethod')}</h3>
+                    <div className="rounded-xl bg-green-500/10 border border-green-500/20 p-4">
+                        <div className="flex items-center gap-3">
+                            <CreditCard className="h-5 w-5 text-green-500" />
+                            <div>
+                                <p className="font-medium">{t('onlinePayment')}</p>
+                                <p className="text-sm text-[var(--muted-foreground)]">{t('paymentDesc')}</p>
                             </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </div>
 
-                <Card className="mb-6 animate-fade-in-up delay-3">
-                    <CardContent className="p-4 space-y-2">
-                        <div className="flex justify-between text-sm">
-                            <span className="text-slate-500 dark:text-slate-400">{t('subtotal')}</span>
-                            <span>{formatPrice(cartTotal)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-slate-500 dark:text-slate-400">{t('tax')}</span>
-                            <span>{formatPrice(tax)}</span>
-                        </div>
-                        <div className="border-t border-slate-200 dark:border-[#2D2D2D] pt-2 flex justify-between font-medium">
-                            <span>{t('total')}</span>
-                            <span className="text-red-600 dark:text-red-400">{formatPrice(total)}</span>
-                        </div>
-                    </CardContent>
-                </Card>
+                <div className="mb-6 rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                        <span className="text-[var(--muted-foreground)]">{t('subtotal')}</span>
+                        <span>{formatPrice(cartTotal)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                        <span className="text-[var(--muted-foreground)]">{t('tax')}</span>
+                        <span>{formatPrice(tax)}</span>
+                    </div>
+                    <div className="border-t border-[var(--border)] pt-2 flex justify-between font-medium">
+                        <span>{t('total')}</span>
+                        <span className="text-red-500">{formatPrice(total)}</span>
+                    </div>
+                </div>
 
-                <Button
-                    className="w-full"
-                    size="lg"
+                <button
                     onClick={handlePlaceOrder}
                     disabled={isProcessing || !isAuthenticated}
+                    className="w-full h-12 rounded-2xl bg-red-500 text-white font-semibold text-base hover:bg-red-600 disabled:opacity-50 transition-all active:scale-[0.98]"
                 >
                     {isProcessing ? (
-                        <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <span className="flex items-center justify-center gap-2">
+                            <Loader2 className="h-4 w-4 animate-spin" />
                             {t('processing')}
-                        </>
+                        </span>
                     ) : (
                         `${t('pay')} ${formatPrice(total)}`
                     )}
-                </Button>
+                </button>
             </div>
         )
     }
 
-    // Cart view
+    // Cart view — matching Figma: food images, quantity controls, red delete, big red CTA
     return (
-        <div className="container mx-auto max-w-2xl px-4 py-8 pb-32">
-            <Link href="/menu" className="mb-6 flex items-center gap-2 text-sm text-slate-500 hover:text-red-600 transition-colors animate-fade-in">
-                <ArrowLeft className="h-4 w-4" />
-                {t('continueShopping')}
-            </Link>
+        <div className="container mx-auto max-w-2xl px-4 py-6 pb-32">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6 animate-fade-in-up">
+                <div className="flex items-center gap-3">
+                    <Link href="/menu" className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--card)] border border-[var(--border)] hover:border-red-500/30 transition-colors">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                    <div>
+                        <h1 className="text-lg font-semibold">{t('yourCart')}</h1>
+                        <p className="text-xs text-[var(--muted-foreground)]">{items.length} items</p>
+                    </div>
+                </div>
+                {/* Red trash icon top right — exactly like Figma */}
+                <button className="flex h-9 w-9 items-center justify-center rounded-full bg-red-500/10 text-red-500 hover:bg-red-500/20 transition-colors">
+                    <Trash2 className="h-4 w-4" />
+                </button>
+            </div>
 
-            <h1 className="mb-6 text-2xl font-semibold animate-fade-in-up">
-                <span className="bg-gradient-to-r from-[#991B1B] to-[#DC2626] bg-clip-text text-transparent">{t('yourCart')}</span>
-            </h1>
-
+            {/* Cart items — with food images like Figma */}
             <div className="space-y-4 mb-6">
                 {items.map((item, index) => (
-                    <Card key={item.id} className={`animate-fade-in-up delay-${Math.min(index + 1, 8)}`}>
-                        <CardContent className="flex items-center gap-4 p-4">
-                            <div className="flex-1 min-w-0">
-                                <h3 className="font-medium truncate">{item.name}</h3>
-                                <p className="text-sm text-slate-500 dark:text-slate-400">{formatPrice(item.price)} each</p>
-                            </div>
+                    <div
+                        key={item.id}
+                        className={`flex items-center gap-3 p-3 rounded-2xl bg-[var(--card)] border border-[var(--border)] animate-fade-in-up delay-${Math.min(index + 1, 8)}`}
+                    >
+                        {/* Food image placeholder */}
+                        <div className="h-16 w-16 shrink-0 rounded-xl bg-[var(--card-elevated)] flex items-center justify-center overflow-hidden">
+                            <span className="text-2xl">🍽️</span>
+                        </div>
 
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-8 w-8 rounded-full hover:border-red-300 hover:text-red-600 active:scale-90 transition-all"
+                        {/* Name + price + quantity */}
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-medium text-sm truncate">{item.name}</h3>
+                            <p className="text-xs text-[var(--muted-foreground)]">{formatPrice(item.price)}</p>
+
+                            {/* Quantity controls — like Figma: — 1 + */}
+                            <div className="flex items-center gap-2 mt-1.5">
+                                <button
                                     onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--card-elevated)] border border-[var(--border)] text-[var(--muted-foreground)] hover:text-red-500 active:scale-90 transition-all"
                                 >
                                     <Minus className="h-3 w-3" />
-                                </Button>
-                                <span className="w-8 text-center font-medium">{item.quantity}</span>
-                                <Button
-                                    variant="outline"
-                                    size="icon"
-                                    className="h-8 w-8 rounded-full hover:border-emerald-300 hover:text-emerald-600 active:scale-90 transition-all"
+                                </button>
+                                <span className="w-6 text-center text-sm font-medium">{item.quantity}</span>
+                                <button
                                     onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                    className="flex h-7 w-7 items-center justify-center rounded-lg bg-[var(--card-elevated)] border border-[var(--border)] text-[var(--muted-foreground)] hover:text-green-500 active:scale-90 transition-all"
                                 >
                                     <Plus className="h-3 w-3" />
-                                </Button>
+                                </button>
                             </div>
+                        </div>
 
-                            <div className="w-20 text-right font-medium text-red-600 dark:text-red-400">
-                                {formatPrice(item.price * item.quantity)}
-                            </div>
-
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-90 transition-all"
+                        {/* Total price + delete */}
+                        <div className="text-right flex flex-col items-end gap-2">
+                            <button
                                 onClick={() => removeFromCart(item.id)}
+                                className="text-red-500/60 hover:text-red-500 transition-colors"
                             >
                                 <Trash2 className="h-4 w-4" />
-                            </Button>
-                        </CardContent>
-                    </Card>
+                            </button>
+                            <span className="text-sm font-semibold text-red-500">
+                                {formatPrice(item.price * item.quantity)}
+                            </span>
+                        </div>
+                    </div>
                 ))}
             </div>
 
-            {/* Estimated Time */}
-            <Card className="mb-6 border-indigo-200 dark:border-indigo-800/40 bg-indigo-50 dark:bg-indigo-900/10 animate-fade-in-up delay-3">
-                <CardContent className="flex items-center gap-3 p-4">
-                    <Clock className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />
-                    <div>
-                        <p className="text-sm text-indigo-700 dark:text-indigo-300">{t('estimatedTime')}</p>
-                        <p className="font-medium">{formatTime(maxEta)}</p>
-                    </div>
-                </CardContent>
-            </Card>
-
-            {/* Summary */}
-            <Card className="mb-6 animate-fade-in-up delay-4">
-                <CardContent className="p-4 space-y-2">
-                    <div className="flex justify-between text-sm">
-                        <span className="text-slate-500 dark:text-slate-400">{t('subtotal')}</span>
-                        <span>{formatPrice(cartTotal)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                        <span className="text-slate-500 dark:text-slate-400">{t('tax')}</span>
-                        <span>{formatPrice(tax)}</span>
-                    </div>
-                    <div className="border-t border-slate-200 dark:border-[#2D2D2D] pt-2 flex justify-between font-medium">
-                        <span>{t('total')}</span>
-                        <span className="text-red-600 dark:text-red-400 text-lg">{formatPrice(total)}</span>
-                    </div>
-                </CardContent>
-            </Card>
-
-            <Button className="w-full animate-fade-in-up delay-5" size="lg" onClick={() => setStep('payment')}>
-                {t('proceedToPayment')}
-            </Button>
+            {/* Place Order button — full width red pill like Figma */}
+            <button
+                onClick={() => setStep('payment')}
+                className="w-full h-12 rounded-2xl bg-red-500 text-white font-semibold text-base hover:bg-red-600 transition-all active:scale-[0.98] animate-fade-in-up delay-4"
+            >
+                Place Order · {formatPrice(total)}
+            </button>
         </div>
     )
 }

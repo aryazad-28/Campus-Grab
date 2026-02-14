@@ -1,25 +1,24 @@
 'use client'
 
 import Link from 'next/link'
-import { Clock, ChefHat, Package, CheckCircle, ArrowLeft } from 'lucide-react'
+import { Clock, ChefHat, Package, CheckCircle, ArrowLeft, Utensils } from 'lucide-react'
 import { useOrders, Order } from '@/components/OrdersProvider'
-import { Card, CardContent } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 const STATUS_STEPS = ['pending', 'preparing', 'ready', 'completed'] as const
-const STATUS_CONFIG: Record<Order['status'], { label: string; icon: typeof Clock; color: string; activeColor: string }> = {
-    pending: { label: 'Received', icon: Clock, color: 'text-amber-500', activeColor: 'bg-amber-500' },
-    preparing: { label: 'Preparing', icon: ChefHat, color: 'text-red-500', activeColor: 'bg-red-500' },
-    ready: { label: 'Ready', icon: Package, color: 'text-emerald-500', activeColor: 'bg-emerald-500' },
-    completed: { label: 'Picked Up', icon: CheckCircle, color: 'text-slate-400', activeColor: 'bg-slate-400' }
+const STATUS_CONFIG: Record<Order['status'], { label: string; sublabel: string; icon: typeof Clock; activeColor: string; activeBg: string }> = {
+    pending: { label: 'Order Received', sublabel: 'In progress...', icon: CheckCircle, activeColor: 'text-red-500', activeBg: 'bg-red-500' },
+    preparing: { label: 'Preparing', sublabel: 'Being cooked', icon: Clock, activeColor: 'text-amber-500', activeBg: 'bg-amber-500' },
+    ready: { label: 'Ready for Pickup', sublabel: 'Waiting at counter', icon: Package, activeColor: 'text-green-500', activeBg: 'bg-green-500' },
+    completed: { label: 'Picked Up', sublabel: 'Completed', icon: Utensils, activeColor: 'text-[var(--muted-foreground)]', activeBg: 'bg-[var(--muted-foreground)]' }
 }
 
+/* Vertical timeline matching Figma exactly */
 function OrderTimeline({ status }: { status: Order['status'] }) {
     const currentIdx = STATUS_STEPS.indexOf(status)
 
     return (
-        <div className="flex items-center gap-0 mt-4">
+        <div className="space-y-0">
             {STATUS_STEPS.map((step, idx) => {
                 const config = STATUS_CONFIG[step]
                 const Icon = config.icon
@@ -28,36 +27,38 @@ function OrderTimeline({ status }: { status: Order['status'] }) {
                 const isFuture = idx > currentIdx
 
                 return (
-                    <div key={step} className="flex items-center flex-1 last:flex-none">
-                        <div className="flex flex-col items-center gap-1.5 relative">
+                    <div key={step} className="flex gap-3">
+                        {/* Vertical line + circle */}
+                        <div className="flex flex-col items-center">
                             <div className={cn(
-                                "flex h-8 w-8 items-center justify-center rounded-full transition-all duration-300",
-                                isCompleted && `${config.activeColor} text-white`,
-                                isActive && `${config.activeColor} text-white animate-pulse-glow`,
-                                isFuture && "bg-slate-100 dark:bg-slate-800 text-slate-400"
+                                "flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-all",
+                                isCompleted && `${config.activeBg} text-white`,
+                                isActive && `${config.activeBg} text-white animate-pulse-glow`,
+                                isFuture && "bg-[var(--card-elevated)] text-[var(--muted-foreground)]"
                             )}>
-                                {isCompleted ? (
-                                    <CheckCircle className="h-4 w-4" />
-                                ) : (
-                                    <Icon className="h-4 w-4" />
-                                )}
+                                <Icon className="h-5 w-5" />
                             </div>
-                            <span className={cn(
-                                "text-[10px] font-medium whitespace-nowrap absolute -bottom-5",
-                                isActive ? config.color : isCompleted ? "text-slate-500" : "text-slate-400 opacity-50"
-                            )}>
-                                {config.label}
-                            </span>
+                            {/* Connecting line */}
+                            {idx < STATUS_STEPS.length - 1 && (
+                                <div className={cn(
+                                    "w-0.5 h-8 my-1 rounded-full transition-colors",
+                                    idx < currentIdx ? config.activeBg : "bg-[var(--border)]"
+                                )} />
+                            )}
                         </div>
 
-                        {idx < STATUS_STEPS.length - 1 && (
-                            <div className="flex-1 mx-1">
-                                <div className={cn(
-                                    "h-[2px] w-full rounded-full transition-all duration-500",
-                                    idx < currentIdx ? config.activeColor : "bg-slate-200 dark:bg-slate-700"
-                                )} />
-                            </div>
-                        )}
+                        {/* Label */}
+                        <div className="pt-2">
+                            <p className={cn(
+                                "text-sm font-medium",
+                                isActive ? config.activeColor : isCompleted ? "" : "text-[var(--muted-foreground)]"
+                            )}>
+                                {config.label}
+                            </p>
+                            {isActive && (
+                                <p className="text-xs text-[var(--muted-foreground)]">{config.sublabel}</p>
+                            )}
+                        </div>
                     </div>
                 )
             })}
@@ -70,131 +71,134 @@ export default function OrdersPage() {
 
     const formatDate = (dateString: string) => {
         const date = new Date(dateString)
-        return date.toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'short',
-            hour: '2-digit',
-            minute: '2-digit'
-        })
+        return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
     }
 
     const activeOrders = orders.filter(o => o.status !== 'completed')
     const pastOrders = orders.filter(o => o.status === 'completed')
 
-    return (
-        <div className="container mx-auto max-w-2xl px-4 py-8 pb-32">
-            <Link href="/profile" className="mb-6 flex items-center gap-2 text-sm text-slate-500 hover:text-red-600 transition-colors animate-fade-in">
-                <ArrowLeft className="h-4 w-4" />
-                Back to profile
-            </Link>
+    if (orders.length === 0) {
+        return (
+            <div className="container mx-auto max-w-md px-4 py-16 text-center animate-fade-in">
+                <Clock className="mx-auto h-12 w-12 text-[var(--muted-foreground)] opacity-30 mb-4" />
+                <p className="text-[var(--muted-foreground)] mb-4">No orders yet</p>
+                <Link href="/canteens" className="text-red-500 underline hover:no-underline font-medium">
+                    Browse canteens
+                </Link>
+            </div>
+        )
+    }
 
-            <h1 className="mb-6 text-2xl font-bold animate-fade-in-up">
-                <span className="bg-gradient-to-r from-[#991B1B] to-[#DC2626] bg-clip-text text-transparent">Order</span> History
-            </h1>
+    // If showing a single active order (like Figma's order tracking screen)
+    if (activeOrders.length > 0) {
+        const order = activeOrders[0]
+        const config = STATUS_CONFIG[order.status]
 
-            {orders.length > 0 ? (
-                <div className="space-y-8">
-                    {activeOrders.length > 0 && (
-                        <div className="space-y-4">
-                            <h2 className="text-sm font-semibold text-red-600 dark:text-red-400 uppercase tracking-wider animate-fade-in">Active Orders</h2>
-                            {activeOrders.map((order, index) => {
-                                const config = STATUS_CONFIG[order.status]
+        return (
+            <div className="container mx-auto max-w-md px-4 py-6 pb-32">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-6 animate-fade-in-up">
+                    <Link href="/canteens" className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--card)] border border-[var(--border)]">
+                        <ArrowLeft className="h-4 w-4" />
+                    </Link>
+                    <div>
+                        <h1 className="text-lg font-semibold">Order Tracking</h1>
+                        <p className="text-xs text-[var(--muted-foreground)]">{order.token_number || `ORD-${order.id}`}</p>
+                    </div>
+                </div>
 
-                                return (
-                                    <Card key={order.id} className={`animate-fade-in-up delay-${Math.min(index + 1, 8)} overflow-hidden`}>
-                                        <div className="h-1 bg-gradient-to-r from-[#991B1B] via-[#DC2626] to-[#EF4444]" />
-                                        <CardContent className="p-4">
-                                            <div className="mb-3 flex items-start justify-between">
-                                                <div>
-                                                    <p className="font-mono text-lg font-bold">{order.token_number || order.id}</p>
-                                                    <p className="text-sm text-slate-500 dark:text-slate-400">{formatDate(order.created_at)}</p>
-                                                </div>
-                                                <Badge variant={
-                                                    order.status === 'ready' ? 'success' :
-                                                        order.status === 'preparing' ? 'destructive' : 'warning'
-                                                } className="gap-1">
-                                                    <config.icon className="h-3 w-3" />
-                                                    {config.label}
-                                                </Badge>
-                                            </div>
+                {/* Order Status Card */}
+                <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-5 mb-4 animate-fade-in-up delay-1">
+                    <h2 className="text-base font-semibold mb-4">Order Status</h2>
+                    <OrderTimeline status={order.status} />
+                </div>
 
-                                            <div className="mb-3 space-y-1">
-                                                {order.items.map((item, idx) => (
-                                                    <div key={idx} className="flex justify-between text-sm">
-                                                        <span>{item.quantity}x {item.name}</span>
-                                                        <span className="text-slate-500 dark:text-slate-400">₹{item.price * item.quantity}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
-
-                                            <div className="pb-4">
-                                                <OrderTimeline status={order.status} />
-                                            </div>
-
-                                            <div className="flex items-center justify-between border-t border-slate-200 dark:border-[#2D2D2D] pt-3 mt-4">
-                                                <span className="font-medium">Total</span>
-                                                <span className="font-semibold">₹{order.total}</span>
-                                            </div>
-
-                                            {order.status === 'ready' && (
-                                                <button
-                                                    onClick={() => updateOrderStatus(order.id, 'completed')}
-                                                    className="mt-3 w-full rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 py-2.5 text-sm font-medium text-white hover:brightness-110 transition-all active:scale-[0.98]"
-                                                >
-                                                    Mark as Picked Up
-                                                </button>
-                                            )}
-                                        </CardContent>
-                                    </Card>
-                                )
-                            })}
+                {/* Canteen Details */}
+                <div className="rounded-2xl bg-[var(--card)] border border-[var(--border)] p-5 mb-4 animate-fade-in-up delay-2">
+                    <h2 className="text-base font-semibold mb-3">Canteen Details</h2>
+                    <div className="space-y-2">
+                        {order.items.map((item, idx) => (
+                            <div key={idx} className="flex justify-between text-sm">
+                                <span className="text-[var(--muted-foreground)]">{item.quantity}x {item.name}</span>
+                                <span>₹{item.price * item.quantity}</span>
+                            </div>
+                        ))}
+                        <div className="border-t border-[var(--border)] pt-2 flex justify-between font-medium">
+                            <span>Total</span>
+                            <span className="text-red-500">₹{order.total}</span>
                         </div>
-                    )}
+                    </div>
+                </div>
 
-                    {pastOrders.length > 0 && (
-                        <div className="space-y-4">
-                            <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider animate-fade-in">Past Orders</h2>
-                            {pastOrders.map((order, index) => (
-                                <Card key={order.id} className={`animate-fade-in-up delay-${Math.min(index + 1, 8)} opacity-80`}>
-                                    <CardContent className="p-4">
-                                        <div className="mb-3 flex items-start justify-between">
-                                            <div>
-                                                <p className="font-mono text-lg font-bold">{order.token_number || order.id}</p>
-                                                <p className="text-sm text-slate-500 dark:text-slate-400">{formatDate(order.created_at)}</p>
-                                            </div>
-                                            <Badge variant="outline" className="gap-1">
-                                                <CheckCircle className="h-3 w-3" />
-                                                Completed
-                                            </Badge>
-                                        </div>
+                {order.status === 'ready' && (
+                    <button
+                        onClick={() => updateOrderStatus(order.id, 'completed')}
+                        className="w-full h-12 rounded-2xl bg-green-500 text-white font-semibold hover:bg-green-600 transition-all active:scale-[0.98] animate-fade-in-up delay-3"
+                    >
+                        Mark as Picked Up
+                    </button>
+                )}
 
-                                        <div className="mb-3 space-y-1">
-                                            {order.items.map((item, idx) => (
-                                                <div key={idx} className="flex justify-between text-sm">
-                                                    <span>{item.quantity}x {item.name}</span>
-                                                    <span className="text-slate-500 dark:text-slate-400">₹{item.price * item.quantity}</span>
-                                                </div>
-                                            ))}
-                                        </div>
+                {/* Other active orders */}
+                {activeOrders.length > 1 && (
+                    <div className="mt-6 space-y-3">
+                        <h3 className="text-sm font-medium text-[var(--muted-foreground)]">Other Active Orders</h3>
+                        {activeOrders.slice(1).map(o => (
+                            <div key={o.id} className="rounded-xl bg-[var(--card)] border border-[var(--border)] p-3 flex items-center justify-between">
+                                <div>
+                                    <p className="font-mono text-sm font-bold">{o.token_number || o.id}</p>
+                                    <p className="text-xs text-[var(--muted-foreground)]">{o.items.length} items · ₹{o.total}</p>
+                                </div>
+                                <span className={cn("text-xs font-medium", STATUS_CONFIG[o.status].activeColor)}>
+                                    {STATUS_CONFIG[o.status].label}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                )}
 
-                                        <div className="flex items-center justify-between border-t border-slate-200 dark:border-[#2D2D2D] pt-3">
-                                            <span className="font-medium">Total</span>
-                                            <span className="font-semibold">₹{order.total}</span>
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                {/* Past orders */}
+                {pastOrders.length > 0 && (
+                    <div className="mt-6 space-y-3">
+                        <h3 className="text-sm font-medium text-[var(--muted-foreground)]">Past Orders</h3>
+                        {pastOrders.map(o => (
+                            <div key={o.id} className="rounded-xl bg-[var(--card)] border border-[var(--border)] p-3 flex items-center justify-between opacity-60">
+                                <div>
+                                    <p className="font-mono text-sm font-bold">{o.token_number || o.id}</p>
+                                    <p className="text-xs text-[var(--muted-foreground)]">{formatDate(o.created_at)} · ₹{o.total}</p>
+                                </div>
+                                <span className="text-xs text-[var(--muted-foreground)]">Completed</span>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        )
+    }
+
+    // Only past orders — list view
+    return (
+        <div className="container mx-auto max-w-md px-4 py-6 pb-32">
+            <h1 className="text-lg font-semibold mb-4 animate-fade-in-up">Order History</h1>
+            <div className="space-y-3">
+                {pastOrders.map((o, index) => (
+                    <div key={o.id} className={`rounded-xl bg-[var(--card)] border border-[var(--border)] p-4 animate-fade-in-up delay-${Math.min(index + 1, 8)}`}>
+                        <div className="flex items-center justify-between mb-2">
+                            <p className="font-mono font-bold">{o.token_number || o.id}</p>
+                            <span className="text-xs text-[var(--muted-foreground)]">{formatDate(o.created_at)}</span>
+                        </div>
+                        <div className="space-y-1">
+                            {o.items.map((item, idx) => (
+                                <p key={idx} className="text-sm text-[var(--muted-foreground)]">{item.quantity}x {item.name}</p>
                             ))}
                         </div>
-                    )}
-                </div>
-            ) : (
-                <div className="py-16 text-center animate-fade-in">
-                    <p className="mb-4 text-slate-500 dark:text-slate-400">No orders yet</p>
-                    <Link href="/canteens" className="text-red-600 dark:text-red-400 underline hover:no-underline font-medium">
-                        Browse canteens
-                    </Link>
-                </div>
-            )}
+                        <div className="mt-2 pt-2 border-t border-[var(--border)] flex justify-between text-sm font-medium">
+                            <span>Total</span>
+                            <span>₹{o.total}</span>
+                        </div>
+                    </div>
+                ))}
+            </div>
         </div>
     )
 }

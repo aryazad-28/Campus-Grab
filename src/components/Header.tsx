@@ -1,6 +1,5 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { ShoppingCart, User, Sun, Moon } from 'lucide-react'
 import { useCart } from './CartProvider'
@@ -28,7 +27,7 @@ export function Header() {
                         alt="Campus Grab"
                         className="h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-transform group-hover:scale-105"
                     />
-                    <span className="text-base font-bold sm:text-lg bg-gradient-to-r from-[#991B1B] to-[#DC2626] bg-clip-text text-transparent">
+                    <span className="text-base font-bold sm:text-lg text-red-500">
                         Campus Grab
                     </span>
                 </Link>
@@ -59,7 +58,7 @@ export function Header() {
                         <Button variant="outline" size="icon" className="h-9 w-9">
                             <ShoppingCart className="h-4 w-4" />
                             {cartCount > 0 && (
-                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-r from-[#991B1B] to-[#DC2626] text-[10px] font-bold text-white">
+                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
                                     {cartCount > 9 ? '9+' : cartCount}
                                 </span>
                             )}
