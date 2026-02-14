@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ShoppingCart, Utensils, User, Menu, X, Sun, Moon } from 'lucide-react'
+import { ShoppingCart, User, Sun, Moon } from 'lucide-react'
 import { useCart } from './CartProvider'
 import { useAuth } from './AuthProvider'
 import { useTheme } from './ThemeProvider'
@@ -11,9 +11,8 @@ import { Button } from './ui/button'
 export function Header() {
     const { cartCount } = useCart()
     const { isAuthenticated, user } = useAuth()
-    const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-    // Try to get theme context (may not exist if not in student layout)
+    // Try to get theme context
     let themeContext: { theme: 'light' | 'dark'; toggleTheme: () => void } | null = null
     try {
         themeContext = useTheme()
@@ -22,11 +21,17 @@ export function Header() {
     }
 
     return (
-        <header className="sticky top-0 z-50 w-full border-b backdrop-blur-sm transition-colors" style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}>
+        <header className="sticky top-0 z-50 w-full border-b glass transition-colors" style={{ borderColor: 'var(--border)' }}>
             <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:h-16">
-                <Link href="/" className="flex items-center gap-2">
-                    <img src="/logo.png" alt="Campus Grab" className="h-8 w-8 sm:h-9 sm:w-9 rounded-full" />
-                    <span className="text-base font-semibold sm:text-lg">Campus Grab</span>
+                <Link href="/" className="flex items-center gap-2 group">
+                    <img
+                        src="/logo.png"
+                        alt="Campus Grab"
+                        className="h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-transform group-hover:scale-105"
+                    />
+                    <span className="text-base font-bold sm:text-lg bg-gradient-to-r from-[#C33811] to-[#F75412] bg-clip-text text-transparent">
+                        Campus Grab
+                    </span>
                 </Link>
 
                 {/* Desktop Navigation */}
@@ -56,7 +61,7 @@ export function Header() {
                         <Button variant="outline" size="icon" className="h-9 w-9">
                             <ShoppingCart className="h-4 w-4" />
                             {cartCount > 0 && (
-                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 dark:bg-white text-[10px] text-white dark:text-neutral-900">
+                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-gradient-to-r from-[#C33811] to-[#F75412] text-[10px] font-bold text-white">
                                     {cartCount > 9 ? '9+' : cartCount}
                                 </span>
                             )}
@@ -77,9 +82,8 @@ export function Header() {
                     )}
                 </nav>
 
-                {/* Mobile Navigation */}
+                {/* Mobile: just theme toggle (nav is in BottomNav now) */}
                 <div className="flex items-center gap-2 sm:hidden">
-                    {/* Theme Toggle Mobile */}
                     {themeContext && (
                         <Button
                             variant="ghost"
@@ -94,53 +98,8 @@ export function Header() {
                             )}
                         </Button>
                     )}
-
-                    <Link href="/cart" className="relative">
-                        <Button variant="outline" size="icon" className="h-9 w-9">
-                            <ShoppingCart className="h-4 w-4" />
-                            {cartCount > 0 && (
-                                <span className="absolute -right-1 -top-1 flex h-4 w-4 items-center justify-center rounded-full bg-neutral-900 dark:bg-white text-[10px] text-white dark:text-neutral-900">
-                                    {cartCount > 9 ? '9+' : cartCount}
-                                </span>
-                            )}
-                        </Button>
-                    </Link>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9"
-                        onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                    >
-                        {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-                    </Button>
                 </div>
             </div>
-
-            {/* Mobile Menu Dropdown */}
-            {mobileMenuOpen && (
-                <div className="border-t border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 px-4 py-3 sm:hidden transition-colors">
-                    <div className="flex flex-col gap-2">
-                        <Link href="/canteens" onClick={() => setMobileMenuOpen(false)}>
-                            <Button variant="ghost" className="w-full justify-start">Canteens</Button>
-                        </Link>
-                        <Link href="/orders" onClick={() => setMobileMenuOpen(false)}>
-                            <Button variant="ghost" className="w-full justify-start">My Orders</Button>
-                        </Link>
-                        {isAuthenticated ? (
-                            <Link href="/profile" onClick={() => setMobileMenuOpen(false)}>
-                                <Button variant="ghost" className="w-full justify-start gap-2">
-                                    <User className="h-4 w-4" />
-                                    {user?.name}
-                                </Button>
-                            </Link>
-                        ) : (
-                            <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                                <Button className="w-full">Sign In</Button>
-                            </Link>
-                        )}
-                    </div>
-                </div>
-            )}
         </header>
     )
 }

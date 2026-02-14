@@ -30,19 +30,19 @@ export function MenuCard({ item }: MenuCardProps) {
     }
 
     return (
-        <Card className="overflow-hidden transition-shadow hover:shadow-md active:shadow-sm">
-            {/* Image - smaller on mobile */}
-            <div className="relative aspect-[16/10] overflow-hidden bg-neutral-100 sm:aspect-[4/3]">
+        <Card className="overflow-hidden transition-all hover:shadow-lg active:shadow-sm active:scale-[0.98] group">
+            {/* Image */}
+            <div className="relative aspect-[16/10] overflow-hidden bg-[#fdf5f0] dark:bg-[#241a15] sm:aspect-[4/3]">
                 {item.image_url ? (
                     <Image
                         src={item.image_url}
                         alt={item.name}
                         fill
-                        className="object-cover"
+                        className="object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                 ) : (
-                    <div className="flex h-full items-center justify-center text-sm text-neutral-400">
-                        No image
+                    <div className="flex h-full items-center justify-center">
+                        <span className="text-3xl">🍽️</span>
                     </div>
                 )}
                 <Badge className="absolute right-2 top-2 text-xs" variant="secondary">
@@ -50,22 +50,21 @@ export function MenuCard({ item }: MenuCardProps) {
                 </Badge>
             </div>
 
-            {/* Content - larger touch targets */}
+            {/* Content */}
             <CardContent className="p-3 sm:p-4">
                 <div className="mb-2 flex items-start justify-between gap-2">
-                    <h3 className="text-sm font-medium leading-tight sm:text-base">{item.name}</h3>
-                    <span className="shrink-0 text-sm font-semibold sm:text-base">{formatPrice(item.price)}</span>
+                    <h3 className="text-sm font-semibold leading-tight sm:text-base">{item.name}</h3>
+                    <span className="shrink-0 text-sm font-bold text-[#C33811] sm:text-base">{formatPrice(item.price)}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-1 text-xs text-neutral-500 sm:text-sm">
+                    <div className="flex items-center gap-1 text-xs text-[#8a7060] sm:text-sm">
                         <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         <span>{formatTime(item.eta_minutes)}</span>
                     </div>
-                    {/* Larger button for mobile touch */}
                     <Button
                         size="sm"
                         onClick={handleAdd}
-                        className="h-9 min-w-[80px] gap-1 text-xs sm:h-8 sm:text-sm"
+                        className={`h-9 min-w-[80px] gap-1 text-xs sm:h-8 sm:text-sm ${added ? 'bg-emerald-500 hover:bg-emerald-600' : ''}`}
                         disabled={added}
                     >
                         {added ? (
