@@ -4,7 +4,8 @@ import { useState, useMemo, useEffect, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { Search, Zap, Clock, Loader2, Brain, TrendingUp, ArrowLeft, Star } from 'lucide-react'
+import { Search, Zap, Clock, Loader2, Brain, TrendingUp, ArrowLeft, Star, Beef, Pizza, CircleDot, Salad, UtensilsCrossed, CakeSlice, Coffee, Cup, LayoutGrid, type LucideIcon } from 'lucide-react'
+import { AnimeCategoryNav } from '@/components/ui/anime-category-nav'
 import { useMenu } from '@/components/MenuProvider'
 import { useAI } from '@/components/AIProvider'
 import { supabase } from '@/lib/supabase'
@@ -60,6 +61,26 @@ function MenuContent() {
         const cats = [...new Set(availableItems.map(item => item.category))]
         return cats.sort()
     }, [availableItems])
+
+    const categoryIconMap: Record<string, LucideIcon> = {
+        'Burgers': Beef,
+        'Classic Pizzas': Pizza,
+        'Special Pizzas': Pizza,
+        'Momos': CircleDot,
+        'Appetizers': Salad,
+        'Pastas': UtensilsCrossed,
+        'Brownies': CakeSlice,
+        'Beverages': Coffee,
+        'Coffee': Coffee,
+    }
+
+    const navItems = useMemo(() => {
+        const items = [{ name: 'All', icon: LayoutGrid }]
+        categories.forEach(cat => {
+            items.push({ name: cat, icon: categoryIconMap[cat] || UtensilsCrossed })
+        })
+        return items
+    }, [categories])
 
     const fastItems = useMemo(() => {
         return [...availableItems]
@@ -142,29 +163,13 @@ function MenuContent() {
                     </div>
                 )}
 
-                {/* Category pills — red active like Figma */}
-                <div className="flex gap-2 overflow-x-auto pb-3 -mx-4 px-4 mb-4 scrollbar-hide animate-fade-in-up delay-1">
-                    <button
-                        onClick={() => setSelectedCategory(null)}
-                        className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedCategory === null
-                            ? 'bg-red-500 text-white'
-                            : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]'
-                            }`}
-                    >
-                        All
-                    </button>
-                    {categories.map(category => (
-                        <button
-                            key={category}
-                            onClick={() => setSelectedCategory(category)}
-                            className={`shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${selectedCategory === category
-                                ? 'bg-red-500 text-white'
-                                : 'bg-[var(--card)] text-[var(--muted-foreground)] border border-[var(--border)]'
-                                }`}
-                        >
-                            {category}
-                        </button>
-                    ))}
+                {/* Animated Category Nav */}
+                <div className="mb-5 animate-fade-in-up delay-1">
+                    <AnimeCategoryNav
+                        items={navItems}
+                        activeItem={selectedCategory === null ? 'All' : selectedCategory}
+                        onItemClick={(name) => setSelectedCategory(name === 'All' ? null : name)}
+                    />
                 </div>
 
                 {/* Search */}
