@@ -77,16 +77,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     })
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session?.user) {
+        setUser(null)
+        return
+      }
+
       // Check if this is an admin account
-      if (session?.user?.user_metadata?.account_type === 'admin') {
+      if (session.user.user_metadata?.account_type === 'admin') {
         // This is an admin account - sign out and reject
         if (supabase) supabase.auth.signOut()
         setUser(null)
         alert('This account is registered as an admin account. Please use the admin portal at /admin/login to log in.')
         return
       }
-      setUser(mapSupabaseUser(session?.user ?? null))
+
+      // Auto-tag Google OAuth users as 'student' if they have no account_type
+      // This prevents them from slipping into admin portal
+      if (!session.user.user_metadata?.account_type && supabase) {
+        try {
+          await supabase.auth.updateUser({
+            data: { account_type: 'student' }
+          })
+        } catch (err) {
+          console.warn('Failed to auto-tag Google OAuth user:', err)
+        }
+      }
+
+      setUser(mapSupabaseUser(session.user))
     })
 
     return () => subscription.unsubscribe()

@@ -62,15 +62,17 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
         // First, check if this user is tagged as an admin
         const { data: { user } } = await supabase.auth.getUser()
+        const accountType = user?.user_metadata?.account_type
 
-        // Check account type metadata
-        if (user?.user_metadata?.account_type === 'student') {
-            // This is a student account, not an admin - sign out
+        // Only allow users explicitly tagged as 'admin'
+        // Reject students, Google OAuth users (no type), or any non-admin
+        if (accountType !== 'admin') {
+            // Don't sign out — just reject from admin portal
+            // (they may be a valid student on the student side)
             await supabase.auth.signOut()
             setAdmin(null)
             setNeedsOnboarding(false)
             setIsLoading(false)
-            alert('This account is registered as a student account. Please use the student portal to log in.')
             return
         }
 
@@ -132,9 +134,9 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
             // Verify this is actually an admin account
             const { data: { user } } = await supabase.auth.getUser()
-            if (user?.user_metadata?.account_type === 'student') {
+            if (user?.user_metadata?.account_type !== 'admin') {
                 await supabase.auth.signOut()
-                return { success: false, error: 'This is a student account. Please use the student portal to log in.' }
+                return { success: false, error: 'This account is not registered as an admin. Please use the student portal or sign up as admin.' }
             }
 
             return { success: true }
