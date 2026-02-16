@@ -124,8 +124,18 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     const signUp = useCallback(async (email: string, password: string) => {
         if (!supabase) return { success: false, error: 'Supabase not configured' }
         try {
-            const { data, error } = await supabase.auth.signUp({ email, password })
+            const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    // Disable email confirmation requirement
+                    emailRedirectTo: undefined
+                }
+            })
             if (error) return { success: false, error: error.message }
+            // Note: If email confirmation is required by Supabase settings and emails aren't being sent,
+            // you'll need to disable "Enable email confirmations" in your Supabase dashboard
+            // under Authentication > Settings > Email Auth
             if (data.user && !data.session) {
                 return { success: true, error: 'Please check your email to verify your account' }
             }
