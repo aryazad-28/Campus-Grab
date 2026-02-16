@@ -66,7 +66,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if this is an admin account trying to use student portal
       if (session?.user?.user_metadata?.account_type === 'admin') {
         // This is an admin account - sign out and reject
-        supabase.auth.signOut()
+        if (supabase) supabase.auth.signOut()
         setUser(null)
         setIsLoading(false)
         alert('This account is registered as an admin account. Please use the admin portal at /admin/login to log in.')
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Check if this is an admin account
       if (session?.user?.user_metadata?.account_type === 'admin') {
         // This is an admin account - sign out and reject
-        supabase.auth.signOut()
+        if (supabase) supabase.auth.signOut()
         setUser(null)
         alert('This account is registered as an admin account. Please use the admin portal at /admin/login to log in.')
         return
