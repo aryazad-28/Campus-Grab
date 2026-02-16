@@ -54,7 +54,7 @@ export default function AdminDashboard() {
                         <span className="text-lg font-semibold">{admin?.canteen_name || t('dashboard')}</span>
                     </div>
                     <div className="flex items-center gap-4">
-                        <Link href="/admin/profile" className="text-sm text-slate-400 hover:text-white hidden sm:block transition-colors">
+                        <Link href="/admin/profile" className="text-sm text-slate-400 hover:text-white transition-colors">
                             {admin?.name}
                         </Link>
                         <Button variant="ghost" size="sm" onClick={handleLogout} className="text-slate-400 hover:text-white gap-2">
