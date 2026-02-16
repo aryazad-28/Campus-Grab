@@ -92,7 +92,7 @@ export default function CanteensPage() {
             {/* Brand Header */}
             <div className="mb-6 animate-fade-in-up">
                 <h1 className="text-2xl font-bold text-red-500 sm:text-3xl">Campus Grab</h1>
-                <p className="text-sm text-[var(--muted-foreground)]">Find food near you</p>
+                <p className="text-sm text-neutral-600 dark:text-neutral-400">Find food near you</p>
             </div>
 
             {/* Location Card */}
@@ -102,7 +102,7 @@ export default function CanteensPage() {
                         <MapPin className="h-4 w-4 text-red-500" />
                     </div>
                     <div>
-                        <p className="text-xs text-[var(--muted-foreground)]">Your location</p>
+                        <p className="text-xs text-neutral-600 dark:text-neutral-400">Your location</p>
                         <p className="font-semibold">Main Campus</p>
                     </div>
                 </div>
@@ -110,7 +110,7 @@ export default function CanteensPage() {
 
             {/* Search */}
             <div className="relative mb-6 animate-fade-in-up delay-2">
-                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--muted-foreground)]" />
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500 dark:text-neutral-400" />
                 <Input
                     type="search"
                     placeholder="Search canteens..."

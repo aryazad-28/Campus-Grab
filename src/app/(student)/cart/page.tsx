@@ -402,11 +402,11 @@ function CartContent() {
             <Card className="mb-6">
                 <CardContent className="p-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                        <span className="text-neutral-600 dark:text-neutral-400">{t('subtotal')}</span>{t('subtotal')}</span>
+                        <span className="text-neutral-500">{t('subtotal')}</span>
                         <span>{formatPrice(cartTotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span className="text-neutral-600 dark:text-neutral-400">{t('subtotal')}</span>{t('tax')}</span>
+                        <span className="text-neutral-500">{t('tax')}</span>
                         <span>{formatPrice(tax)}</span>
                     </div>
                     <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">
@@ -416,9 +416,9 @@ function CartContent() {
                 </CardContent >
             </Card >
 
-        <Button className="w-full" size="lg" onClick={() => setStep('payment')}>
-            {t('proceedToPayment')}
-        </Button>
+            <Button className="w-full" size="lg" onClick={() => setStep('payment')}>
+                {t('proceedToPayment')}
+            </Button>
         </div >
     )
 }
