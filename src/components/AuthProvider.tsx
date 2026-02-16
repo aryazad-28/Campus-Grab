@@ -63,12 +63,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Check current session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      // Check if this is an admin account trying to use student portal
+      if (session?.user?.user_metadata?.account_type === 'admin') {
+        // This is an admin account - sign out and reject
+        supabase.auth.signOut()
+        setUser(null)
+        setIsLoading(false)
+        alert('This account is registered as an admin account. Please use the admin portal at /admin/login to log in.')
+        return
+      }
       setUser(mapSupabaseUser(session?.user ?? null))
       setIsLoading(false)
     })
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Check if this is an admin account
+      if (session?.user?.user_metadata?.account_type === 'admin') {
+        // This is an admin account - sign out and reject
+        supabase.auth.signOut()
+        setUser(null)
+        alert('This account is registered as an admin account. Please use the admin portal at /admin/login to log in.')
+        return
+      }
       setUser(mapSupabaseUser(session?.user ?? null))
     })
 
@@ -89,11 +106,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         email,
         password,
         options: {
-          data: { name }
+          data: {
+            name,
+            account_type: 'student'  // Tag as student account
+          }
         }
       })
 
       if (error) {
+        // Better error messages for common issues
+        if (error.message.includes('rate limit') || error.message.includes('Email rate limit exceeded')) {
+          return {
+            success: false,
+            error: 'Too many signup attempts. Please wait a few minutes and try again.'
+          }
+        }
         return { success: false, error: error.message }
       }
 

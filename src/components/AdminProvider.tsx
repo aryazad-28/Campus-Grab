@@ -60,6 +60,20 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         setSupabaseUserId(userId)
         setSupabaseEmail(email)
 
+        // First, check if this user is tagged as an admin
+        const { data: { user } } = await supabase.auth.getUser()
+
+        // Check account type metadata
+        if (user?.user_metadata?.account_type === 'student') {
+            // This is a student account, not an admin - sign out
+            await supabase.auth.signOut()
+            setAdmin(null)
+            setNeedsOnboarding(false)
+            setIsLoading(false)
+            alert('This account is registered as a student account. Please use the student portal to log in.')
+            return
+        }
+
         const { data, error } = await supabase
             .from('admin_profiles')
             .select('*')
@@ -128,11 +142,23 @@ export function AdminProvider({ children }: { children: ReactNode }) {
                 email,
                 password,
                 options: {
+                    data: {
+                        account_type: 'admin'  // Tag as admin account
+                    },
                     // Disable email confirmation requirement
                     emailRedirectTo: undefined
                 }
             })
-            if (error) return { success: false, error: error.message }
+            if (error) {
+                // Better error messages for common issues
+                if (error.message.includes('rate limit') || error.message.includes('Email rate limit exceeded')) {
+                    return {
+                        success: false,
+                        error: 'Too many signup attempts. Please wait a few minutes and try again, or disable email confirmation in Supabase Dashboard (Auth → Providers → Email).'
+                    }
+                }
+                return { success: false, error: error.message }
+            }
             // Note: If email confirmation is required by Supabase settings and emails aren't being sent,
             // you'll need to disable "Enable email confirmations" in your Supabase dashboard
             // under Authentication > Settings > Email Auth
