@@ -20,7 +20,7 @@ export default function CartPage() {
     return (
         <Suspense fallback={
             <div className="flex min-h-[50vh] items-center justify-center">
-                <Loader2 className="h-6 w-6 animate-spin text-neutral-400" />
+                <Loader2 className="h-6 w-6 animate-spin text-neutral-600 dark:text-neutral-400" />
             </div>
         }>
             <CartContent />
@@ -194,7 +194,7 @@ function CartContent() {
         return (
             <div className="container mx-auto px-4 py-16 text-center">
                 <h1 className="mb-4 text-2xl font-semibold">{t('emptyTitle')}</h1>
-                <p className="mb-8 text-neutral-500">{t('emptySubtitle')}</p>
+                <p className="mb-8 text-neutral-600 dark:text-neutral-400">{t('emptySubtitle')}</p>
                 <Link href="/menu">
                     <Button>{t('browseMenu')}</Button>
                 </Link>
@@ -214,30 +214,30 @@ function CartContent() {
                     </div>
                 </div>
                 <h1 className="mb-2 text-2xl font-semibold">{t('orderPlaced')}</h1>
-                <p className="mb-6 text-neutral-500">{t('orderSent')}</p>
+                <p className="mb-6 text-neutral-600 dark:text-neutral-400">{t('orderSent')}</p>
 
                 <Card className="mb-6 text-left">
                     <CardContent className="p-4 space-y-2">
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">{t('tokenNumber')}</span>
+                            <span className="text-neutral-600 dark:text-neutral-400">{t('tokenNumber')}</span>
                             <span className="font-mono text-lg font-bold">{orderToken}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">{t('orderTime')}</span>
+                            <span className="text-neutral-600 dark:text-neutral-400">{t('orderTime')}</span>
                             <span className="text-sm">{orderTime}</span>
                         </div>
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">{t('status')}</span>
+                            <span className="text-neutral-600 dark:text-neutral-400">{t('status')}</span>
                             <Badge variant="warning">{t('pendingApproval')}</Badge>
-                        </div>
+                        </div >
                         <div className="flex justify-between">
-                            <span className="text-neutral-500">{t('payment')}</span>
+                            <span className="text-neutral-600 dark:text-neutral-400">{t('payment')}</span>
                             <Badge variant="success">{t('paidOnline')}</Badge>
-                        </div>
-                    </CardContent>
-                </Card>
+                        </div >
+                    </CardContent >
+                </Card >
 
-                <p className="mb-6 text-sm text-neutral-500">
+                <p className="mb-6 text-sm text-neutral-600 dark:text-neutral-400">
                     {t('notificationHint')}
                 </p>
 
@@ -249,7 +249,7 @@ function CartContent() {
                         <Button variant="outline" className="w-full">{t('orderMore')}</Button>
                     </Link>
                 </div>
-            </div>
+            </div >
         )
     }
 
@@ -259,7 +259,7 @@ function CartContent() {
             <div className="container mx-auto max-w-md px-4 py-8">
                 <button
                     onClick={() => setStep('cart')}
-                    className="mb-6 flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900"
+                    className="mb-6 flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200"
                 >
                     <ArrowLeft className="h-4 w-4" />
                     {t('backToCart')}
@@ -298,19 +298,19 @@ function CartContent() {
                 <Card className="mb-6">
                     <CardContent className="p-4 space-y-2">
                         <div className="flex justify-between text-sm">
-                            <span className="text-neutral-500">{t('subtotal')}</span>
+                            <span className="text-neutral-600 dark:text-neutral-400">{t('subtotal')}</span>
                             <span>{formatPrice(cartTotal)}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                            <span className="text-neutral-500">{t('tax')}</span>
+                            <span className="text-neutral-600 dark:text-neutral-400">{t('tax')}</span>
                             <span>{formatPrice(tax)}</span>
                         </div>
                         <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">
                             <span>{t('total')}</span>
                             <span>{formatPrice(total)}</span>
                         </div>
-                    </CardContent>
-                </Card>
+                    </CardContent >
+                </Card >
 
                 <Button
                     className="w-full"
@@ -327,14 +327,14 @@ function CartContent() {
                         `${t('pay')} ${formatPrice(total)}`
                     )}
                 </Button>
-            </div>
+            </div >
         )
     }
 
     // Cart view
     return (
         <div className="container mx-auto max-w-2xl px-4 py-8">
-            <Link href="/menu" className="mb-6 flex items-center gap-2 text-sm text-neutral-500 hover:text-neutral-900">
+            <Link href="/menu" className="mb-6 flex items-center gap-2 text-sm text-neutral-600 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-neutral-200">
                 <ArrowLeft className="h-4 w-4" />
                 {t('continueShopping')}
             </Link>
@@ -347,7 +347,7 @@ function CartContent() {
                         <CardContent className="flex items-center gap-4 p-4">
                             <div className="flex-1">
                                 <h3 className="font-medium">{item.name}</h3>
-                                <p className="text-sm text-neutral-500">{formatPrice(item.price)} each</p>
+                                <p className="text-sm text-neutral-600 dark:text-neutral-400">{formatPrice(item.price)} each</p>
                             </div>
 
                             <div className="flex items-center gap-2">
@@ -377,7 +377,7 @@ function CartContent() {
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-8 w-8 text-neutral-400 hover:text-red-500"
+                                className="h-8 w-8 text-neutral-500 hover:text-red-500 dark:text-neutral-400"
                                 onClick={() => removeFromCart(item.id)}
                             >
                                 <Trash2 className="h-4 w-4" />
@@ -402,23 +402,23 @@ function CartContent() {
             <Card className="mb-6">
                 <CardContent className="p-4 space-y-2">
                     <div className="flex justify-between text-sm">
-                        <span className="text-neutral-500">{t('subtotal')}</span>
+                        <span className="text-neutral-600 dark:text-neutral-400">{t('subtotal')}</span>{t('subtotal')}</span>
                         <span>{formatPrice(cartTotal)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                        <span className="text-neutral-500">{t('tax')}</span>
+                        <span className="text-neutral-600 dark:text-neutral-400">{t('subtotal')}</span>{t('tax')}</span>
                         <span>{formatPrice(tax)}</span>
                     </div>
                     <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">
                         <span>{t('total')}</span>
                         <span>{formatPrice(total)}</span>
                     </div>
-                </CardContent>
-            </Card>
+                </CardContent >
+            </Card >
 
-            <Button className="w-full" size="lg" onClick={() => setStep('payment')}>
-                {t('proceedToPayment')}
-            </Button>
-        </div>
+        <Button className="w-full" size="lg" onClick={() => setStep('payment')}>
+            {t('proceedToPayment')}
+        </Button>
+        </div >
     )
 }
