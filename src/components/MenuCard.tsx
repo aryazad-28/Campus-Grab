@@ -1,7 +1,7 @@
 'use client'
 
 import Image from 'next/image'
-import { Clock, Plus, Check } from 'lucide-react'
+import { Clock, Plus, Check, Lock } from 'lucide-react'
 import { useState } from 'react'
 import { MenuItem } from '@/lib/supabase'
 import { useCart } from './CartProvider'
@@ -9,13 +9,15 @@ import { formatPrice, formatTime } from '@/lib/utils'
 
 interface MenuCardProps {
     item: MenuItem
+    disabled?: boolean
 }
 
-export function MenuCard({ item }: MenuCardProps) {
+export function MenuCard({ item, disabled }: MenuCardProps) {
     const { addToCart } = useCart()
     const [added, setAdded] = useState(false)
 
     const handleAdd = () => {
+        if (disabled) return
         addToCart({
             id: item.id,
             name: item.name,
@@ -27,7 +29,7 @@ export function MenuCard({ item }: MenuCardProps) {
     }
 
     return (
-        <div className="group">
+        <div className={`group ${disabled ? 'opacity-60' : ''}`}>
             {/* Food Image with time badge */}
             <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#252525] dark:bg-[#252525] mb-2.5">
                 {item.image_url ? (
@@ -60,13 +62,15 @@ export function MenuCard({ item }: MenuCardProps) {
                 {/* Circular red + button (matching Figma exactly) */}
                 <button
                     onClick={handleAdd}
-                    disabled={added}
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all active:scale-90 ${added
-                            ? 'bg-green-500 text-white'
-                            : 'bg-red-500 text-white hover:bg-red-600'
+                    disabled={added || disabled}
+                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full transition-all active:scale-90 ${disabled
+                            ? 'bg-neutral-500 text-white cursor-not-allowed'
+                            : added
+                                ? 'bg-green-500 text-white'
+                                : 'bg-red-500 text-white hover:bg-red-600'
                         }`}
                 >
-                    {added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
+                    {disabled ? <Lock className="h-3.5 w-3.5" /> : added ? <Check className="h-4 w-4" /> : <Plus className="h-4 w-4" />}
                 </button>
             </div>
         </div>

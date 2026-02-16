@@ -17,6 +17,7 @@ interface AdminProfile {
     status: 'pending' | 'approved' | 'rejected'
     razorpay_key_id: string | null
     razorpay_key_secret: string | null
+    is_open: boolean
 }
 
 interface AdminContextType {
@@ -27,6 +28,7 @@ interface AdminContextType {
     signInWithGoogle: () => Promise<{ success: boolean; error?: string }>
     resetPassword: (email: string) => Promise<{ success: boolean; error?: string }>
     submitOnboarding: (profile: OnboardingData) => Promise<{ success: boolean; error?: string }>
+    toggleOpen: () => Promise<{ success: boolean; error?: string }>
     logout: () => void
     isAuthenticated: boolean
     isPending: boolean
@@ -232,6 +234,24 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         return { success: true }
     }, [supabaseUserId, supabaseEmail])
 
+    const toggleOpen = useCallback(async () => {
+        if (!supabase || !admin) return { success: false, error: 'Not authenticated' }
+        try {
+            const newStatus = !admin.is_open
+            const { error } = await supabase
+                .from('admin_profiles')
+                .update({ is_open: newStatus })
+                .eq('id', admin.id)
+            if (error) return { success: false, error: error.message }
+            const updated = { ...admin, is_open: newStatus }
+            setAdmin(updated)
+            localStorage.setItem(ADMIN_STORAGE_KEY, JSON.stringify(updated))
+            return { success: true }
+        } catch {
+            return { success: false, error: 'Failed to update status' }
+        }
+    }, [admin])
+
     const logout = useCallback(() => {
         if (supabase) supabase.auth.signOut()
         setAdmin(null)
@@ -249,6 +269,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             signInWithGoogle,
             resetPassword,
             submitOnboarding,
+            toggleOpen,
             logout,
             isAuthenticated: !!admin && admin.status === 'approved',
             isPending: !!admin && admin.status === 'pending',

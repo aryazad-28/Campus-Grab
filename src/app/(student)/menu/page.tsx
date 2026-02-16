@@ -35,6 +35,7 @@ function MenuContent() {
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
     const [canteenName, setCanteenName] = useState<string | null>(null)
+    const [canteenOpen, setCanteenOpen] = useState<boolean>(true)
 
     useEffect(() => {
         if (!canteenId) router.push('/canteens')
@@ -42,8 +43,13 @@ function MenuContent() {
 
     useEffect(() => {
         if (!canteenId || !supabase) return
-        supabase.from('admin_profiles').select('canteen_name').eq('id', canteenId).single()
-            .then(({ data }) => { if (data) setCanteenName(data.canteen_name) })
+        supabase.from('admin_profiles').select('canteen_name, is_open').eq('id', canteenId).single()
+            .then(({ data }) => {
+                if (data) {
+                    setCanteenName(data.canteen_name)
+                    setCanteenOpen(data.is_open !== false)
+                }
+            })
     }, [canteenId])
 
     const canteenItems = useMemo(() => {
@@ -140,6 +146,14 @@ function MenuContent() {
             </div>
 
             <div className="container mx-auto px-4 py-4">
+                {/* Canteen Closed Banner */}
+                {!canteenOpen && (
+                    <div className="mb-6 animate-fade-in-up rounded-2xl border-2 border-red-500/30 bg-red-500/10 p-5 text-center">
+                        <div className="text-3xl mb-2">🔒</div>
+                        <h3 className="text-lg font-bold text-red-500 mb-1">Canteen is Closed</h3>
+                        <p className="text-sm text-[var(--muted-foreground)]">This canteen is not accepting orders right now. Check back later!</p>
+                    </div>
+                )}
                 {/* Fastest Items — horizontal scroll like Figma */}
                 {fastItems.length > 0 && (
                     <div className="mb-6 animate-fade-in-up">
@@ -155,7 +169,7 @@ function MenuContent() {
                         <div className="flex gap-3 overflow-x-auto pb-2 -mx-4 px-4 scrollbar-hide">
                             {fastItems.map((item) => (
                                 <div key={item.id} className="shrink-0 w-[140px]">
-                                    <MenuCard item={item} />
+                                    <MenuCard item={item} disabled={!canteenOpen} />
                                 </div>
                             ))}
                         </div>
@@ -240,7 +254,7 @@ function MenuContent() {
                                     <div className="grid gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4">
                                         {items.map((item, index) => (
                                             <div key={item.id} className={`animate-fade-in-up delay-${Math.min(index + 1, 8)}`}>
-                                                <MenuCard item={item} />
+                                                <MenuCard item={item} disabled={!canteenOpen} />
                                             </div>
                                         ))}
                                     </div>

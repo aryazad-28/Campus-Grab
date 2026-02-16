@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { LayoutDashboard, UtensilsCrossed, LogOut, ClipboardList, Bell, BarChart3 } from 'lucide-react'
+import { LayoutDashboard, UtensilsCrossed, LogOut, ClipboardList, Bell, BarChart3, Power } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { Button } from '@/components/ui/button'
@@ -12,10 +12,11 @@ import { useTranslations } from 'next-intl'
 
 export default function AdminDashboard() {
     const router = useRouter()
-    const { admin, isAuthenticated, isPending, needsOnboarding, isLoading, logout } = useAdmin()
+    const { admin, isAuthenticated, isPending, needsOnboarding, isLoading, logout, toggleOpen } = useAdmin()
     const { orders } = useOrders()
     const t = useTranslations('Admin')
     const tCommon = useTranslations('Common')
+    const [isToggling, setIsToggling] = useState(false)
 
     useEffect(() => {
         if (!isLoading) {
@@ -40,6 +41,13 @@ export default function AdminDashboard() {
         setTimeout(() => router.push('/login'), 100)
     }
 
+    const handleToggleOpen = async () => {
+        setIsToggling(true)
+        await toggleOpen()
+        setIsToggling(false)
+    }
+
+    const isOpen = admin?.is_open ?? false
     const pendingOrders = orders.filter(o => o.status === 'pending').length
     const preparingOrders = orders.filter(o => o.status === 'preparing').length
     const readyOrders = orders.filter(o => o.status === 'ready').length
@@ -68,6 +76,65 @@ export default function AdminDashboard() {
             {/* Main Content */}
             <main className="container mx-auto px-4 py-8">
                 <h1 className="mb-6 text-2xl font-semibold">{t('welcome', { name: admin?.name || '' })}</h1>
+
+                {/* ✨ Canteen Open/Close Toggle Card */}
+                <div className="mb-8">
+                    <Card className={`relative overflow-hidden border-2 transition-all duration-500 ${isOpen
+                            ? 'bg-emerald-500/5 border-emerald-500/40'
+                            : 'bg-red-500/5 border-red-500/40'
+                        }`}>
+                        {/* Animated background glow */}
+                        <div className={`absolute inset-0 transition-opacity duration-700 ${isOpen ? 'opacity-100' : 'opacity-0'
+                            }`}>
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                        </div>
+                        <div className={`absolute inset-0 transition-opacity duration-700 ${!isOpen ? 'opacity-100' : 'opacity-0'
+                            }`}>
+                            <div className="absolute top-0 right-0 w-40 h-40 bg-red-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+                        </div>
+
+                        <CardContent className="relative p-6">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-4">
+                                    {/* Animated status dot */}
+                                    <div className={`relative flex h-3 w-3`}>
+                                        <span className={`absolute inline-flex h-full w-full rounded-full opacity-75 ${isOpen ? 'bg-emerald-400 animate-ping' : 'bg-red-400'
+                                            }`} />
+                                        <span className={`relative inline-flex rounded-full h-3 w-3 ${isOpen ? 'bg-emerald-500' : 'bg-red-500'
+                                            }`} />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-lg font-semibold text-white">
+                                            Canteen Status
+                                        </h3>
+                                        <p className={`text-sm font-medium transition-colors duration-300 ${isOpen ? 'text-emerald-400' : 'text-red-400'
+                                            }`}>
+                                            {isOpen ? '● Accepting Orders' : '● Closed for Orders'}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {/* Toggle Button */}
+                                <button
+                                    onClick={handleToggleOpen}
+                                    disabled={isToggling}
+                                    className={`group relative flex items-center gap-3 rounded-full px-6 py-3 font-semibold text-sm transition-all duration-300 ${isToggling ? 'opacity-50 cursor-wait' :
+                                            isOpen
+                                                ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30 hover:shadow-lg hover:shadow-red-500/20'
+                                                : 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/20'
+                                        }`}
+                                >
+                                    <Power className={`h-5 w-5 transition-transform duration-300 ${isToggling ? 'animate-spin' : 'group-hover:scale-110'
+                                        }`} />
+                                    {isToggling
+                                        ? 'Updating...'
+                                        : isOpen ? 'Close Canteen' : 'Open Canteen'
+                                    }
+                                </button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
 
                 {/* Stats Cards */}
                 <div className="grid gap-4 mb-8 sm:grid-cols-3">

@@ -16,6 +16,7 @@ interface CanteenInfo {
     status: string
     latitude: number | null
     longitude: number | null
+    is_open: boolean
     distance?: number
 }
 
@@ -47,7 +48,7 @@ export default function CanteensPage() {
             try {
                 const { data, error } = await supabase
                     .from('admin_profiles')
-                    .select('id, canteen_name, college_name, area, status, latitude, longitude')
+                    .select('id, canteen_name, college_name, area, status, latitude, longitude, is_open')
                     .eq('status', 'approved')
                 if (!error && data) setCanteens(data)
             } catch (err) {
@@ -171,7 +172,9 @@ export default function CanteensPage() {
                                     <h3 className="font-semibold text-base">{canteen.canteen_name}</h3>
                                     <p className="text-sm text-[var(--muted-foreground)]">{canteen.college_name}</p>
                                 </div>
-                                <span className="text-sm font-medium text-green-500">Open</span>
+                                <span className={`text-sm font-medium ${canteen.is_open !== false ? 'text-green-500' : 'text-red-400'}`}>
+                                    {canteen.is_open !== false ? 'Open' : 'Closed'}
+                                </span>
                             </div>
                         </div>
                     ))}
