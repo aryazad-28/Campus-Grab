@@ -10,7 +10,7 @@ const tabs = [
     { href: '/canteens', icon: Home, label: 'Home' },
     { href: '/cart', icon: ShoppingCart, label: 'Cart', badge: true },
     { href: '/orders', icon: Clock, label: 'Orders' },
-    { href: '/profile', icon: UserCircle, label: 'Admin' },
+    { href: '/profile', icon: UserCircle, label: 'Profile' },
 ]
 
 export function BottomNav() {
