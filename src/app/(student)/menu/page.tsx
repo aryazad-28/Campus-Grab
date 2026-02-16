@@ -61,6 +61,26 @@ function MenuContent() {
         return cats.sort()
     }, [availableItems])
 
+    const categoryIconMap: Record<string, LucideIcon> = {
+        'Burgers': Beef,
+        'Classic Pizzas': Pizza,
+        'Special Pizzas': Pizza,
+        'Momos': CircleDot,
+        'Appetizers': Salad,
+        'Pastas': UtensilsCrossed,
+        'Brownies': CakeSlice,
+        'Beverages': Coffee,
+        'Coffee': Coffee,
+    }
+
+    const navItems = useMemo(() => {
+        const items = [{ name: 'All', icon: LayoutGrid }]
+        categories.forEach(cat => {
+            items.push({ name: cat, icon: categoryIconMap[cat] || UtensilsCrossed })
+        })
+        return items
+    }, [categories])
+
     const fastItems = useMemo(() => {
         return [...availableItems]
             .sort((a, b) => a.eta_minutes - b.eta_minutes)

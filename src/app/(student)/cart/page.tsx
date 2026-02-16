@@ -36,7 +36,7 @@ function CartContent() {
     const canteenId = searchParams.get('canteen') || (typeof window !== 'undefined' ? localStorage.getItem('campus-grab-selected-canteen') : null)
     const { items, updateQuantity, removeFromCart, clearCart, cartTotal, maxEta } = useCart()
     const { addOrder } = useOrders()
-    const { isAuthenticated } = useAuth()
+    const { isAuthenticated, user } = useAuth()
     const { trackNewOrder } = useAI()
     const [step, setStep] = useState<CheckoutStep>('cart')
     const [orderToken, setOrderToken] = useState<string | null>(null)
@@ -92,7 +92,7 @@ function CartContent() {
 
             const razorpayData = await razorpayRes.json()
 
-            // Step 3: Open Razorpay Checkout (UPI only)
+            // Step 3: Open Razorpay Checkout (UPI only — optimized for speed)
             const options = {
                 key: razorpayData.key_id,
                 amount: razorpayData.amount,
@@ -105,11 +105,25 @@ function CartContent() {
                     card: false,
                     netbanking: false,
                     wallet: false,
+                    paylater: false,
+                    emi: false,
+                },
+                config: {
+                    display: {
+                        blocks: {
+                            upi: {
+                                name: 'Pay via UPI',
+                                instruments: [
+                                    { method: 'upi', flows: ['qrcode', 'collect', 'intent'] }
+                                ],
+                            },
+                        },
+                        sequence: ['block.upi'],
+                        preferences: { show_default_blocks: false },
+                    },
                 },
                 prefill: {
-                    name: '', // Add user name if available
-                    contact: '', // Add user phone if available  
-                    email: '', // Add user email if available
+                    email: user?.email || '',
                 },
                 handler: async function (response: any) {
                     try {
@@ -157,10 +171,11 @@ function CartContent() {
                     ondismiss: function () {
                         setIsProcessing(false)
                         alert('Payment cancelled. Your order is still pending.')
-                    }
+                    },
+                    confirm_close: true,
                 },
                 theme: {
-                    color: '#10b981'
+                    color: '#EF4444'
                 }
             }
 

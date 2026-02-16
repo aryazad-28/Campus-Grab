@@ -32,13 +32,23 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // 1. Fetch vendor's Razorpay credentials from database
-        const { data: admin, error: adminError } = await supabase
-            .from('admin_profiles')
-            .select('razorpay_key_id, razorpay_key_secret, canteen_name')
-            .eq('id', canteenId)
-            .eq('status', 'approved')
-            .single()
+        // 1. Fetch vendor credentials AND order details in PARALLEL (saves ~500ms)
+        const [adminResult, orderResult] = await Promise.all([
+            supabase
+                .from('admin_profiles')
+                .select('razorpay_key_id, razorpay_key_secret, canteen_name')
+                .eq('id', canteenId)
+                .eq('status', 'approved')
+                .single(),
+            supabase
+                .from('orders')
+                .select('id, items, total, status, admin_id')
+                .eq('id', orderId)
+                .single()
+        ])
+
+        const { data: admin, error: adminError } = adminResult
+        const { data: order, error: orderError } = orderResult
 
         if (adminError || !admin) {
             return NextResponse.json(
@@ -53,13 +63,6 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             )
         }
-
-        // 2. Fetch order details and calculate amount from database
-        const { data: order, error: orderError } = await supabase
-            .from('orders')
-            .select('id, items, total, status, admin_id')
-            .eq('id', orderId)
-            .single()
 
         if (orderError || !order) {
             console.error('Order fetch error:', orderError)
