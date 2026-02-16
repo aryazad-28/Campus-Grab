@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, Clock, ChefHat, Package, CheckCircle, Loader2, RefreshCw } from 'lucide-react'
+import { ArrowLeft, Clock, ChefHat, Package, CheckCircle, Loader2, RefreshCw, Volume2, VolumeX } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
 import { useOrders, Order } from '@/components/OrdersProvider'
 import { useAI } from '@/components/AIProvider'
@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { useTranslations } from 'next-intl'
+import { unlockAudio, isAudioReady } from '@/lib/notification-sound'
 
 export default function AdminOrdersPage() {
     const router = useRouter()
@@ -18,8 +19,26 @@ export default function AdminOrdersPage() {
     const { orders, updateOrderStatus } = useOrders()
     const { markOrderComplete } = useAI()
     const [filter, setFilter] = useState<Order['status'] | 'all'>('all')
+    const [soundEnabled, setSoundEnabled] = useState(false)
     const t = useTranslations('Admin')
     const tOrders = useTranslations('Orders')
+
+    // Unlock audio on first user interaction
+    useEffect(() => {
+        const handleInteraction = () => {
+            unlockAudio()
+            setSoundEnabled(isAudioReady())
+            // Remove listeners after first interaction
+            document.removeEventListener('click', handleInteraction)
+            document.removeEventListener('touchstart', handleInteraction)
+        }
+        document.addEventListener('click', handleInteraction)
+        document.addEventListener('touchstart', handleInteraction)
+        return () => {
+            document.removeEventListener('click', handleInteraction)
+            document.removeEventListener('touchstart', handleInteraction)
+        }
+    }, [])
 
     const STATUS_CONFIG: Record<Order['status'], { label: string; icon: typeof Clock; color: string; nextStatus?: Order['status']; nextLabel?: string }> = {
         pending: { label: t('newOrders'), icon: Clock, color: 'bg-amber-100 text-amber-800 border-amber-200', nextStatus: 'preparing', nextLabel: t('acceptStart') },
@@ -67,9 +86,23 @@ export default function AdminOrdersPage() {
                         <span className="hidden sm:inline">{t('dashboard')}</span>
                     </Link>
                     <h1 className="text-lg font-semibold">{t('orders')}</h1>
-                    <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white" onClick={() => window.location.reload()}>
-                        <RefreshCw className="h-5 w-5" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={soundEnabled ? 'text-emerald-400 hover:text-emerald-300' : 'text-red-400 hover:text-red-300'}
+                            onClick={() => {
+                                unlockAudio()
+                                setSoundEnabled(isAudioReady())
+                            }}
+                            title={soundEnabled ? 'Sound enabled' : 'Tap to enable sound'}
+                        >
+                            {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="text-slate-400 hover:text-white" onClick={() => window.location.reload()}>
+                            <RefreshCw className="h-5 w-5" />
+                        </Button>
+                    </div>
                 </div>
             </header>
 

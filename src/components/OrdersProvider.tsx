@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
+import { playOrderNotification } from '@/lib/notification-sound'
 
 export interface Order {
     id: string
@@ -92,6 +93,10 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                     if (adminId && newOrder.admin_id !== adminId) return
                     setOrders(prev => {
                         if (prev.some(o => o.id === newOrder.id)) return prev
+                        // Play notification sound for admin when new order arrives
+                        if (adminId) {
+                            try { playOrderNotification() } catch { /* ignore audio errors */ }
+                        }
                         return [newOrder, ...prev]
                     })
                 })

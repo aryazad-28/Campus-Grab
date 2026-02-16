@@ -160,6 +160,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         return { success: false, error: error.message }
       }
 
+      // Verify this is not an admin account
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user?.user_metadata?.account_type === 'admin') {
+        await supabase.auth.signOut()
+        return { success: false, error: 'This is an admin account. Please use /admin/login to log in.' }
+      }
+
       return { success: true }
     } catch (err) {
       return { success: false, error: 'An unexpected error occurred' }

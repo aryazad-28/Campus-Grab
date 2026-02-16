@@ -129,6 +129,14 @@ export function AdminProvider({ children }: { children: ReactNode }) {
         try {
             const { error } = await supabase.auth.signInWithPassword({ email, password })
             if (error) return { success: false, error: error.message }
+
+            // Verify this is actually an admin account
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user?.user_metadata?.account_type === 'student') {
+                await supabase.auth.signOut()
+                return { success: false, error: 'This is a student account. Please use the student portal to log in.' }
+            }
+
             return { success: true }
         } catch {
             return { success: false, error: 'An unexpected error occurred' }
