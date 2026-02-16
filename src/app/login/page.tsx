@@ -123,7 +123,7 @@ export default function LoginPage() {
                 </div>
 
                 <div className="relative z-10 w-full max-w-md space-y-4">
-                    <p className="text-center text-sm text-slate-500 mb-4 animate-fade-in-up delay-1">Continue as</p>
+                    <p className="text-center text-sm text-slate-600 dark:text-slate-400 mb-4 animate-fade-in-up delay-1">Continue as</p>
 
                     <button
                         onClick={() => setShowStudentForm(true)}
@@ -134,7 +134,7 @@ export default function LoginPage() {
                                 <GraduationCap className="h-7 w-7 text-emerald-600 dark:text-emerald-400" />
                             </div>
                             <div className="text-left">
-                                <h3 className="text-xl font-semibold">Student</h3>
+                                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Student</h3>
                                 <p className="text-sm text-slate-500 dark:text-slate-400">
                                     Order food from campus canteens
                                 </p>
@@ -152,7 +152,7 @@ export default function LoginPage() {
                                 <ShieldCheck className="h-7 w-7 text-indigo-600 dark:text-indigo-400" />
                             </div>
                             <div className="text-left">
-                                <h3 className="text-xl font-semibold">Canteen Admin</h3>
+                                <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Canteen Admin</h3>
                                 <p className="text-sm text-slate-500 dark:text-slate-400">
                                     Manage orders and menu items
                                 </p>
@@ -195,10 +195,10 @@ export default function LoginPage() {
                     >
                         ← Back to role selection
                     </button>
-                    <CardTitle className="text-2xl">
+                    <CardTitle className="text-2xl text-slate-900 dark:text-white">
                         {mode === 'signin' ? 'Welcome back' : 'Create account'}
                     </CardTitle>
-                    <CardDescription>
+                    <CardDescription className="text-slate-600 dark:text-slate-400">
                         {mode === 'signin' ? 'Sign in as Student' : 'Sign up as Student'}
                     </CardDescription>
                 </CardHeader>
@@ -231,7 +231,7 @@ export default function LoginPage() {
                     <form onSubmit={handleStudentSubmit} className="space-y-4">
                         {mode === 'signup' && (
                             <div className="space-y-2">
-                                <label className="text-sm font-medium" htmlFor="name">Name</label>
+                                <label className="text-sm font-medium text-slate-900 dark:text-slate-200" htmlFor="name">Name</label>
                                 <div className="relative">
                                     <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                     <Input
@@ -248,7 +248,7 @@ export default function LoginPage() {
                         )}
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium" htmlFor="email">Email</label>
+                            <label className="text-sm font-medium text-slate-900 dark:text-slate-200" htmlFor="email">Email</label>
                             <div className="relative">
                                 <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                 <Input
@@ -264,7 +264,7 @@ export default function LoginPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium" htmlFor="password">Password</label>
+                            <label className="text-sm font-medium text-slate-900 dark:text-slate-200" htmlFor="password">Password</label>
                             <div className="relative">
                                 <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                 <Input
@@ -297,7 +297,7 @@ export default function LoginPage() {
                         </Button>
                     </form>
 
-                    <div className="mt-6 text-center text-sm">
+                    <div className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
                         {mode === 'signin' ? (
                             <>
                                 Don&apos;t have an account?{' '}
