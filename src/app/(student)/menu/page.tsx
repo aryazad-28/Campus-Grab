@@ -36,6 +36,7 @@ function MenuContent() {
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
     const [canteenName, setCanteenName] = useState<string | null>(null)
     const [canteenOpen, setCanteenOpen] = useState<boolean>(true)
+    const [canteenImage, setCanteenImage] = useState<string | null>(null)
 
     useEffect(() => {
         if (!canteenId) router.push('/canteens')
@@ -43,11 +44,12 @@ function MenuContent() {
 
     useEffect(() => {
         if (!canteenId || !supabase) return
-        supabase.from('admin_profiles').select('canteen_name, is_open').eq('id', canteenId).single()
+        supabase.from('admin_profiles').select('canteen_name, is_open, canteen_image').eq('id', canteenId).single()
             .then(({ data }) => {
                 if (data) {
                     setCanteenName(data.canteen_name)
                     setCanteenOpen(data.is_open !== false)
+                    setCanteenImage(data.canteen_image || null)
                 }
             })
     }, [canteenId])
@@ -119,9 +121,17 @@ function MenuContent() {
             {/* Hero Banner — like Figma canteen page */}
             <div className="relative h-52 bg-[var(--card-elevated)] overflow-hidden animate-fade-in">
                 <div className="absolute inset-0 bg-gradient-to-t from-[var(--background)] via-transparent to-transparent z-10" />
-                <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                    <span className="text-6xl">🍽️</span>
-                </div>
+                {canteenImage ? (
+                    <img
+                        src={canteenImage}
+                        alt={canteenName || 'Canteen'}
+                        className="absolute inset-0 h-full w-full object-cover"
+                    />
+                ) : (
+                    <div className="absolute inset-0 flex items-center justify-center opacity-20">
+                        <span className="text-6xl">🍽️</span>
+                    </div>
+                )}
 
                 {/* Back button */}
                 <Link href="/canteens" className="absolute top-4 left-4 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-black/40 backdrop-blur-sm text-white hover:bg-black/60 transition-colors">

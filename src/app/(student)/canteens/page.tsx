@@ -145,7 +145,7 @@ export default function CanteensPage() {
                             className={`cursor-pointer rounded-2xl overflow-hidden bg-[var(--card)] border border-[var(--border)] transition-all hover:border-red-500/30 active:scale-[0.98] animate-fade-in-up delay-${Math.min(index + 3, 8)}`}
                         >
                             {/* Hero Image */}
-                            <div className="relative h-40 bg-gradient-to-br from-red-500/20 via-orange-400/20 to-amber-300/20 dark:from-red-900/30 dark:via-orange-900/20 dark:to-amber-900/10">
+                            <div className="relative h-48 bg-[var(--card-elevated)]">
                                 {canteen.canteen_image ? (
                                     <img
                                         src={canteen.canteen_image}
@@ -153,7 +153,7 @@ export default function CanteensPage() {
                                         className="absolute inset-0 h-full w-full object-cover"
                                     />
                                 ) : (
-                                    <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-red-500/20 via-orange-400/20 to-amber-300/20 dark:from-red-900/30 dark:via-orange-900/20 dark:to-amber-900/10">
                                         <Store className="h-10 w-10 text-[var(--muted-foreground)] opacity-30" />
                                     </div>
                                 )}
