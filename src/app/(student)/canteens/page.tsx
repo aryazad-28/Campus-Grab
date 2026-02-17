@@ -17,6 +17,7 @@ interface CanteenInfo {
     latitude: number | null
     longitude: number | null
     is_open: boolean
+    canteen_image: string | null
     distance?: number
 }
 
@@ -48,7 +49,7 @@ export default function CanteensPage() {
             try {
                 const { data, error } = await supabase
                     .from('admin_profiles')
-                    .select('id, canteen_name, college_name, area, status, latitude, longitude, is_open')
+                    .select('id, canteen_name, college_name, area, status, latitude, longitude, is_open, canteen_image')
                     .eq('status', 'approved')
                 if (!error && data) setCanteens(data)
             } catch (err) {
@@ -144,11 +145,19 @@ export default function CanteensPage() {
                             className={`cursor-pointer rounded-2xl overflow-hidden bg-[var(--card)] border border-[var(--border)] transition-all hover:border-red-500/30 active:scale-[0.98] animate-fade-in-up delay-${Math.min(index + 3, 8)}`}
                         >
                             {/* Hero Image */}
-                            <div className="relative h-40 bg-[var(--card-elevated)]">
+                            <div className="relative h-40 bg-gradient-to-br from-red-500/20 via-orange-400/20 to-amber-300/20 dark:from-red-900/30 dark:via-orange-900/20 dark:to-amber-900/10">
+                                {canteen.canteen_image ? (
+                                    <img
+                                        src={canteen.canteen_image}
+                                        alt={canteen.canteen_name}
+                                        className="absolute inset-0 h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <Store className="h-10 w-10 text-[var(--muted-foreground)] opacity-30" />
+                                    </div>
+                                )}
                                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    <Store className="h-10 w-10 text-[var(--muted-foreground)] opacity-30" />
-                                </div>
 
                                 {/* Best Choice badge */}
                                 {index === 0 && (

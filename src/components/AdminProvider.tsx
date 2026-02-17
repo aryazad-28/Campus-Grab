@@ -18,6 +18,7 @@ interface AdminProfile {
     razorpay_key_id: string | null
     razorpay_key_secret: string | null
     is_open: boolean
+    canteen_image: string | null
 }
 
 interface AdminContextType {

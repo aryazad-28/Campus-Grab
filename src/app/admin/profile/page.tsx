@@ -3,10 +3,12 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, User, Building, MapPin, Phone, Mail, Loader2, LogOut, History, CalendarDays, ChevronDown, IndianRupee, CheckCircle } from 'lucide-react'
+import { ArrowLeft, User, Building, MapPin, Phone, Mail, Loader2, LogOut, History, CalendarDays, ChevronDown, IndianRupee, CheckCircle, Camera, ImageIcon } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
+import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { useTranslations } from 'next-intl'
@@ -46,6 +48,31 @@ export default function AdminProfilePage() {
     const [isLoadingHistory, setIsLoadingHistory] = useState(false)
     const [showMonthDropdown, setShowMonthDropdown] = useState(false)
     const [showYearDropdown, setShowYearDropdown] = useState(false)
+    const [canteenImageUrl, setCanteenImageUrl] = useState('')
+    const [isSavingImage, setIsSavingImage] = useState(false)
+    const [imageSaveMsg, setImageSaveMsg] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (admin?.canteen_image) setCanteenImageUrl(admin.canteen_image)
+    }, [admin])
+
+    const handleSaveCanteenImage = async () => {
+        if (!admin || !supabase) return
+        setIsSavingImage(true)
+        setImageSaveMsg(null)
+        try {
+            const { error } = await supabase
+                .from('admin_profiles')
+                .update({ canteen_image: canteenImageUrl || null })
+                .eq('id', admin.id)
+            if (error) throw error
+            setImageSaveMsg('Image saved!')
+            setTimeout(() => setImageSaveMsg(null), 3000)
+        } catch {
+            setImageSaveMsg('Failed to save')
+        }
+        setIsSavingImage(false)
+    }
 
     // Fetch month summaries
     const fetchMonthSummaries = useCallback(async () => {
@@ -169,6 +196,64 @@ export default function AdminProfilePage() {
                                     </label>
                                     <p className="font-medium">{admin?.email}</p>
                                 </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Canteen Image Card */}
+                    <Card className="bg-slate-800 border-slate-700">
+                        <CardHeader>
+                            <CardTitle className="flex items-center gap-2 text-lg text-white">
+                                <Camera className="h-5 w-5" />
+                                Canteen Photo
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {/* Image Preview */}
+                            <div className="relative h-40 rounded-xl overflow-hidden bg-slate-700 border border-slate-600">
+                                {canteenImageUrl ? (
+                                    <img
+                                        src={canteenImageUrl}
+                                        alt="Canteen preview"
+                                        className="h-full w-full object-cover"
+                                        onError={(e) => {
+                                            (e.target as HTMLImageElement).style.display = 'none'
+                                        }}
+                                    />
+                                ) : (
+                                    <div className="flex h-full items-center justify-center">
+                                        <ImageIcon className="h-10 w-10 text-slate-500" />
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Image URL Input */}
+                            <div className="space-y-2">
+                                <label className="text-sm text-slate-400">Image URL</label>
+                                <Input
+                                    type="url"
+                                    placeholder="https://example.com/canteen-photo.jpg"
+                                    value={canteenImageUrl}
+                                    onChange={(e) => setCanteenImageUrl(e.target.value)}
+                                    className="bg-slate-700 border-slate-600 text-white"
+                                />
+                                <p className="text-xs text-slate-500">Paste a URL to your canteen photo — this will appear on the student app</p>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <Button
+                                    onClick={handleSaveCanteenImage}
+                                    disabled={isSavingImage}
+                                    className="gap-2"
+                                >
+                                    {isSavingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
+                                    Save Photo
+                                </Button>
+                                {imageSaveMsg && (
+                                    <span className={`text-sm ${imageSaveMsg === 'Image saved!' ? 'text-green-400' : 'text-red-400'}`}>
+                                        {imageSaveMsg}
+                                    </span>
+                                )}
                             </div>
                         </CardContent>
                     </Card>

@@ -49,12 +49,19 @@ export default function LoginPage() {
     const [showStudentForm, setShowStudentForm] = useState(false)
 
     useEffect(() => {
-        if (isAuthenticated && window.location.pathname === '/login') {
-            router.push('/menu')
+        if (isAuthenticated) {
+            router.replace('/menu')
         }
     }, [isAuthenticated, router])
 
-    if (isAuthenticated && typeof window !== 'undefined' && window.location.pathname === '/login') return null
+    // Don't render anything while redirecting authenticated users
+    if (isAuthenticated) {
+        return (
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-red-500" />
+            </div>
+        )
+    }
 
     const handleStudentSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -75,7 +82,7 @@ export default function LoginPage() {
         } else {
             const { success, error } = await signIn(email, password)
             if (success) {
-                router.push('/menu')
+                router.replace('/menu')
             } else {
                 setMessage({ type: 'error', text: error || 'Sign in failed' })
             }
