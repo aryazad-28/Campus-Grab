@@ -56,28 +56,39 @@ export function AdminProvider({ children }: { children: ReactNode }) {
     const [supabaseUserId, setSupabaseUserId] = useState<string | null>(null)
     const [supabaseEmail, setSupabaseEmail] = useState<string>('')
 
-    const loadAdminProfile = useCallback(async (userId: string, email: string) => {
+    const loadAdminProfile = useCallback(async (userId: string, email: string, accountType?: string) => {
         if (!supabase) return
 
         setSupabaseUserId(userId)
         setSupabaseEmail(email)
 
-        // First, check if this user is tagged as an admin
-        const { data: { user } } = await supabase.auth.getUser()
-        const accountType = user?.user_metadata?.account_type
-
-        // Only allow users explicitly tagged as 'admin'
-        // Reject students, Google OAuth users (no type), or any non-admin
+        // Use the account_type passed from session metadata
+        // This avoids a getUser() network call that can fail with expired tokens
         if (accountType !== 'admin') {
-            // Don't sign out — just reject from admin portal
-            // (they may be a valid student on the student side)
-            await supabase.auth.signOut()
+            // Not an admin — don't sign out (they may be a valid student)
             setAdmin(null)
             setNeedsOnboarding(false)
             setIsLoading(false)
             return
         }
 
+        // Try to load cached profile from localStorage first for instant UI
+        const cached = localStorage.getItem(ADMIN_STORAGE_KEY)
+        if (cached) {
+            try {
+                const cachedProfile = JSON.parse(cached) as AdminProfile
+                if (cachedProfile.user_id === userId) {
+                    setAdmin(cachedProfile)
+                    setNeedsOnboarding(false)
+                    setIsLoading(false)
+                    // Still verify from Supabase in background
+                }
+            } catch {
+                localStorage.removeItem(ADMIN_STORAGE_KEY)
+            }
+        }
+
+        // Fetch fresh profile from Supabase
         const { data, error } = await supabase
             .from('admin_profiles')
             .select('*')
@@ -109,15 +120,34 @@ export function AdminProvider({ children }: { children: ReactNode }) {
 
         supabase.auth.getSession().then(({ data: { session } }) => {
             if (session?.user) {
-                loadAdminProfile(session.user.id, session.user.email || '')
+                // Pass account_type from session metadata — no network call needed
+                loadAdminProfile(
+                    session.user.id,
+                    session.user.email || '',
+                    session.user.user_metadata?.account_type
+                )
             } else {
+                // No session — try cached profile as fallback
+                const cached = localStorage.getItem(ADMIN_STORAGE_KEY)
+                if (cached) {
+                    try {
+                        setAdmin(JSON.parse(cached))
+                        setNeedsOnboarding(false)
+                    } catch {
+                        localStorage.removeItem(ADMIN_STORAGE_KEY)
+                    }
+                }
                 setIsLoading(false)
             }
         })
 
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
             if (session?.user) {
-                loadAdminProfile(session.user.id, session.user.email || '')
+                loadAdminProfile(
+                    session.user.id,
+                    session.user.email || '',
+                    session.user.user_metadata?.account_type
+                )
             } else {
                 setAdmin(null)
                 setNeedsOnboarding(false)
