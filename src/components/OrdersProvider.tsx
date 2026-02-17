@@ -3,6 +3,12 @@
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react'
 import { supabase } from '@/lib/supabase'
 import { playOrderNotification } from '@/lib/notification-sound'
+import {
+    registerServiceWorker,
+    requestNotificationPermission,
+    showNewOrderNotification,
+    showOrderStatusNotification
+} from '@/lib/notifications'
 
 export interface Order {
     id: string
@@ -83,6 +89,12 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
 
         loadOrders()
 
+        // Register service worker + request notification permission
+        registerServiceWorker()
+        if (adminId) {
+            requestNotificationPermission()
+        }
+
         // Real-time subscription for orders
         if (supabase) {
             const channel = supabase
@@ -93,9 +105,18 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                     if (adminId && newOrder.admin_id !== adminId) return
                     setOrders(prev => {
                         if (prev.some(o => o.id === newOrder.id)) return prev
-                        // Play notification sound for admin when new order arrives
+                        // Play notification sound + show push notification for admin
                         if (adminId) {
                             try { playOrderNotification() } catch { /* ignore audio errors */ }
+                            try {
+                                const items = newOrder.items || []
+                                const itemCount = items.reduce((sum: number, i: any) => sum + (i.quantity || 1), 0)
+                                showNewOrderNotification(
+                                    newOrder.token_number || '???',
+                                    itemCount,
+                                    newOrder.total || 0
+                                )
+                            } catch { /* ignore notification errors */ }
                         }
                         return [newOrder, ...prev]
                     })
@@ -103,6 +124,17 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'orders' }, (payload) => {
                     const updated = payload.new as Order
                     if (adminId && updated.admin_id !== adminId) return
+
+                    // Show status notification for students (non-admin)
+                    if (!adminId && updated.status && updated.status !== 'pending') {
+                        try {
+                            showOrderStatusNotification(
+                                updated.token_number || '???',
+                                updated.status
+                            )
+                        } catch { /* ignore notification errors */ }
+                    }
+
                     setOrders(prev => prev.map(o => o.id === updated.id ? updated : o))
                 })
                 .subscribe()
