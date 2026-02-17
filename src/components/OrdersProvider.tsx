@@ -105,19 +105,8 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                     if (adminId && newOrder.admin_id !== adminId) return
                     setOrders(prev => {
                         if (prev.some(o => o.id === newOrder.id)) return prev
-                        // Play notification sound + show push notification for admin
-                        if (adminId) {
-                            try { playOrderNotification() } catch { /* ignore audio errors */ }
-                            try {
-                                const items = newOrder.items || []
-                                const itemCount = items.reduce((sum: number, i: any) => sum + (i.quantity || 1), 0)
-                                showNewOrderNotification(
-                                    newOrder.token_number || '???',
-                                    itemCount,
-                                    newOrder.total || 0
-                                )
-                            } catch { /* ignore notification errors */ }
-                        }
+                        // Don't notify here — order is not paid yet
+                        // Notification will fire on UPDATE when payment is verified
                         return [newOrder, ...prev]
                     })
                 })
@@ -125,7 +114,29 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                     const updated = payload.new as Order
                     if (adminId && updated.admin_id !== adminId) return
 
-                    // Show status notification for students (non-admin)
+                    // Admin: notify when payment is verified (payment_verified flips to true)
+                    if (adminId && (updated as any).payment_verified === true) {
+                        setOrders(prev => {
+                            const existing = prev.find(o => o.id === updated.id)
+                            // Only notify if this order wasn't already marked as paid in our local state
+                            if (existing && !(existing as any).payment_verified) {
+                                try { playOrderNotification() } catch { /* ignore audio errors */ }
+                                try {
+                                    const items = updated.items || []
+                                    const itemCount = items.reduce((sum: number, i: any) => sum + (i.quantity || 1), 0)
+                                    showNewOrderNotification(
+                                        updated.token_number || '???',
+                                        itemCount,
+                                        updated.total || 0
+                                    )
+                                } catch { /* ignore notification errors */ }
+                            }
+                            return prev.map(o => o.id === updated.id ? updated : o)
+                        })
+                        return
+                    }
+
+                    // Student: notify on status changes (preparing, ready, completed)
                     if (!adminId && updated.status && updated.status !== 'pending') {
                         try {
                             showOrderStatusNotification(
