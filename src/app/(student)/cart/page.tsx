@@ -43,8 +43,7 @@ function CartContent() {
     const [orderTime, setOrderTime] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
 
-    const tax = Math.round(cartTotal * 0.05)
-    const total = cartTotal + tax
+    const total = cartTotal
 
     const handlePlaceOrder = async () => {
         if (items.length === 0) return
@@ -301,10 +300,6 @@ function CartContent() {
                             <span className="text-neutral-600 dark:text-neutral-400">{t('subtotal')}</span>
                             <span>{formatPrice(cartTotal)}</span>
                         </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-neutral-600 dark:text-neutral-400">{t('tax')}</span>
-                            <span>{formatPrice(tax)}</span>
-                        </div>
                         <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">
                             <span>{t('total')}</span>
                             <span>{formatPrice(total)}</span>
@@ -404,10 +399,6 @@ function CartContent() {
                     <div className="flex justify-between text-sm">
                         <span className="text-neutral-500">{t('subtotal')}</span>
                         <span>{formatPrice(cartTotal)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                        <span className="text-neutral-500">{t('tax')}</span>
-                        <span>{formatPrice(tax)}</span>
                     </div>
                     <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">
                         <span>{t('total')}</span>
