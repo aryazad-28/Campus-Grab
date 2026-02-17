@@ -207,10 +207,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     if (supabase) {
-      await supabase.auth.signOut()
+      await supabase.auth.signOut({ scope: 'global' })
     }
     setUser(null)
     localStorage.removeItem(USER_STORAGE_KEY)
+    // Clear any Supabase session data from localStorage
+    Object.keys(localStorage).forEach(key => {
+      if (key.startsWith('sb-') || key.includes('supabase')) {
+        localStorage.removeItem(key)
+      }
+    })
+    // Redirect to login
+    window.location.href = '/login'
   }
 
   const resetPassword = async (email: string) => {

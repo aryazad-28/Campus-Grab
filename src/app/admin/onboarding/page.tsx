@@ -119,7 +119,7 @@ export default function AdminOnboardingPage() {
         { key: 'canteen_name', label: 'Canteen Name', placeholder: 'Main Canteen', icon: Store, type: 'text' },
         { key: 'college_name', label: 'College/Campus Name', placeholder: 'AISSMS College of Engineering', icon: Building2, type: 'text' },
         { key: 'area', label: 'Area / City', placeholder: 'Pune, Maharashtra', icon: MapPin, type: 'text' },
-        { key: 'phone', label: 'Phone (optional)', placeholder: '+91 9876543210', icon: Phone, type: 'tel' },
+        { key: 'phone', label: 'Contact Number', placeholder: '+91 9876543210', icon: Phone, type: 'tel' },
     ]
 
     return (
@@ -148,7 +148,7 @@ export default function AdminOnboardingPage() {
                                         className="pl-10 bg-slate-700 border-slate-600 text-white placeholder:text-slate-500"
                                         value={formData[key as keyof typeof formData]?.toString() || ''}
                                         onChange={(e) => setFormData(prev => ({ ...prev, [key]: e.target.value }))}
-                                        required={key !== 'phone'}
+                                        required
                                     />
                                 </div>
 
