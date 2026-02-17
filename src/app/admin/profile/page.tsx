@@ -51,25 +51,81 @@ export default function AdminProfilePage() {
     const [canteenImageUrl, setCanteenImageUrl] = useState('')
     const [isSavingImage, setIsSavingImage] = useState(false)
     const [imageSaveMsg, setImageSaveMsg] = useState<string | null>(null)
+    const fileInputRef = (typeof window !== 'undefined') ? { current: null as HTMLInputElement | null } : { current: null }
 
     useEffect(() => {
         if (admin?.canteen_image) setCanteenImageUrl(admin.canteen_image)
     }, [admin])
 
-    const handleSaveCanteenImage = async () => {
-        if (!admin || !supabase) return
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (!file || !admin || !supabase) return
+
+        // Validate file
+        if (!file.type.startsWith('image/')) {
+            setImageSaveMsg('Please select an image file')
+            return
+        }
+        if (file.size > 5 * 1024 * 1024) {
+            setImageSaveMsg('Image must be under 5MB')
+            return
+        }
+
         setIsSavingImage(true)
         setImageSaveMsg(null)
+
         try {
-            const { error } = await supabase
+            // Upload to Supabase Storage
+            const fileExt = file.name.split('.').pop()
+            const fileName = `${admin.id}/canteen.${fileExt}`
+
+            const { error: uploadError } = await supabase.storage
+                .from('canteen-images')
+                .upload(fileName, file, { upsert: true })
+
+            if (uploadError) throw uploadError
+
+            // Get public URL
+            const { data: urlData } = supabase.storage
+                .from('canteen-images')
+                .getPublicUrl(fileName)
+
+            const publicUrl = urlData.publicUrl
+
+            // Save URL to admin_profiles
+            const { error: updateError } = await supabase
                 .from('admin_profiles')
-                .update({ canteen_image: canteenImageUrl || null })
+                .update({ canteen_image: publicUrl })
                 .eq('id', admin.id)
-            if (error) throw error
-            setImageSaveMsg('Image saved!')
+
+            if (updateError) throw updateError
+
+            setCanteenImageUrl(publicUrl)
+            setImageSaveMsg('Photo uploaded!')
+            setTimeout(() => setImageSaveMsg(null), 3000)
+        } catch (err: any) {
+            console.error('Upload error:', err)
+            setImageSaveMsg(err.message || 'Upload failed')
+        }
+        setIsSavingImage(false)
+
+        // Reset file input
+        if (e.target) e.target.value = ''
+    }
+
+    const handleRemoveImage = async () => {
+        if (!admin || !supabase) return
+        setIsSavingImage(true)
+        try {
+            await supabase
+                .from('admin_profiles')
+                .update({ canteen_image: null })
+                .eq('id', admin.id)
+            setCanteenImageUrl('')
+            setImageSaveMsg('Photo removed')
             setTimeout(() => setImageSaveMsg(null), 3000)
         } catch {
-            setImageSaveMsg('Failed to save')
+            setImageSaveMsg('Failed to remove')
         }
         setIsSavingImage(false)
     }
@@ -221,40 +277,48 @@ export default function AdminProfilePage() {
                                         }}
                                     />
                                 ) : (
-                                    <div className="flex h-full items-center justify-center">
+                                    <div className="flex h-full flex-col items-center justify-center gap-2">
                                         <ImageIcon className="h-10 w-10 text-slate-500" />
+                                        <p className="text-sm text-slate-500">No photo yet</p>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Image URL Input */}
-                            <div className="space-y-2">
-                                <label className="text-sm text-slate-400">Image URL</label>
-                                <Input
-                                    type="url"
-                                    placeholder="https://example.com/canteen-photo.jpg"
-                                    value={canteenImageUrl}
-                                    onChange={(e) => setCanteenImageUrl(e.target.value)}
-                                    className="bg-slate-700 border-slate-600 text-white"
-                                />
-                                <p className="text-xs text-slate-500">Paste a URL to your canteen photo — this will appear on the student app</p>
-                            </div>
+                            {/* Hidden file input */}
+                            <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                ref={(el) => { fileInputRef.current = el }}
+                                onChange={handleImageUpload}
+                            />
 
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 flex-wrap">
                                 <Button
-                                    onClick={handleSaveCanteenImage}
+                                    onClick={() => fileInputRef.current?.click()}
                                     disabled={isSavingImage}
                                     className="gap-2"
                                 >
-                                    {isSavingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle className="h-4 w-4" />}
-                                    Save Photo
+                                    {isSavingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
+                                    {canteenImageUrl ? 'Change Photo' : 'Upload Photo'}
                                 </Button>
+                                {canteenImageUrl && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleRemoveImage}
+                                        disabled={isSavingImage}
+                                        className="gap-2 border-slate-600 text-slate-300 hover:text-red-400"
+                                    >
+                                        Remove
+                                    </Button>
+                                )}
                                 {imageSaveMsg && (
-                                    <span className={`text-sm ${imageSaveMsg === 'Image saved!' ? 'text-green-400' : 'text-red-400'}`}>
+                                    <span className={`text-sm ${imageSaveMsg.includes('uploaded') || imageSaveMsg.includes('removed') ? 'text-green-400' : 'text-red-400'}`}>
                                         {imageSaveMsg}
                                     </span>
                                 )}
                             </div>
+                            <p className="text-xs text-slate-500">Upload a photo of your canteen — this will appear on the student app. Max 5MB.</p>
                         </CardContent>
                     </Card>
 
