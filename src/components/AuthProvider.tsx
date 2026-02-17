@@ -44,24 +44,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    // Check for demo user in localStorage first
-    const storedUser = localStorage.getItem(USER_STORAGE_KEY)
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser))
-        setIsLoading(false)
-        return
-      } catch {
-        localStorage.removeItem(USER_STORAGE_KEY)
-      }
-    }
-
     if (!supabase) {
+      // Demo mode — fall back to localStorage
+      const storedUser = localStorage.getItem(USER_STORAGE_KEY)
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser))
+        } catch {
+          localStorage.removeItem(USER_STORAGE_KEY)
+        }
+      }
       setIsLoading(false)
       return
     }
 
-    // Check current session
+    // Always check Supabase session — it persists across browser restarts
     supabase.auth.getSession().then(({ data: { session } }) => {
       // Check if this is an admin account trying to use student portal
       if (session?.user?.user_metadata?.account_type === 'admin') {
@@ -82,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setIsLoading(false)
     })
 
-    // Listen for auth changes
+    // Listen for auth changes (including automatic token refreshes)
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session?.user) {
         setUser(null)
