@@ -5,8 +5,16 @@ import { MenuProvider } from '@/components/MenuProvider'
 import { OrdersProvider } from '@/components/OrdersProvider'
 
 function AdminScopedProviders({ children }: { children: React.ReactNode }) {
-    const { admin } = useAdmin()
+    const { admin, isLoading } = useAdmin()
+
+    // Prevent fetching data until we know who the admin is
+    if (isLoading) return null
+
     const adminId = admin?.id
+
+    // If not authenticated (admin is null), the page protection will handle redirect, 
+    // but we should still avoid fetching "public" data here.
+    if (!adminId) return null
 
     return (
         <MenuProvider adminId={adminId}>

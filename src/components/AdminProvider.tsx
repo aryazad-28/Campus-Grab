@@ -15,8 +15,6 @@ interface AdminProfile {
     latitude: number | null
     longitude: number | null
     status: 'pending' | 'approved' | 'rejected'
-    razorpay_key_id: string | null
-    razorpay_key_secret: string | null
     is_open: boolean
     canteen_image: string | null
 }
@@ -89,10 +87,15 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             }
         }
 
-        // Fetch fresh profile from Supabase
+        // Fetch fresh profile from Supabase with EXPLICIT selection of safe fields
+        // Excludes razorpay_key_secret to prevent client-side leaks
         const { data, error } = await supabase
             .from('admin_profiles')
-            .select('*')
+            .select(`
+                id, user_id, name, email, canteen_name, college_name, area, 
+                phone, latitude, longitude, status, is_open, canteen_image,
+                razorpay_key_id
+            `)
             .eq('user_id', userId)
             .single()
 

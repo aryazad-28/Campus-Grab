@@ -231,10 +231,10 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
         throw new Error('Failed to create order on server.')
     }, [adminId])
 
-    const updateOrderStatus = useCallback((id: string, status: Order['status']) => {
+    const updateOrderStatus = useCallback(async (id: string, status: Order['status']) => {
         const completed_at = status === 'completed' ? new Date().toISOString() : undefined
 
-        // Update locally first
+        // Update locally first (optimistic UI)
         setOrders(prev => prev.map(order => {
             if (order.id === id) {
                 const updatedOrder = { ...order, status }
@@ -248,16 +248,35 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
 
         // Update in Supabase
         if (supabase) {
+            // Case 1: Student marking order as completed (Secure RPC)
+            if (!adminId && status === 'completed') {
+                try {
+                    const { error } = await supabase.rpc('mark_order_completed', { p_order_id: id })
+                    if (error) {
+                        console.error('Failed to mark order completed:', error)
+                        // Revert optimistic update on error would be ideal here
+                    }
+                } catch (err) {
+                    console.error('RPC error:', err)
+                }
+                return
+            }
+
+            // Case 2: Admin updating status (Direct RLS update)
+            // Admins have RLS permission to UPDATE orders for their canteen
             const updateData: Record<string, unknown> = { status }
             if (completed_at) {
                 updateData.completed_at = completed_at
             }
 
-            supabase.from('orders').update(updateData).eq('id', id).then(({ error }) => {
-                if (error) console.error('Supabase order status update error:', error)
-            })
+            const { error } = await supabase
+                .from('orders')
+                .update(updateData)
+                .eq('id', id)
+
+            if (error) console.error('Supabase order status update error:', error)
         }
-    }, [])
+    }, [adminId])
 
     // Current order is the most recent non-completed order
     const currentOrder = orders.find(o => o.status !== 'completed') || null
