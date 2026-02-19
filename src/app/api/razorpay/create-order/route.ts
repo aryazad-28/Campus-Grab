@@ -1,31 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Razorpay from 'razorpay'
-import { createClient } from '@supabase/supabase-js'
+import { getAuthenticatedUser, getServiceSupabase } from '@/lib/auth'
 
 export async function POST(request: NextRequest) {
     try {
-        // Validate environment variables first
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-            console.error('Missing required environment variables')
-            return NextResponse.json(
-                { error: 'Server configuration error: Missing Supabase credentials' },
-                { status: 500 }
-            )
-        }
+        // Authenticate the user
+        const auth = await getAuthenticatedUser(request)
+        if (auth.error) return auth.error
 
-        // Initialize Supabase client
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_ROLE_KEY
-        )
+        const supabase = getServiceSupabase()
 
         const body = await request.json()
-        console.log('Received request body:', { orderId: body.orderId, canteenId: body.canteenId })
 
         const { orderId, canteenId } = body
 
         if (!orderId || !canteenId) {
-            console.error('Missing orderId or canteenId in request')
+
             return NextResponse.json(
                 { error: 'Missing orderId or canteenId' },
                 { status: 400 }
@@ -42,7 +32,7 @@ export async function POST(request: NextRequest) {
                 .single(),
             supabase
                 .from('orders')
-                .select('id, items, total, status, admin_id')
+                .select('id, items, total, status, admin_id, user_id')
                 .eq('id', orderId)
                 .single()
         ])
@@ -65,7 +55,6 @@ export async function POST(request: NextRequest) {
         }
 
         if (orderError || !order) {
-            console.error('Order fetch error:', orderError)
             return NextResponse.json(
                 { error: 'Order not found' },
                 { status: 404 }
@@ -74,16 +63,22 @@ export async function POST(request: NextRequest) {
 
         // Verify order belongs to this canteen
         if (order.admin_id !== canteenId) {
-            console.error('Order admin_id mismatch:', { orderAdminId: order.admin_id, requestedCanteenId: canteenId })
             return NextResponse.json(
                 { error: 'Order does not belong to this canteen' },
                 { status: 403 }
             )
         }
 
+        // SECURITY: Verify order belongs to the authenticated user
+        if (order.user_id && order.user_id !== auth.userId) {
+            return NextResponse.json(
+                { error: 'Order does not belong to you' },
+                { status: 403 }
+            )
+        }
+
         // Verify order is pending payment
         if (order.status !== 'pending') {
-            console.error('Order not in pending status:', order.status)
             return NextResponse.json(
                 { error: 'Order is not in pending status' },
                 { status: 400 }
@@ -100,7 +95,7 @@ export async function POST(request: NextRequest) {
         // Amount should be in smallest currency unit (paise for INR)
         const amountInPaise = Math.round(order.total * 100)
 
-        console.log('Creating Razorpay order:', { amountInPaise, orderId: order.id, total: order.total })
+
 
         const razorpayOrder = await razorpay.orders.create({
             amount: amountInPaise,
@@ -112,7 +107,7 @@ export async function POST(request: NextRequest) {
             },
         })
 
-        console.log('Razorpay order created successfully:', razorpayOrder.id)
+
 
         // 5. Return order details to frontend
         return NextResponse.json({

@@ -8,6 +8,7 @@ import { useCart } from '@/components/CartProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { useAI } from '@/components/AIProvider'
+import { getAuthHeaders } from '@/lib/api-auth'
 import { formatPrice, formatTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
@@ -75,9 +76,10 @@ function CartContent() {
             })
 
             // Step 2: Create Razorpay order via API
+            const authHeaders = await getAuthHeaders()
             const razorpayRes = await fetch('/api/razorpay/create-order', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: authHeaders,
                 body: JSON.stringify({
                     orderId: newOrder.id,
                     canteenId: canteenId,
@@ -129,7 +131,7 @@ function CartContent() {
                         // Step 4: Verify payment on server
                         const verifyRes = await fetch('/api/razorpay/verify-payment', {
                             method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
+                            headers: authHeaders,
                             body: JSON.stringify({
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,

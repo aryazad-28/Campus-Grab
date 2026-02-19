@@ -1,16 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { getAuthenticatedUser, getServiceSupabase } from '@/lib/auth'
 
 export async function GET(request: NextRequest) {
     try {
-        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
-        }
+        // Authenticate the user
+        const auth = await getAuthenticatedUser(request)
+        if (auth.error) return auth.error
 
-        const supabase = createClient(
-            process.env.NEXT_PUBLIC_SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_ROLE_KEY
-        )
+        const supabase = getServiceSupabase()
 
         const { searchParams } = new URL(request.url)
         const adminId = searchParams.get('admin_id')
@@ -20,6 +17,20 @@ export async function GET(request: NextRequest) {
 
         if (!adminId) {
             return NextResponse.json({ error: 'Missing admin_id' }, { status: 400 })
+        }
+
+        // SECURITY: Verify the authenticated user owns this admin profile
+        const { data: adminProfile } = await supabase
+            .from('admin_profiles')
+            .select('id, user_id')
+            .eq('id', adminId)
+            .single()
+
+        if (!adminProfile || adminProfile.user_id !== auth.userId) {
+            return NextResponse.json(
+                { error: 'You can only view orders for your own canteen' },
+                { status: 403 }
+            )
         }
 
         // If specific date is requested, return all orders for that date

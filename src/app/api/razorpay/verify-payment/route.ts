@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
+import Razorpay from 'razorpay'
 import { createClient } from '@supabase/supabase-js'
 
 export async function POST(request: NextRequest) {
@@ -27,7 +28,7 @@ export async function POST(request: NextRequest) {
         // 1. Fetch order details
         const { data: order, error: orderError } = await supabase
             .from('orders')
-            .select('id, admin_id, status')
+            .select('id, admin_id, status, total')
             .eq('id', orderId)
             .single()
 
@@ -38,10 +39,18 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // 2. Fetch vendor's Razorpay secret key
+        // 1b. Verify order is in pending status (prevent re-verification)
+        if (order.status !== 'pending') {
+            return NextResponse.json(
+                { error: 'Order has already been processed' },
+                { status: 400 }
+            )
+        }
+
+        // 2. Fetch vendor's Razorpay credentials
         const { data: admin, error: adminError } = await supabase
             .from('admin_profiles')
-            .select('razorpay_key_secret')
+            .select('razorpay_key_id, razorpay_key_secret')
             .eq('id', order.admin_id)
             .single()
 
@@ -65,7 +74,35 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // 4. Update order status to confirmed (preparing)
+        // 4. Cross-verify payment amount with Razorpay API
+        if (admin.razorpay_key_id) {
+            try {
+                const razorpay = new Razorpay({
+                    key_id: admin.razorpay_key_id,
+                    key_secret: admin.razorpay_key_secret,
+                })
+                const payment = await razorpay.payments.fetch(razorpay_payment_id)
+                const expectedAmountPaise = Math.round(order.total * 100)
+
+                if (payment.amount !== expectedAmountPaise) {
+                    console.error('Payment amount mismatch:', {
+                        paid: payment.amount,
+                        expected: expectedAmountPaise,
+                        orderId,
+                    })
+                    return NextResponse.json(
+                        { error: 'Payment amount does not match order total' },
+                        { status: 400 }
+                    )
+                }
+            } catch (fetchError) {
+                console.error('Failed to fetch payment from Razorpay for verification:', fetchError)
+                // Continue with signature-based verification only if Razorpay API is unreachable
+                // Signature is already verified, so this is acceptable as a fallback
+            }
+        }
+
+        // 5. Update order status to confirmed (preparing)
         const { error: updateError } = await supabase
             .from('orders')
             .update({
@@ -77,6 +114,7 @@ export async function POST(request: NextRequest) {
                 paid_at: new Date().toISOString(),
             })
             .eq('id', orderId)
+            .eq('status', 'pending') // Double-check: only update if still pending (race condition guard)
 
         if (updateError) {
             console.error('Error updating order:', updateError)

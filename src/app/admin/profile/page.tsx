@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { ArrowLeft, User, Building, MapPin, Phone, Mail, Loader2, LogOut, History, CalendarDays, ChevronDown, IndianRupee, CheckCircle, Camera, ImageIcon } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
 import { supabase } from '@/lib/supabase'
+import { getAuthHeaders } from '@/lib/api-auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -135,7 +136,8 @@ export default function AdminProfilePage() {
         if (!admin?.id) return
         setIsLoadingHistory(true)
         try {
-            const res = await fetch(`/api/orders/vendor?admin_id=${admin.id}&month=${selectedMonth}&year=${selectedYear}`)
+            const authHeaders = await getAuthHeaders()
+            const res = await fetch(`/api/orders/vendor?admin_id=${admin.id}&month=${selectedMonth}&year=${selectedYear}`, { headers: authHeaders })
             if (res.ok) {
                 const data = await res.json()
                 setDaySummaries(data.days || [])
@@ -152,7 +154,8 @@ export default function AdminProfilePage() {
         if (!admin?.id) return
         setIsLoadingHistory(true)
         try {
-            const res = await fetch(`/api/orders/vendor?admin_id=${admin.id}&date=${date}`)
+            const authHeaders = await getAuthHeaders()
+            const res = await fetch(`/api/orders/vendor?admin_id=${admin.id}&date=${date}`, { headers: authHeaders })
             if (res.ok) {
                 const data = await res.json()
                 setDayOrders(data)

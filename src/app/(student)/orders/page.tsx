@@ -6,6 +6,7 @@ import { Clock, ChefHat, Package, CheckCircle, ArrowLeft, Utensils, ChevronDown,
 import { useOrders, Order } from '@/components/OrdersProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { cn } from '@/lib/utils'
+import { getAuthHeaders } from '@/lib/api-auth'
 import { useTranslations } from 'next-intl'
 
 const STATUS_STEPS = ['pending', 'preparing', 'ready', 'completed'] as const
@@ -102,7 +103,8 @@ export default function OrdersPage() {
                 const now = new Date()
                 url += `&month=${selectedMonth}&year=${now.getFullYear()}`
             }
-            const res = await fetch(url)
+            const authHeaders = await getAuthHeaders()
+            const res = await fetch(url, { headers: authHeaders })
             if (res.ok) {
                 const data = await res.json()
                 setHistoryDays(data.days || [])
