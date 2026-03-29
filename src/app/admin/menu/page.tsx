@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { ArrowLeft, Plus, Trash2, Check, X, Loader2 } from 'lucide-react'
+import { Plus, Trash2, Check, X, Loader2 } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
 import { useMenu } from '@/components/MenuProvider'
 import { Button } from '@/components/ui/button'
@@ -66,85 +65,82 @@ export default function MenuManagementPage() {
 
     if (authLoading || !isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-900">
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-[var(--muted-foreground)]" />
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white">
+        <div className="animate-in fade-in pb-20">
             {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-800">
-                <div className="container mx-auto flex h-14 items-center justify-between px-4">
-                    <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-white">
-                        <ArrowLeft className="h-5 w-5" />
-                        <span className="hidden sm:inline">{t('dashboard')}</span>
-                    </Link>
-                    <h1 className="text-lg font-semibold">{t('menu')}</h1>
-                    <Button onClick={() => setShowAddForm(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 gap-1">
+            <div className="sticky top-[4rem] z-40 border-b glass bg-background/80 backdrop-blur-md">
+                <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+                    <h1 className="text-xl font-bold">{t('menu')}</h1>
+                    <Button onClick={() => setShowAddForm(true)} size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white gap-1">
                         <Plus className="h-4 w-4" />
                         <span className="hidden sm:inline">{t('add')}</span>
                     </Button>
                 </div>
-            </header>
+            </div>
 
             <main className="container mx-auto px-4 py-6">
                 {/* Add Form */}
                 {showAddForm && (
-                    <Card className="mb-6 bg-slate-800 border-slate-700">
-                        <CardHeader className="pb-3">
-                            <CardTitle className="text-lg text-white">{t('addNewItem')}</CardTitle>
+                    <Card className="mb-6 border-[var(--border)] overflow-hidden">
+                        <CardHeader className="pb-3 bg-[var(--card)]/50">
+                            <CardTitle className="text-lg">{t('addNewItem')}</CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="pt-4">
                             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                                 <Input
                                     placeholder={t('itemName')}
                                     value={formData.name}
                                     onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                                    className="bg-slate-700 border-slate-600 text-white"
                                 />
-                                <select
-                                    className="h-10 rounded-lg border border-slate-600 bg-slate-700 px-3 text-sm text-white"
-                                    value={formData.category}
-                                    onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
-                                >
-                                    {CATEGORIES.map(cat => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                </select>
+                                <div className="relative">
+                                    <select
+                                        className="w-full h-10 rounded-md border border-[var(--border)] bg-[var(--background)] px-3 text-sm appearance-none focus:outline-none focus:ring-2 focus:ring-[var(--ring)]"
+                                        value={formData.category}
+                                        onChange={(e) => setFormData(prev => ({ ...prev, category: e.target.value }))}
+                                    >
+                                        {CATEGORIES.map(cat => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                    </select>
+                                    <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                                         <svg className="h-4 w-4 text-[var(--muted-foreground)] opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </div>
+                                </div>
                                 <Input
                                     type="number"
                                     placeholder={t('price')}
                                     value={formData.price}
                                     onChange={(e) => setFormData(prev => ({ ...prev, price: e.target.value }))}
-                                    className="bg-slate-700 border-slate-600 text-white"
                                 />
                                 <Input
                                     type="number"
                                     placeholder={t('eta')}
                                     value={formData.eta_minutes}
                                     onChange={(e) => setFormData(prev => ({ ...prev, eta_minutes: e.target.value }))}
-                                    className="bg-slate-700 border-slate-600 text-white"
                                 />
                                 <Input
                                     type="url"
                                     placeholder={t('imageOptional')}
                                     value={formData.image_url}
                                     onChange={(e) => setFormData(prev => ({ ...prev, image_url: e.target.value }))}
-                                    className="bg-slate-700 border-slate-600 text-white"
                                 />
                                 <div className="flex gap-2">
-                                    <Button onClick={handleAdd} className="flex-1 bg-emerald-600 hover:bg-emerald-700 gap-1">
+                                    <Button onClick={handleAdd} className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white gap-1">
                                         <Check className="h-4 w-4" />
                                         {t('add')}
                                     </Button>
-                                    <Button variant="outline" onClick={() => setShowAddForm(false)} className="border-slate-600 text-white hover:bg-slate-700">
+                                    <Button variant="outline" onClick={() => setShowAddForm(false)}>
                                         <X className="h-4 w-4" />
                                     </Button>
                                 </div>
                             </div>
-                            <p className="mt-2 text-xs text-slate-500">{t('defaultImage')}</p>
+                            <p className="mt-3 text-xs text-[var(--muted-foreground)] opacity-80">{t('defaultImage')}</p>
                         </CardContent>
                     </Card>
                 )}
@@ -152,12 +148,12 @@ export default function MenuManagementPage() {
                 {/* Items List */}
                 {isLoading ? (
                     <div className="flex justify-center py-12">
-                        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+                        <Loader2 className="h-6 w-6 animate-spin text-[var(--muted-foreground)]" />
                     </div>
                 ) : items.length === 0 ? (
                     <div className="text-center py-12">
-                        <p className="text-slate-400 mb-4">{t('noItems')}</p>
-                        <Button onClick={() => setShowAddForm(true)} className="bg-emerald-600 hover:bg-emerald-700 gap-2">
+                        <p className="text-[var(--muted-foreground)] mb-4">{t('noItems')}</p>
+                        <Button onClick={() => setShowAddForm(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2">
                             <Plus className="h-4 w-4" />
                             {t('addFirstItem')}
                         </Button>
@@ -165,46 +161,63 @@ export default function MenuManagementPage() {
                 ) : (
                     <div className="space-y-3">
                         {items.map(item => (
-                            <Card key={item.id} className={`bg-slate-800 border-slate-700 ${!item.available ? 'opacity-50' : ''}`}>
-                                <CardContent className="flex flex-wrap items-center gap-3 p-3 sm:gap-4 sm:p-4">
-                                    {item.image_url && (
-                                        <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-slate-700 sm:h-14 sm:w-14">
-                                            <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
-                                        </div>
-                                    )}
+                            <Card key={item.id} className={`overflow-hidden transition-opacity ${!item.available ? 'opacity-50 grayscale-[0.2]' : ''}`}>
+                                <div className="flex flex-col sm:flex-row p-4 gap-4 items-start sm:items-center">
+                                    {/* Left side: Image + Info */}
+                                    <div className="flex items-center gap-4 flex-1 w-full">
+                                        {item.image_url ? (
+                                            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl border border-[var(--border)]">
+                                                <img src={item.image_url} alt={item.name} className="h-full w-full object-cover" />
+                                            </div>
+                                        ) : (
+                                            <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[var(--muted)] flex items-center justify-center">
+                                                 <span className="text-xs text-[var(--muted-foreground)]">No Img</span>
+                                            </div>
+                                        )}
 
-                                    <div className="flex-1 min-w-[150px]">
-                                        <h3 className="font-medium text-sm text-white sm:text-base">{item.name}</h3>
-                                        <div className="flex items-center gap-2 mt-1">
-                                            <Badge variant="secondary" className="text-xs bg-slate-700 text-slate-300">{item.category}</Badge>
-                                            <span className="text-xs text-slate-500">{item.eta_minutes} min</span>
+                                        <div className="flex-1 min-w-0">
+                                            <h3 className="font-semibold text-base truncate">{item.name}</h3>
+                                            <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                                                <Badge variant="secondary" className="text-xs font-normal bg-[var(--muted)]">{item.category}</Badge>
+                                                <span className="text-xs text-[var(--muted-foreground)] whitespace-nowrap flex items-center gap-1">
+                                                    <Clock className="h-3 w-3" />
+                                                    {item.eta_minutes} min
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="font-semibold text-sm text-white sm:text-base">₹{item.price}</div>
-
-                                    <div className="flex items-center gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={() => toggleAvailability(item.id)}
-                                            className={`text-xs sm:text-sm ${item.available
-                                                ? 'border-emerald-600 text-emerald-400 hover:bg-emerald-600/20'
-                                                : 'border-slate-600 text-slate-400 hover:bg-slate-700'
-                                                }`}
-                                        >
-                                            {item.available ? t('available') : t('unavailable')}
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-500/20"
-                                            onClick={() => handleDelete(item.id)}
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
+                                    {/* Right side: Price + Actions */}
+                                    <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-4 pt-4 sm:pt-0 border-t border-[var(--border)] sm:border-0 mt-2 sm:mt-0">
+                                        <div className="font-bold text-[var(--foreground)] sm:hidden">₹{item.price}</div>
+                                        
+                                        <div className="flex items-center gap-4">
+                                            <div className="font-bold text-[var(--foreground)] hidden sm:block w-20 text-right">₹{item.price}</div>
+                                            
+                                            <div className="flex items-center gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    onClick={() => toggleAvailability(item.id)}
+                                                    className={`h-8 px-3 text-xs sm:text-sm font-medium transition-colors ${item.available
+                                                        ? 'border-emerald-500/50 text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20'
+                                                        : 'hover:bg-[var(--accent)] text-[var(--muted-foreground)]'
+                                                        }`}
+                                                >
+                                                    {item.available ? t('available') : t('unavailable')}
+                                                </Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                                                    onClick={() => handleDelete(item.id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </Button>
+                                            </div>
+                                        </div>
                                     </div>
-                                </CardContent>
+                                </div>
                             </Card>
                         ))}
                     </div>

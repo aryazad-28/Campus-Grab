@@ -3,6 +3,9 @@
 import { AdminProvider, useAdmin } from '@/components/AdminProvider'
 import { MenuProvider } from '@/components/MenuProvider'
 import { OrdersProvider } from '@/components/OrdersProvider'
+import { ThemeProvider } from '@/components/ThemeProvider'
+import { AdminHeader } from '@/components/AdminHeader'
+import { AdminBottomNav } from '@/components/AdminBottomNav'
 
 function AdminScopedProviders({ children }: { children: React.ReactNode }) {
     const { admin, isLoading } = useAdmin()
@@ -19,7 +22,11 @@ function AdminScopedProviders({ children }: { children: React.ReactNode }) {
     return (
         <MenuProvider adminId={adminId}>
             <OrdersProvider adminId={adminId}>
-                {children}
+                <AdminHeader />
+                <main className="min-h-[calc(100vh-4rem)] pb-20 sm:pb-8">
+                    {children}
+                </main>
+                <AdminBottomNav />
             </OrdersProvider>
         </MenuProvider>
     )
@@ -31,10 +38,12 @@ export default function AdminLayout({
     children: React.ReactNode
 }) {
     return (
-        <AdminProvider>
-            <AdminScopedProviders>
-                {children}
-            </AdminScopedProviders>
-        </AdminProvider>
+        <ThemeProvider>
+            <AdminProvider>
+                <AdminScopedProviders>
+                    {children}
+                </AdminScopedProviders>
+            </AdminProvider>
+        </ThemeProvider>
     )
 }

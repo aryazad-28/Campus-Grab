@@ -3,15 +3,34 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { ArrowLeft, User, Building, MapPin, Phone, Mail, Loader2, LogOut, History, CalendarDays, ChevronDown, IndianRupee, CheckCircle, Camera, ImageIcon } from 'lucide-react'
+import {
+    UserCircle,
+    Building,
+    MapPin,
+    Phone,
+    Mail,
+    Loader2,
+    LogOut,
+    History,
+    ChevronDown,
+    CheckCircle,
+    Camera,
+    ImageIcon,
+    Globe,
+    HelpCircle,
+    Shield,
+    Receipt,
+    Info,
+    ChevronRight
+} from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
+import { Card, CardContent } from '@/components/ui/card'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
 import { useTranslations } from 'next-intl'
+import { cn } from '@/lib/utils'
 
 interface DaySummary {
     date: string
@@ -30,6 +49,43 @@ const MONTH_KEYS = [
     'january', 'february', 'march', 'april', 'may', 'june',
     'july', 'august', 'september', 'october', 'november', 'december'
 ] as const
+
+const ProfileRow = ({
+    icon: Icon,
+    label,
+    value,
+    onClick,
+    className = '',
+    chevron = true,
+}: {
+    icon: any
+    label: string
+    value?: React.ReactNode
+    onClick?: () => void
+    className?: string
+    chevron?: boolean
+}) => (
+    <button
+        onClick={onClick}
+        disabled={!onClick}
+        className={cn(
+            "w-full flex items-center justify-between p-4 bg-[var(--card)] hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] transition-colors text-left",
+            !onClick && "cursor-default hover:bg-[var(--card)] hover:text-inherit",
+            className
+        )}
+    >
+        <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)]">
+                <Icon className="h-5 w-5" />
+            </div>
+            <span className="font-medium text-[var(--foreground)] text-sm sm:text-base">{label}</span>
+        </div>
+        <div className="flex items-center gap-3">
+            {value && <span className="text-sm font-medium text-[var(--muted-foreground)]">{value}</span>}
+            {onClick && chevron && <ChevronRight className="h-5 w-5 text-[var(--muted-foreground)] opacity-50" />}
+        </div>
+    </button>
+)
 
 export default function AdminProfilePage() {
     const router = useRouter()
@@ -61,7 +117,6 @@ export default function AdminProfilePage() {
         const file = e.target.files?.[0]
         if (!file || !admin || !supabase) return
 
-        // Validate file
         if (!file.type.startsWith('image/')) {
             setImageSaveMsg('Please select an image file')
             return
@@ -75,7 +130,6 @@ export default function AdminProfilePage() {
         setImageSaveMsg(null)
 
         try {
-            // Upload to Supabase Storage
             const fileExt = file.name.split('.').pop()
             const fileName = `${admin.id}/canteen.${fileExt}`
 
@@ -85,14 +139,12 @@ export default function AdminProfilePage() {
 
             if (uploadError) throw uploadError
 
-            // Get public URL
             const { data: urlData } = supabase.storage
                 .from('canteen-images')
                 .getPublicUrl(fileName)
 
             const publicUrl = urlData.publicUrl
 
-            // Save URL to admin_profiles
             const { error: updateError } = await supabase
                 .from('admin_profiles')
                 .update({ canteen_image: publicUrl })
@@ -108,7 +160,6 @@ export default function AdminProfilePage() {
         }
         setIsSavingImage(false)
 
-        // Reset file input
         if (e.target) e.target.value = ''
     }
 
@@ -134,7 +185,6 @@ export default function AdminProfilePage() {
         if (!admin?.id) return
         setIsLoadingHistory(true)
         try {
-            // Get auth token for API validation
             const session = supabase ? (await supabase.auth.getSession()).data.session : null
             const headers: Record<string, string> = {}
             if (session?.access_token) {
@@ -158,7 +208,6 @@ export default function AdminProfilePage() {
         if (!admin?.id) return
         setIsLoadingHistory(true)
         try {
-            // Get auth token for API validation
             const session = supabase ? (await supabase.auth.getSession()).data.session : null
             const headers: Record<string, string> = {}
             if (session?.access_token) {
@@ -195,8 +244,8 @@ export default function AdminProfilePage() {
 
     if (isLoading || !isAuthenticated) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-slate-900">
-                <Loader2 className="h-6 w-6 animate-spin text-white" />
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader2 className="h-6 w-6 animate-spin text-[var(--muted-foreground)]" />
             </div>
         )
     }
@@ -207,79 +256,49 @@ export default function AdminProfilePage() {
     }
 
     return (
-        <div className="min-h-screen bg-slate-900 text-white">
+        <div className="animate-in fade-in pb-20 bg-[var(--background)]">
             {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-slate-700 bg-slate-800">
-                <div className="container mx-auto flex h-14 items-center justify-between px-4">
-                    <Link href="/admin" className="flex items-center gap-2 text-slate-400 hover:text-white">
-                        <ArrowLeft className="h-5 w-5" />
-                        <span className="hidden sm:inline">{t('dashboard')}</span>
-                    </Link>
-                    <h1 className="text-lg font-semibold">{t('profile')}</h1>
-                    <div className="w-8"></div> {/* Spacer for centering */}
+            <header className="sticky top-[4rem] z-40 border-b glass bg-background/80 backdrop-blur-md">
+                <div className="container mx-auto px-4 py-3 flex items-center justify-between">
+                    <h1 className="text-xl font-bold">{t('profile')}</h1>
                 </div>
             </header>
 
-            <main className="container mx-auto px-4 py-6 max-w-2xl">
-                <div className="space-y-6">
-                    {/* Profile Card */}
-                    <Card className="bg-slate-800 border-slate-700">
-                        <CardHeader className="pb-4 border-b border-slate-700">
-                            <CardTitle className="flex items-center gap-3 text-xl text-white">
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600/20 text-blue-400">
-                                    <User className="h-6 w-6" />
-                                </div>
-                                <div>
-                                    <p>{admin?.name}</p>
-                                    <p className="text-sm font-normal text-slate-400">{admin?.email}</p>
-                                </div>
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="pt-6 space-y-4">
-                            <div className="grid gap-4 sm:grid-cols-2">
-                                <div className="space-y-1">
-                                    <label className="text-xs text-slate-500 flex items-center gap-1">
-                                        <Building className="h-3 w-3" />
-                                        {t('canteenName')}
-                                    </label>
-                                    <p className="font-medium">{admin?.canteen_name}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs text-slate-500 flex items-center gap-1">
-                                        <MapPin className="h-3 w-3" />
-                                        {t('college')}
-                                    </label>
-                                    <p className="font-medium">{admin?.college_name}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs text-slate-500 flex items-center gap-1">
-                                        <Phone className="h-3 w-3" />
-                                        {t('phone')}
-                                    </label>
-                                    <p className="font-medium">{admin?.phone || '-'}</p>
-                                </div>
-                                <div className="space-y-1">
-                                    <label className="text-xs text-slate-500 flex items-center gap-1">
-                                        <Mail className="h-3 w-3" />
-                                        {t('email')}
-                                    </label>
-                                    <p className="font-medium">{admin?.email}</p>
-                                </div>
-                            </div>
-                        </CardContent>
-                    </Card>
+            <main className="container mx-auto px-4 py-8 max-w-2xl space-y-6">
 
-                    {/* Canteen Image Card */}
-                    <Card className="bg-slate-800 border-slate-700">
-                        <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-lg text-white">
-                                <Camera className="h-5 w-5" />
-                                Canteen Photo
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-4">
-                            {/* Image Preview */}
-                            <div className="relative h-40 rounded-xl overflow-hidden bg-slate-700 border border-slate-600">
+                {/* Account Details Group */}
+                <div className="space-y-3">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted-foreground)] px-2">
+                        Account Details
+                    </h2>
+                    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+                        
+                        <div className="p-6 border-b border-[var(--border)] flex flex-col items-center justify-center text-center gap-3">
+                            <div className="h-20 w-20 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-500 flex items-center justify-center ring-4 ring-blue-500/5">
+                                <UserCircle className="h-10 w-10" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-bold text-[var(--foreground)]">{admin?.name}</h3>
+                                <p className="text-sm font-medium text-[var(--muted-foreground)]">{admin?.email}</p>
+                            </div>
+                        </div>
+
+                        <ProfileRow icon={Building} label="Canteen Name" value={admin?.canteen_name} />
+                        <div className="h-px w-full bg-[var(--border)]" />
+                        <ProfileRow icon={MapPin} label="College" value={admin?.college_name} />
+                        <div className="h-px w-full bg-[var(--border)]" />
+                        <ProfileRow icon={Phone} label="Phone" value={admin?.phone || '-'} />
+                    </div>
+                </div>
+
+                {/* Canteen Photo Group */}
+                <div className="space-y-3">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted-foreground)] px-2">
+                        Appearance
+                    </h2>
+                    <Card className="rounded-2xl border-[var(--border)] shadow-sm">
+                        <CardContent className="p-4 sm:p-6 space-y-5">
+                            <div className="relative h-48 rounded-xl overflow-hidden bg-[var(--muted)] border border-[var(--border)] shadow-inner">
                                 {canteenImageUrl ? (
                                     <img
                                         src={canteenImageUrl}
@@ -290,14 +309,15 @@ export default function AdminProfilePage() {
                                         }}
                                     />
                                 ) : (
-                                    <div className="flex h-full flex-col items-center justify-center gap-2">
-                                        <ImageIcon className="h-10 w-10 text-slate-500" />
-                                        <p className="text-sm text-slate-500">No photo yet</p>
+                                    <div className="flex h-full flex-col items-center justify-center gap-3">
+                                        <div className="p-3 bg-background rounded-full shadow-sm">
+                                            <ImageIcon className="h-8 w-8 text-[var(--muted-foreground)]" />
+                                        </div>
+                                        <p className="text-sm font-medium text-[var(--muted-foreground)]">No photo yet</p>
                                     </div>
                                 )}
                             </div>
 
-                            {/* Hidden file input */}
                             <input
                                 type="file"
                                 accept="image/*"
@@ -306,11 +326,11 @@ export default function AdminProfilePage() {
                                 onChange={handleImageUpload}
                             />
 
-                            <div className="flex items-center gap-3 flex-wrap">
+                            <div className="flex flex-col sm:flex-row items-center gap-3">
                                 <Button
                                     onClick={() => fileInputRef.current?.click()}
                                     disabled={isSavingImage}
-                                    className="gap-2"
+                                    className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white gap-2 font-medium"
                                 >
                                     {isSavingImage ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                                     {canteenImageUrl ? 'Change Photo' : 'Upload Photo'}
@@ -320,81 +340,82 @@ export default function AdminProfilePage() {
                                         variant="outline"
                                         onClick={handleRemoveImage}
                                         disabled={isSavingImage}
-                                        className="gap-2 border-slate-600 text-slate-300 hover:text-red-400"
+                                        className="w-full sm:w-auto gap-2 border-[var(--border)] hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400 font-medium"
                                     >
                                         Remove
                                     </Button>
                                 )}
-                                {imageSaveMsg && (
-                                    <span className={`text-sm ${imageSaveMsg.includes('uploaded') || imageSaveMsg.includes('removed') ? 'text-green-400' : 'text-red-400'}`}>
-                                        {imageSaveMsg}
-                                    </span>
-                                )}
                             </div>
-                            <p className="text-xs text-slate-500">Upload a photo of your canteen — this will appear on the student app. Max 5MB.</p>
+                            {imageSaveMsg && (
+                                <p className={`text-sm font-medium px-1 ${imageSaveMsg.includes('uploaded') || imageSaveMsg.includes('removed') ? 'text-emerald-500' : 'text-red-500'}`}>
+                                    {imageSaveMsg}
+                                </p>
+                            )}
+                            <p className="text-xs text-[var(--muted-foreground)] leading-relaxed px-1">Upload a photo of your canteen to attract more students. Maximum size is 5MB.</p>
                         </CardContent>
                     </Card>
+                </div>
 
-                    {/* Settings Card */}
-                    <Card className="bg-slate-800 border-slate-700">
-                        <CardHeader>
-                            <CardTitle className="text-lg text-white">Settings</CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <span className="text-slate-300">Language</span>
-                                <LanguageSwitcher />
-                            </div>
+                {/* Settings & Support Group */}
+                <div className="space-y-3">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted-foreground)] px-2">
+                        Settings & Support
+                    </h2>
+                    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+                        <ProfileRow 
+                            icon={Globe} 
+                            label="Language" 
+                            value={<LanguageSwitcher />} 
+                            chevron={false}
+                        />
+                        <div className="h-px w-full bg-[var(--border)]" />
+                        <Link href="/admin/support">
+                            <ProfileRow icon={HelpCircle} label="Help & Support" />
+                        </Link>
+                    </div>
+                </div>
 
-                            <div className="pt-4 border-t border-slate-700">
-                                <Button
-                                    variant="destructive"
-                                    className="w-full gap-2"
-                                    onClick={handleLogout}
-                                >
-                                    <LogOut className="h-4 w-4" />
-                                    {tCommon('signOut')}
-                                </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-
-                    {/* Order History Card */}
-                    <Card className="bg-slate-800 border-slate-700">
-                        <CardHeader>
-                            <button
-                                onClick={() => setShowHistory(!showHistory)}
-                                className="flex items-center justify-between w-full text-left"
-                            >
-                                <CardTitle className="text-lg text-white flex items-center gap-2">
+                {/* Orders History Group */}
+                <div className="space-y-3">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted-foreground)] px-2">
+                        Records
+                    </h2>
+                    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+                        <button
+                            onClick={() => setShowHistory(!showHistory)}
+                            className="w-full flex items-center justify-between p-4 bg-[var(--card)] hover:bg-[var(--accent)] transition-colors text-left"
+                        >
+                            <div className="flex items-center gap-3">
+                                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)]">
                                     <History className="h-5 w-5" />
-                                    {t('orderHistory')}
-                                </CardTitle>
-                                <ChevronDown className={`h-5 w-5 text-slate-400 transition-transform ${showHistory ? 'rotate-180' : ''}`} />
-                            </button>
-                        </CardHeader>
+                                </div>
+                                <span className="font-medium text-[var(--foreground)] text-sm sm:text-base">Order History</span>
+                            </div>
+                            <ChevronDown className={`h-5 w-5 text-[var(--muted-foreground)] transition-transform duration-300 ${showHistory ? '-rotate-180' : ''}`} />
+                        </button>
 
+                        {/* Order History Accordion Content */}
                         {showHistory && (
-                            <CardContent className="space-y-4">
+                            <div className="p-4 border-t border-[var(--border)] bg-[var(--background)]">
                                 {/* Year & Month Selectors */}
                                 {!selectedDate && (
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 mb-4">
                                         {/* Year Dropdown */}
                                         <div className="relative flex-1">
                                             <button
                                                 onClick={() => setShowYearDropdown(!showYearDropdown)}
-                                                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-sm hover:bg-slate-600 transition-colors"
+                                                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] text-sm font-medium hover:bg-[var(--accent)] transition-colors"
                                             >
-                                                <span className="text-white">{selectedYear}</span>
-                                                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} />
+                                                <span>{selectedYear}</span>
+                                                <ChevronDown className={`h-4 w-4 opacity-70 transition-transform ${showYearDropdown ? 'rotate-180' : ''}`} />
                                             </button>
                                             {showYearDropdown && (
-                                                <div className="absolute top-full left-0 mt-1 w-full rounded-lg bg-slate-800 border border-slate-700 shadow-lg z-50 py-1">
+                                                <div className="absolute top-full left-0 mt-2 w-full rounded-xl bg-[var(--card)] border border-[var(--border)] shadow-lg z-50 py-1 overflow-hidden">
                                                     {[selectedYear - 1, selectedYear, selectedYear + 1].map(year => (
                                                         <button
                                                             key={year}
                                                             onClick={() => { setSelectedYear(year); setShowYearDropdown(false) }}
-                                                            className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-700 transition-colors ${selectedYear === year ? 'text-red-400 font-medium' : 'text-slate-300'}`}
+                                                            className={`w-full px-4 py-2 text-left text-sm hover:bg-[var(--accent)] transition-colors ${selectedYear === year ? 'text-blue-600 font-bold bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' : 'font-medium'}`}
                                                         >
                                                             {year}
                                                         </button>
@@ -407,18 +428,18 @@ export default function AdminProfilePage() {
                                         <div className="relative flex-1">
                                             <button
                                                 onClick={() => setShowMonthDropdown(!showMonthDropdown)}
-                                                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-slate-700 border border-slate-600 text-sm hover:bg-slate-600 transition-colors"
+                                                className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-[var(--card)] border border-[var(--border)] text-sm font-medium hover:bg-[var(--accent)] transition-colors"
                                             >
-                                                <span className="text-white">{tOrders(MONTH_KEYS[selectedMonth - 1])}</span>
-                                                <ChevronDown className={`h-4 w-4 text-slate-400 transition-transform ${showMonthDropdown ? 'rotate-180' : ''}`} />
+                                                <span>{tOrders(MONTH_KEYS[selectedMonth - 1])}</span>
+                                                <ChevronDown className={`h-4 w-4 opacity-70 transition-transform ${showMonthDropdown ? 'rotate-180' : ''}`} />
                                             </button>
                                             {showMonthDropdown && (
-                                                <div className="absolute top-full left-0 mt-1 w-full rounded-lg bg-slate-800 border border-slate-700 shadow-lg z-50 py-1 max-h-64 overflow-y-auto">
+                                                <div className="absolute top-full right-0 lg:left-0 mt-2 w-48 rounded-xl bg-[var(--card)] border border-[var(--border)] shadow-lg z-50 py-1 max-h-64 overflow-y-auto">
                                                     {MONTH_KEYS.map((key, idx) => (
                                                         <button
                                                             key={key}
                                                             onClick={() => { setSelectedMonth(idx + 1); setShowMonthDropdown(false) }}
-                                                            className={`w-full px-3 py-2 text-left text-sm hover:bg-slate-700 transition-colors ${selectedMonth === idx + 1 ? 'text-red-400 font-medium' : 'text-slate-300'}`}
+                                                            className={`w-full px-4 py-2 text-left text-sm hover:bg-[var(--accent)] transition-colors ${selectedMonth === idx + 1 ? 'text-blue-600 font-bold bg-blue-50 dark:bg-blue-500/10 dark:text-blue-400' : 'font-medium'}`}
                                                         >
                                                             {tOrders(key)}
                                                         </button>
@@ -433,9 +454,9 @@ export default function AdminProfilePage() {
                                 {selectedDate && (
                                     <button
                                         onClick={() => { setSelectedDate(null); setDayOrders(null) }}
-                                        className="flex items-center gap-2 text-slate-400 hover:text-white text-sm"
+                                        className="flex items-center gap-2 text-[var(--muted-foreground)] hover:text-[var(--foreground)] text-sm font-medium mb-4"
                                     >
-                                        <ArrowLeft className="h-4 w-4" />
+                                        <ChevronDown className="h-4 w-4 rotate-90" />
                                         {t('backToMonthView')}
                                     </button>
                                 )}
@@ -443,8 +464,8 @@ export default function AdminProfilePage() {
                                 {/* Loading */}
                                 {isLoadingHistory && (
                                     <div className="flex flex-col items-center justify-center py-12">
-                                        <Loader2 className="h-6 w-6 animate-spin text-slate-400 mb-2" />
-                                        <p className="text-sm text-slate-500">{tOrders('loadingHistory')}</p>
+                                        <Loader2 className="h-8 w-8 animate-spin text-blue-500 mb-4" />
+                                        <p className="text-sm font-medium text-[var(--muted-foreground)]">{tOrders('loadingHistory')}</p>
                                     </div>
                                 )}
 
@@ -452,52 +473,54 @@ export default function AdminProfilePage() {
                                 {!isLoadingHistory && !selectedDate && (
                                     <>
                                         {daySummaries.length === 0 ? (
-                                            <div className="text-center py-12">
-                                                <p className="text-slate-400">{t('noOrders')}</p>
+                                            <div className="text-center py-12 rounded-xl border border-dashed border-[var(--border)] bg-[var(--muted)]/50">
+                                                <p className="font-medium text-[var(--muted-foreground)]">{t('noOrders')}</p>
                                             </div>
                                         ) : (
-                                            <div className="space-y-3">
+                                            <div className="space-y-4">
                                                 {/* Monthly total */}
-                                                <div className="rounded-xl bg-gradient-to-r from-red-900/40 to-red-800/20 border border-red-800/40 p-4">
+                                                <div className="rounded-xl bg-blue-50 border border-blue-100 dark:bg-blue-500/10 dark:border-blue-500/20 p-5">
                                                     <div className="flex items-center justify-between">
                                                         <div>
-                                                            <p className="text-xs text-slate-400 uppercase">{t('monthlyRevenue')}</p>
-                                                            <p className="text-2xl font-bold text-white">
+                                                            <p className="text-xs font-bold text-blue-600/70 dark:text-blue-400/80 uppercase tracking-wider mb-1">{t('monthlyRevenue')}</p>
+                                                            <p className="text-2xl font-black text-blue-700 dark:text-blue-400">
                                                                 ₹{daySummaries.reduce((sum, d) => sum + d.totalRevenue, 0).toLocaleString()}
                                                             </p>
                                                         </div>
                                                         <div className="text-right">
-                                                            <p className="text-xs text-slate-400 uppercase">{t('totalOrders')}</p>
-                                                            <p className="text-2xl font-bold text-white">
+                                                            <p className="text-xs font-bold text-blue-600/70 dark:text-blue-400/80 uppercase tracking-wider mb-1">{t('totalOrders')}</p>
+                                                            <p className="text-2xl font-black text-blue-700 dark:text-blue-400">
                                                                 {daySummaries.reduce((sum, d) => sum + d.orderCount, 0)}
                                                             </p>
                                                         </div>
                                                     </div>
                                                 </div>
 
-                                                {daySummaries.map(day => {
-                                                    const formatDateHeader = (dateStr: string) => {
-                                                        const date = new Date(dateStr + 'T00:00:00')
-                                                        return date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
-                                                    }
+                                                <div className="grid gap-3 mt-4">
+                                                    {daySummaries.map(day => {
+                                                        const formatDateHeader = (dateStr: string) => {
+                                                            const date = new Date(dateStr + 'T00:00:00')
+                                                            return date.toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short' })
+                                                        }
 
-                                                    return (
-                                                        <button
-                                                            key={day.date}
-                                                            onClick={() => setSelectedDate(day.date)}
-                                                            className="w-full rounded-xl bg-slate-700/50 border border-slate-600 p-4 flex items-center justify-between hover:bg-slate-700 hover:border-slate-500 transition-colors text-left"
-                                                        >
-                                                            <div>
-                                                                <p className="font-semibold text-white">{formatDateHeader(day.date)}</p>
-                                                                <p className="text-xs text-slate-400">{tOrders('ordersCount', { count: day.orderCount })}</p>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <p className="font-semibold text-emerald-400">₹{day.totalRevenue.toLocaleString()}</p>
-                                                                <p className="text-xs text-slate-500">{t('viewDetails')} →</p>
-                                                            </div>
-                                                        </button>
-                                                    )
-                                                })}
+                                                        return (
+                                                            <button
+                                                                key={day.date}
+                                                                onClick={() => setSelectedDate(day.date)}
+                                                                className="w-full rounded-xl bg-[var(--card)] border border-[var(--border)] p-4 flex items-center justify-between hover:bg-[var(--accent)] hover:border-[var(--ring)] transition-all text-left shadow-sm group"
+                                                            >
+                                                                <div>
+                                                                    <p className="font-bold text-[var(--foreground)]">{formatDateHeader(day.date)}</p>
+                                                                    <p className="text-sm font-medium text-[var(--muted-foreground)] mt-0.5">{tOrders('ordersCount', { count: day.orderCount })}</p>
+                                                                </div>
+                                                                <div className="text-right">
+                                                                    <p className="font-bold text-emerald-600 dark:text-emerald-500">₹{day.totalRevenue.toLocaleString()}</p>
+                                                                    <p className="text-xs font-semibold text-blue-600 dark:text-blue-400 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">View Details →</p>
+                                                                </div>
+                                                            </button>
+                                                        )
+                                                    })}
+                                                </div>
                                             </div>
                                         )}
                                     </>
@@ -507,48 +530,49 @@ export default function AdminProfilePage() {
                                 {!isLoadingHistory && selectedDate && dayOrders && (
                                     <>
                                         {/* Day revenue header */}
-                                        <div className="rounded-xl bg-gradient-to-r from-emerald-900/40 to-emerald-800/20 border border-emerald-800/40 p-4">
+                                        <div className="rounded-xl bg-emerald-50 border border-emerald-100 dark:bg-emerald-500/10 dark:border-emerald-500/20 p-5 mb-5">
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <p className="text-xs text-slate-400 uppercase">{t('dailyRevenue')}</p>
-                                                    <p className="text-2xl font-bold text-white">₹{dayOrders.totalRevenue.toLocaleString()}</p>
+                                                    <p className="text-xs font-bold text-emerald-600/70 dark:text-emerald-400/80 uppercase tracking-wider mb-1">{t('dailyRevenue')}</p>
+                                                    <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">₹{dayOrders.totalRevenue.toLocaleString()}</p>
                                                 </div>
                                                 <div className="text-right">
-                                                    <p className="text-xs text-slate-400 uppercase">{t('totalOrders')}</p>
-                                                    <p className="text-2xl font-bold text-white">{dayOrders.orderCount}</p>
+                                                    <p className="text-xs font-bold text-emerald-600/70 dark:text-emerald-400/80 uppercase tracking-wider mb-1">{t('totalOrders')}</p>
+                                                    <p className="text-2xl font-black text-emerald-700 dark:text-emerald-400">{dayOrders.orderCount}</p>
                                                 </div>
                                             </div>
                                         </div>
 
                                         {/* Day's orders */}
-                                        <div className="space-y-3">
+                                        <div className="space-y-4">
                                             {dayOrders.orders.map((order: any) => {
                                                 const formatTime = (dateString: string) => {
                                                     return new Date(dateString).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
                                                 }
 
                                                 return (
-                                                    <div key={order.id} className="rounded-xl bg-slate-700/50 border border-slate-600 p-4">
-                                                        <div className="flex items-start justify-between mb-3">
+                                                    <div key={order.id} className="rounded-xl bg-[var(--card)] border border-[var(--border)] shadow-sm">
+                                                        <div className="p-4 bg-[var(--muted)]/30 border-b border-[var(--border)] flex items-start justify-between rounded-t-xl">
                                                             <div>
-                                                                <p className="font-mono text-lg font-bold text-white">{order.token_number || order.id}</p>
-                                                                <p className="text-xs text-slate-500">{formatTime(order.created_at)}</p>
+                                                                <p className="font-mono text-lg font-bold">#{order.token_number || order.id.slice(0, 4)}</p>
+                                                                <p className="text-xs font-medium text-[var(--muted-foreground)] mt-0.5">{formatTime(order.created_at)}</p>
                                                             </div>
-                                                            <Badge className="bg-neutral-100 text-neutral-600 border-neutral-200 border gap-1">
+                                                            <Badge className="bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/30 gap-1 font-semibold shadow-none">
                                                                 <CheckCircle className="h-3 w-3" />
-                                                                {t('completed')}
+                                                                Completed
                                                             </Badge>
                                                         </div>
-                                                        <div className="mb-3 space-y-1">
+                                                        <div className="p-4 space-y-2.5">
                                                             {order.items.map((item: any, idx: number) => (
                                                                 <div key={idx} className="flex justify-between text-sm">
-                                                                    <span className="text-white">{item.quantity}x {item.name}</span>
-                                                                    <span className="text-slate-400">₹{item.price * item.quantity}</span>
+                                                                    <span className="font-medium">{item.quantity}x {item.name}</span>
+                                                                    <span className="text-[var(--muted-foreground)] font-medium">₹{item.price * item.quantity}</span>
                                                                 </div>
                                                             ))}
-                                                        </div>
-                                                        <div className="pt-2 border-t border-slate-600 flex justify-end">
-                                                            <span className="font-semibold text-lg text-white">₹{order.total}</span>
+                                                            <div className="pt-3 mt-3 border-t border-dashed border-[var(--border)] flex justify-between items-center">
+                                                                <span className="font-semibold text-[var(--muted-foreground)]">Total</span>
+                                                                <span className="font-black text-lg text-[var(--foreground)]">₹{order.total}</span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 )
@@ -556,10 +580,45 @@ export default function AdminProfilePage() {
                                         </div>
                                     </>
                                 )}
-                            </CardContent>
+                            </div>
                         )}
-                    </Card>
+                    </div>
                 </div>
+
+                {/* Legal Group */}
+                <div className="space-y-3">
+                    <h2 className="text-sm font-semibold uppercase tracking-wider text-[var(--muted-foreground)] px-2">
+                        Legal
+                    </h2>
+                    <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
+                        <Link href="/admin/terms">
+                            <ProfileRow icon={Receipt} label="Terms & Conditions" />
+                        </Link>
+                        <div className="h-px w-full bg-[var(--border)]" />
+                        <Link href="/admin/privacy">
+                            <ProfileRow icon={Shield} label="Privacy Policy" />
+                        </Link>
+                        <div className="h-px w-full bg-[var(--border)]" />
+                        <Link href="/admin/refund">
+                            <ProfileRow icon={Receipt} label="Refund Policy" />
+                        </Link>
+                        <div className="h-px w-full bg-[var(--border)]" />
+                        <Link href="/admin/about">
+                            <ProfileRow icon={Info} label="About Campus Grab" />
+                        </Link>
+                    </div>
+                </div>
+
+                {/* Sign Out */}
+                <Button 
+                    variant="destructive" 
+                    className="w-full h-14 rounded-2xl text-base font-bold gap-3 shadow-lg shadow-red-500/20 mt-8 mb-4"
+                    onClick={handleLogout}
+                >
+                    <LogOut className="h-5 w-5" />
+                    Sign Out
+                </Button>
+
             </main>
         </div>
     )
