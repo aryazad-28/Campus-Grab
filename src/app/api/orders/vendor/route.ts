@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser, getServiceSupabase } from '@/lib/auth'
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET(request: NextRequest) {
     try {
-        // Authenticate the user
-        const auth = await getAuthenticatedUser(request)
-        if (auth.error) return auth.error
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+        }
 
-        const supabase = getServiceSupabase()
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        )
+
+        // Auth validation: verify the JWT token
+        const authHeader = request.headers.get('authorization')
+        if (!authHeader?.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+        const token = authHeader.split(' ')[1]
+        const { data: { user: authUser }, error: authError } = await createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        ).auth.getUser(token)
+
+        if (authError || !authUser) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
 
         const { searchParams } = new URL(request.url)
         const adminId = searchParams.get('admin_id')
@@ -19,18 +37,16 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Missing admin_id' }, { status: 400 })
         }
 
-        // SECURITY: Verify the authenticated user owns this admin profile
-        const { data: adminProfile } = await supabase
+        // Verify the authenticated user owns this admin profile
+        const { data: adminProfile, error: profileError } = await supabase
             .from('admin_profiles')
-            .select('id, user_id')
+            .select('id')
             .eq('id', adminId)
+            .eq('user_id', authUser.id)
             .single()
 
-        if (!adminProfile || adminProfile.user_id !== auth.userId) {
-            return NextResponse.json(
-                { error: 'You can only view orders for your own canteen' },
-                { status: 403 }
-            )
+        if (profileError || !adminProfile) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
         // If specific date is requested, return all orders for that date

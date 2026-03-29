@@ -93,8 +93,7 @@ export function AdminProvider({ children }: { children: ReactNode }) {
             .from('admin_profiles')
             .select(`
                 id, user_id, name, email, canteen_name, college_name, area, 
-                phone, latitude, longitude, status, is_open, canteen_image,
-                razorpay_key_id
+                phone, latitude, longitude, status, is_open, canteen_image
             `)
             .eq('user_id', userId)
             .single()

@@ -6,7 +6,6 @@ import Link from 'next/link'
 import { ArrowLeft, User, Building, MapPin, Phone, Mail, Loader2, LogOut, History, CalendarDays, ChevronDown, IndianRupee, CheckCircle, Camera, ImageIcon } from 'lucide-react'
 import { useAdmin } from '@/components/AdminProvider'
 import { supabase } from '@/lib/supabase'
-import { getAuthHeaders } from '@/lib/api-auth'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -105,7 +104,6 @@ export default function AdminProfilePage() {
             setImageSaveMsg('Photo uploaded!')
             setTimeout(() => setImageSaveMsg(null), 3000)
         } catch (err: any) {
-            console.error('Upload error:', err)
             setImageSaveMsg(err.message || 'Upload failed')
         }
         setIsSavingImage(false)
@@ -136,14 +134,20 @@ export default function AdminProfilePage() {
         if (!admin?.id) return
         setIsLoadingHistory(true)
         try {
-            const authHeaders = await getAuthHeaders()
-            const res = await fetch(`/api/orders/vendor?admin_id=${admin.id}&month=${selectedMonth}&year=${selectedYear}`, { headers: authHeaders })
+            // Get auth token for API validation
+            const session = supabase ? (await supabase.auth.getSession()).data.session : null
+            const headers: Record<string, string> = {}
+            if (session?.access_token) {
+                headers['Authorization'] = `Bearer ${session.access_token}`
+            }
+
+            const res = await fetch(`/api/orders/vendor?admin_id=${admin.id}&month=${selectedMonth}&year=${selectedYear}`, { headers })
             if (res.ok) {
                 const data = await res.json()
                 setDaySummaries(data.days || [])
             }
-        } catch (err) {
-            console.error('Failed to fetch month summaries:', err)
+        } catch {
+            // Failed to fetch silently
         } finally {
             setIsLoadingHistory(false)
         }
@@ -154,14 +158,20 @@ export default function AdminProfilePage() {
         if (!admin?.id) return
         setIsLoadingHistory(true)
         try {
-            const authHeaders = await getAuthHeaders()
-            const res = await fetch(`/api/orders/vendor?admin_id=${admin.id}&date=${date}`, { headers: authHeaders })
+            // Get auth token for API validation
+            const session = supabase ? (await supabase.auth.getSession()).data.session : null
+            const headers: Record<string, string> = {}
+            if (session?.access_token) {
+                headers['Authorization'] = `Bearer ${session.access_token}`
+            }
+
+            const res = await fetch(`/api/orders/vendor?admin_id=${admin.id}&date=${date}`, { headers })
             if (res.ok) {
                 const data = await res.json()
                 setDayOrders(data)
             }
-        } catch (err) {
-            console.error('Failed to fetch day orders:', err)
+        } catch {
+            // Failed to fetch silently
         } finally {
             setIsLoadingHistory(false)
         }

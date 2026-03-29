@@ -1,13 +1,31 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getAuthenticatedUser, getServiceSupabase } from '@/lib/auth'
+import { createClient } from '@supabase/supabase-js'
 
 export async function GET(request: NextRequest) {
     try {
-        // Authenticate the user
-        const auth = await getAuthenticatedUser(request)
-        if (auth.error) return auth.error
+        if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+            return NextResponse.json({ error: 'Server configuration error' }, { status: 500 })
+        }
 
-        const supabase = getServiceSupabase()
+        const supabase = createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        )
+
+        // Auth validation: verify the JWT token
+        const authHeader = request.headers.get('authorization')
+        if (!authHeader?.startsWith('Bearer ')) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
+        const token = authHeader.split(' ')[1]
+        const { data: { user: authUser }, error: authError } = await createClient(
+            process.env.NEXT_PUBLIC_SUPABASE_URL,
+            process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+        ).auth.getUser(token)
+
+        if (authError || !authUser) {
+            return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+        }
 
         const { searchParams } = new URL(request.url)
         const userId = searchParams.get('user_id')
@@ -18,12 +36,9 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: 'Missing user_id' }, { status: 400 })
         }
 
-        // SECURITY: Verify the authenticated user matches the requested user_id
-        if (auth.userId !== userId) {
-            return NextResponse.json(
-                { error: 'You can only view your own order history' },
-                { status: 403 }
-            )
+        // Ensure the authenticated user can only access their own history
+        if (userId !== authUser.id) {
+            return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
         }
 
         // Build query — fetch completed orders for this user

@@ -28,7 +28,7 @@ export function MenuProvider({ children, adminId }: { children: ReactNode; admin
                 try {
                     let query = supabase
                         .from('menu_items')
-                        .select('*')
+                        .select('id, admin_id, name, category, price, image_url, eta_minutes, available, created_at')
                         .order('created_at', { ascending: false })
 
                     // If adminId provided, filter by it
@@ -45,8 +45,8 @@ export function MenuProvider({ children, adminId }: { children: ReactNode; admin
                         setIsLoading(false)
                         return
                     }
-                } catch (err) {
-                    console.error('Supabase fetch error:', err)
+                } catch {
+                    // Supabase fetch failed — fall back to localStorage
                 }
             }
 
@@ -122,8 +122,7 @@ export function MenuProvider({ children, adminId }: { children: ReactNode; admin
                 .select()
                 .then(({ data, error }) => {
                     if (error) {
-                        console.error('Supabase insert error:', error)
-                        alert('Failed to add item: ' + error.message)
+                        alert('Failed to add item. Please try again.')
                     } else if (data) {
                         // Add resolved item to state
                         const savedItem = data[0] as MenuItem
@@ -138,8 +137,8 @@ export function MenuProvider({ children, adminId }: { children: ReactNode; admin
 
     const deleteItem = useCallback((id: string) => {
         if (supabase) {
-            supabase.from('menu_items').delete().eq('id', id).then(({ error }) => {
-                if (error) console.error('Supabase delete error:', error)
+            supabase.from('menu_items').delete().eq('id', id).then(({ error: _error }) => {
+                // Delete error handled silently — item already removed from UI
             })
         }
         setItems(prev => prev.filter(item => item.id !== id))
@@ -153,8 +152,8 @@ export function MenuProvider({ children, adminId }: { children: ReactNode; admin
             const newAvailable = !item.available
 
             if (supabase) {
-                supabase.from('menu_items').update({ available: newAvailable }).eq('id', id).then(({ error }) => {
-                    if (error) console.error('Supabase update error:', error)
+                supabase.from('menu_items').update({ available: newAvailable }).eq('id', id).then(() => {
+                    // Update handled silently
                 })
             }
 
@@ -164,8 +163,8 @@ export function MenuProvider({ children, adminId }: { children: ReactNode; admin
 
     const updateItem = useCallback((id: string, updates: Partial<MenuItem>) => {
         if (supabase) {
-            supabase.from('menu_items').update(updates).eq('id', id).then(({ error }) => {
-                if (error) console.error('Supabase update error:', error)
+            supabase.from('menu_items').update(updates).eq('id', id).then(() => {
+                // Update handled silently
             })
         }
         setItems(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item))

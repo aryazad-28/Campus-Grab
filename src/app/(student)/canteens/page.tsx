@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { Search, MapPin, Store, Clock, Loader2, LocateFixed, Navigation, Sparkles } from 'lucide-react'
+import { Search, MapPin, Store, Sparkles } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
 import { requestUserLocation, calculateDistance, formatDistance, type UserLocation } from '@/lib/geolocation'
 import { Input } from '@/components/ui/input'
@@ -52,8 +52,8 @@ export default function CanteensPage() {
                     .select('id, canteen_name, college_name, area, status, latitude, longitude, is_open, canteen_image')
                     .eq('status', 'approved')
                 if (!error && data) setCanteens(data)
-            } catch (err) {
-                console.error('Failed to load canteens:', err)
+            } catch {
+                // Failed to load canteens silently
             }
             setIsLoading(false)
         }
@@ -90,42 +90,23 @@ export default function CanteensPage() {
     }, [sortedCanteens, searchQuery])
 
     return (
-        <div className="container mx-auto px-4 py-6 pb-32">
-            {/* Brand Header */}
-            <div className="mb-6 animate-fade-in-up">
-                <h1 className="text-2xl font-bold text-red-500 sm:text-3xl">Campus Grab</h1>
-                <p className="text-sm text-neutral-600 dark:text-neutral-400">Find food near you</p>
-            </div>
-
-            {/* Location Card */}
-            <div className="mb-6 rounded-2xl bg-[var(--card)] border border-[var(--border)] p-4 animate-fade-in-up delay-1">
-                <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/10">
-                        <MapPin className="h-4 w-4 text-red-500" />
-                    </div>
-                    <div>
-                        <p className="text-xs text-neutral-600 dark:text-neutral-400">Your location</p>
-                        <p className="font-semibold">Main Campus</p>
-                    </div>
-                </div>
-            </div>
-
+        <div className="container mx-auto px-4 py-4 pb-32">
             {/* Search */}
-            <div className="relative mb-6 animate-fade-in-up delay-2">
+            <div className="relative mb-5 animate-fade-in-up">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500 dark:text-neutral-400" />
                 <Input
                     type="search"
-                    placeholder="Search canteens..."
-                    className="pl-10 rounded-xl"
+                    placeholder="Search for canteens, colleges..."
+                    className="pl-10 h-11 rounded-xl bg-[var(--card)] border-[var(--border)] text-sm"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                 />
             </div>
 
-            {/* AI Recommendations header */}
-            <div className="flex items-center gap-2 mb-4 animate-fade-in-up delay-3">
+            {/* Section header */}
+            <div className="flex items-center gap-2 mb-4 animate-fade-in-up delay-1">
                 <Sparkles className="h-4 w-4 text-red-500" />
-                <h2 className="text-base font-semibold">AI Recommendations</h2>
+                <h2 className="text-base font-semibold">Recommended for you</h2>
             </div>
 
             {/* Canteen Cards — Figma style: hero image card */}

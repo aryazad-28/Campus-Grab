@@ -6,7 +6,6 @@ import { Clock, ChefHat, Package, CheckCircle, ArrowLeft, Utensils, ChevronDown,
 import { useOrders, Order } from '@/components/OrdersProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { cn } from '@/lib/utils'
-import { getAuthHeaders } from '@/lib/api-auth'
 import { useTranslations } from 'next-intl'
 
 const STATUS_STEPS = ['pending', 'preparing', 'ready', 'completed'] as const
@@ -103,14 +102,22 @@ export default function OrdersPage() {
                 const now = new Date()
                 url += `&month=${selectedMonth}&year=${now.getFullYear()}`
             }
-            const authHeaders = await getAuthHeaders()
-            const res = await fetch(url, { headers: authHeaders })
+
+            // Get auth token for API validation
+            const { supabase } = await import('@/lib/supabase')
+            const session = supabase ? (await supabase.auth.getSession()).data.session : null
+            const headers: Record<string, string> = {}
+            if (session?.access_token) {
+                headers['Authorization'] = `Bearer ${session.access_token}`
+            }
+
+            const res = await fetch(url, { headers })
             if (res.ok) {
                 const data = await res.json()
                 setHistoryDays(data.days || [])
             }
-        } catch (err) {
-            console.error('Failed to fetch history:', err)
+        } catch {
+            // Failed to fetch history silently
         } finally {
             setIsLoadingHistory(false)
         }

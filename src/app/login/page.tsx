@@ -47,6 +47,8 @@ export default function LoginPage() {
     const [isLoading, setIsLoading] = useState(false)
     const [isGoogleLoading, setIsGoogleLoading] = useState(false)
     const [showStudentForm, setShowStudentForm] = useState(false)
+    const [agreeToTerms, setAgreeToTerms] = useState(false)
+    const [showTermsError, setShowTermsError] = useState(false)
 
     useEffect(() => {
         if (isAuthenticated) {
@@ -66,6 +68,13 @@ export default function LoginPage() {
     const handleStudentSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         setMessage(null)
+        
+        if (mode === 'signup' && !agreeToTerms) {
+            setShowTermsError(true)
+            return
+        }
+        
+        setShowTermsError(false)
         setIsLoading(true)
 
         if (mode === 'signup') {
@@ -291,6 +300,29 @@ export default function LoginPage() {
                                 </Link>
                             )}
                         </div>
+
+                        {mode === 'signup' && (
+                            <div className="space-y-2">
+                                <div className="flex items-start gap-2">
+                                    <input 
+                                        type="checkbox" 
+                                        id="terms" 
+                                        className="mt-1 rounded border-slate-300 dark:border-slate-600 text-red-600 focus:ring-red-500"
+                                        checked={agreeToTerms}
+                                        onChange={(e) => {
+                                            setAgreeToTerms(e.target.checked)
+                                            if (e.target.checked) setShowTermsError(false)
+                                        }}
+                                    />
+                                    <label htmlFor="terms" className="text-xs text-slate-500 dark:text-slate-400 leading-tight">
+                                        I agree to the <Link href="/terms" className="text-red-600 dark:text-red-400 hover:underline">Terms & Conditions</Link> and <Link href="/privacy" className="text-red-600 dark:text-red-400 hover:underline">Privacy Policy</Link>
+                                    </label>
+                                </div>
+                                {showTermsError && (
+                                    <p className="text-xs text-red-500">You must agree to the terms and privacy policy to sign up.</p>
+                                )}
+                            </div>
+                        )}
 
                         {message && (
                             <p className={`text-sm ${message.type === 'error' ? 'text-red-500' : 'text-emerald-600'}`}>

@@ -10,17 +10,14 @@ let swRegistration: ServiceWorkerRegistration | null = null
  */
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
     if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-        console.warn('[Notifications] Service workers not supported')
         return null
     }
 
     try {
         const registration = await navigator.serviceWorker.register('/sw.js')
         swRegistration = registration
-        console.log('[Notifications] Service worker registered')
         return registration
     } catch (err) {
-        console.warn('[Notifications] Service worker registration failed:', err)
         return null
     }
 }
@@ -31,7 +28,6 @@ export async function registerServiceWorker(): Promise<ServiceWorkerRegistration
  */
 export async function requestNotificationPermission(): Promise<boolean> {
     if (typeof window === 'undefined' || !('Notification' in window)) {
-        console.warn('[Notifications] Notifications not supported')
         return false
     }
 
@@ -82,8 +78,8 @@ export async function showNotification(
                 })
                 return
             }
-        } catch (err) {
-            console.warn('[Notifications] SW notification failed, falling back:', err)
+        } catch {
+            // SW notification failed, fall back to Notification API
         }
     }
 
@@ -98,7 +94,7 @@ export async function showNotification(
             vibrate: [200, 100, 200, 100, 200],
         } as NotificationOptions)
     } catch {
-        console.warn('[Notifications] Failed to show notification')
+        // Failed to show notification
     }
 }
 

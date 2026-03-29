@@ -22,9 +22,8 @@ export function unlockAudio(): void {
         source.connect(audioContext.destination)
         source.start(0)
         isAudioUnlocked = true
-        console.log('[NotificationSound] Audio unlocked')
-    } catch (e) {
-        console.warn('[NotificationSound] Failed to unlock audio:', e)
+    } catch {
+        // Failed to unlock audio
     }
 }
 
@@ -37,7 +36,6 @@ export function playOrderNotification(): void {
         try {
             audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
         } catch {
-            console.warn('[NotificationSound] Cannot create AudioContext')
             return
         }
     }

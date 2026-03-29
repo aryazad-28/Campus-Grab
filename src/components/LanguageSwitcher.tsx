@@ -28,12 +28,16 @@ export default function LanguageSwitcher() {
     }
 
     return (
-        <div className="flex items-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2">
-            <Globe className="h-4 w-4 text-neutral-500" />
+        <div
+            className="flex items-center gap-2 rounded-lg border px-3 py-2"
+            style={{ backgroundColor: 'var(--card)', borderColor: 'var(--border)' }}
+        >
+            <Globe className="h-4 w-4" style={{ color: 'var(--muted-foreground)' }} />
             <select
                 value={locale}
                 onChange={handleChange}
-                className="bg-transparent text-sm font-medium text-neutral-700 outline-none"
+                className="bg-transparent text-sm font-medium outline-none"
+                style={{ color: 'var(--foreground)' }}
             >
                 <option value="en">English</option>
                 <option value="hi">हिंदी (Hindi)</option>

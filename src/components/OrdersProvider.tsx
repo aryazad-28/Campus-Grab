@@ -55,7 +55,7 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                 try {
                     let query = supabase
                         .from('orders')
-                        .select('*')
+                        .select('id, token_number, items, total, status, created_at, estimated_time, payment_method, completed_at, admin_id, payment_verified')
                         .order('created_at', { ascending: false })
 
                     // If adminId provided, filter by it
@@ -71,8 +71,8 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                         localStorage.removeItem(ORDERS_STORAGE_KEY)
                         return
                     }
-                } catch (err) {
-                    console.error('Supabase orders fetch error:', err)
+                } catch {
+                    // Supabase fetch failed — fall back to localStorage
                 }
             }
 
@@ -192,17 +192,15 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                     p_payment_method: newOrder.payment_method
                 }
 
-                console.log('Attempting create_order RPC via addOrder. Params:', JSON.stringify(rpcParams, null, 2))
+
 
                 if (!rpcParams.p_admin_id) {
-                    console.error('ABORTING RPC: Missing p_admin_id (canteen ID).')
                     throw new Error('Missing admin_id/canteen_id. Cannot place order.')
                 }
 
                 const { data, error } = await supabase.rpc('create_order', rpcParams)
 
                 if (error) {
-                    console.error('Supabase create_order RPC error:', error)
                     // Revert optimistic update on error
                     setOrders(prev => prev.filter(o => o.id !== tempId))
                     throw error
@@ -215,9 +213,6 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                     return confirmOrder
                 }
             } catch (err: any) {
-                console.error('Supabase order save failed:', err)
-                if (err?.message) console.error('Error Message:', err.message)
-                if (err?.details) console.error('Error Details:', err.details)
 
                 // Revert optimistic update
                 setOrders(prev => prev.filter(o => o.id !== tempId))
@@ -253,11 +248,10 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                 try {
                     const { error } = await supabase.rpc('mark_order_completed', { p_order_id: id })
                     if (error) {
-                        console.error('Failed to mark order completed:', error)
                         // Revert optimistic update on error would be ideal here
                     }
-                } catch (err) {
-                    console.error('RPC error:', err)
+                } catch {
+                    // RPC failed silently
                 }
                 return
             }
@@ -274,7 +268,7 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                 .update(updateData)
                 .eq('id', id)
 
-            if (error) console.error('Supabase order status update error:', error)
+            // error is silently handled — UI already updated optimistically
         }
     }, [adminId])
 

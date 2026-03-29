@@ -8,7 +8,6 @@ import { useCart } from '@/components/CartProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { useAuth } from '@/components/AuthProvider'
 import { useAI } from '@/components/AIProvider'
-import { getAuthHeaders } from '@/lib/api-auth'
 import { formatPrice, formatTime } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
@@ -76,10 +75,9 @@ function CartContent() {
             })
 
             // Step 2: Create Razorpay order via API
-            const authHeaders = await getAuthHeaders()
             const razorpayRes = await fetch('/api/razorpay/create-order', {
                 method: 'POST',
-                headers: authHeaders,
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     orderId: newOrder.id,
                     canteenId: canteenId,
@@ -131,7 +129,7 @@ function CartContent() {
                         // Step 4: Verify payment on server
                         const verifyRes = await fetch('/api/razorpay/verify-payment', {
                             method: 'POST',
-                            headers: authHeaders,
+                            headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
                                 razorpay_order_id: response.razorpay_order_id,
                                 razorpay_payment_id: response.razorpay_payment_id,
@@ -162,7 +160,6 @@ function CartContent() {
                         clearCart()
                         setStep('confirmation')
                     } catch (error: any) {
-                        console.error('Payment verification error:', error)
                         alert('Payment verification failed. Please contact support.')
                     } finally {
                         setIsProcessing(false)
@@ -183,7 +180,6 @@ function CartContent() {
             const rzp = new (window as any).Razorpay(options)
             rzp.open()
         } catch (err: any) {
-            console.error('Order/Payment error:', err)
             alert(err.message || 'Failed to initiate payment. Please try again.')
             setIsProcessing(false)
         }

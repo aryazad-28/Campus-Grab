@@ -90,8 +90,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           await supabase.auth.updateUser({
             data: { account_type: 'student' }
           })
-        } catch (err) {
-          console.warn('Failed to auto-tag Google OAuth user:', err)
+        } catch {
+          // Auto-tag failed silently — non-critical
         }
       }
 

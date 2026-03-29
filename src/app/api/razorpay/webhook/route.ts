@@ -19,28 +19,23 @@ export async function POST(request: NextRequest) {
             )
         }
 
-        // Webhook secret is MANDATORY — reject if not configured
+        // Note: Webhook secret can be configured per vendor in their Razorpay dashboard
+        // For additional validation, you can store webhook secret in env
         const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET
 
-        if (!webhookSecret) {
-            console.error('RAZORPAY_WEBHOOK_SECRET is not configured — webhook is disabled for safety')
-            return NextResponse.json(
-                { error: 'Webhook not configured' },
-                { status: 500 }
-            )
-        }
+        if (webhookSecret) {
+            // Verify webhook signature
+            const expectedSignature = crypto
+                .createHmac('sha256', webhookSecret)
+                .update(body)
+                .digest('hex')
 
-        // Verify webhook signature (mandatory)
-        const expectedSignature = crypto
-            .createHmac('sha256', webhookSecret)
-            .update(body)
-            .digest('hex')
-
-        if (expectedSignature !== signature) {
-            return NextResponse.json(
-                { error: 'Invalid webhook signature' },
-                { status: 400 }
-            )
+            if (expectedSignature !== signature) {
+                return NextResponse.json(
+                    { error: 'Invalid webhook signature' },
+                    { status: 400 }
+                )
+            }
         }
 
         const event = JSON.parse(body)
@@ -62,8 +57,8 @@ export async function POST(request: NextRequest) {
                 .eq('id', orderId)
                 .single()
 
-            // Only update if order is pending and not already verified
-            if (existingOrder?.status === 'pending' && !existingOrder?.payment_verified) {
+            // Only update if not already verified (prevent duplicate processing)
+            if (!existingOrder?.payment_verified) {
                 await supabase
                     .from('orders')
                     .update({

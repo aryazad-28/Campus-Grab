@@ -22,14 +22,14 @@ export function Header() {
 
     return (
         <header className="sticky top-0 z-50 w-full border-b glass transition-colors" style={{ borderColor: 'var(--border)' }}>
-            <div className="container mx-auto flex h-14 items-center justify-between px-4 sm:h-16">
-                <Link href="/" className="flex items-center gap-2 group">
+            <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:h-16">
+                <Link href="/" className="flex items-center gap-2.5 group">
                     <img
                         src="/logo.png"
                         alt="Campus Grab"
-                        className="h-8 w-8 sm:h-9 sm:w-9 rounded-full transition-transform group-hover:scale-105"
+                        className="h-10 w-10 sm:h-9 sm:w-9 rounded-full transition-transform group-hover:scale-105"
                     />
-                    <span className="text-base font-bold sm:text-lg text-red-500">
+                    <span className="text-lg font-bold sm:text-lg text-red-500">
                         Campus Grab
                     </span>
                 </Link>
