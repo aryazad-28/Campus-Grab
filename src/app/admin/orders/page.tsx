@@ -56,8 +56,10 @@ export default function AdminOrdersPage() {
         )
     }
 
-    // Filter out 'pending' orders - only show paid orders
-    const paidOrders = orders.filter(o => o.status !== 'pending')
+    // Filter out unverified payments (only show orders where payment was successful)
+    // Note: older orders might not have the payment_verified flag, so we also show orders that are past 'pending' state
+    const paidOrders = orders.filter(o => (o as any).payment_verified === true || o.status !== 'pending')
+    
     const filteredOrders = filter === 'all' ? paidOrders : paidOrders.filter(o => o.status === filter)
     const preparingCount = paidOrders.filter(o => o.status === 'preparing').length
     const readyCount = paidOrders.filter(o => o.status === 'ready').length

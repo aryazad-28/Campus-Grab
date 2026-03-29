@@ -48,9 +48,13 @@ export default function AdminDashboard() {
     }
 
     const isOpen = admin?.is_open ?? false
-    const pendingOrders = orders.filter(o => o.status === 'pending').length
-    const preparingOrders = orders.filter(o => o.status === 'preparing').length
-    const readyOrders = orders.filter(o => o.status === 'ready').length
+    
+    // Only count verified orders, or legacy orders that advanced past 'pending'
+    const validOrders = orders.filter(o => (o as any).payment_verified === true || o.status !== 'pending')
+    
+    const pendingOrders = validOrders.filter(o => o.status === 'pending').length
+    const preparingOrders = validOrders.filter(o => o.status === 'preparing').length
+    const readyOrders = validOrders.filter(o => o.status === 'ready').length
 
     return (
         <div className="animate-in fade-in space-y-6 px-4 py-8 container mx-auto">
