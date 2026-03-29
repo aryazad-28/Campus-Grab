@@ -12,9 +12,9 @@ function AdminScopedProviders({ children }: { children: React.ReactNode }) {
 
     const adminId = admin?.id
 
-    // If not authenticated (admin is null), the page protection will handle redirect, 
-    // but we should still avoid fetching "public" data here.
-    if (!adminId) return null
+    // If not authenticated (admin is null), return children unwrapped so login/onboarding pages can render,
+    // without spinning up the MenuProvider/OrdersProvider that require an adminId.
+    if (!adminId) return <>{children}</>
 
     return (
         <MenuProvider adminId={adminId}>
