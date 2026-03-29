@@ -19,24 +19,19 @@ export default function AdminOrdersPage() {
     const { orders, updateOrderStatus } = useOrders()
     const { markOrderComplete } = useAI()
     const [filter, setFilter] = useState<Order['status'] | 'all'>('all')
-    const [soundEnabled, setSoundEnabled] = useState(false)
     const t = useTranslations('Admin')
     const tOrders = useTranslations('Orders')
 
-    // Unlock audio on first user interaction
+    // Aggressively attempt to keep audio unlocked on any interaction
     useEffect(() => {
         const handleInteraction = () => {
             unlockAudio()
-            setSoundEnabled(isAudioReady())
-            // Remove listeners after first interaction
-            document.removeEventListener('click', handleInteraction)
-            document.removeEventListener('touchstart', handleInteraction)
         }
-        document.addEventListener('click', handleInteraction)
-        document.addEventListener('touchstart', handleInteraction)
+        document.addEventListener('click', handleInteraction, { capture: true })
+        document.addEventListener('touchstart', handleInteraction, { capture: true, passive: true })
         return () => {
-            document.removeEventListener('click', handleInteraction)
-            document.removeEventListener('touchstart', handleInteraction)
+            document.removeEventListener('click', handleInteraction, { capture: true })
+            document.removeEventListener('touchstart', handleInteraction, { capture: true })
         }
     }, [])
 
@@ -79,18 +74,6 @@ export default function AdminOrdersPage() {
                     <div className="flex items-center justify-between mb-3">
                         <h1 className="text-xl font-bold">{t('orders')}</h1>
                         <div className="flex items-center gap-1">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className={soundEnabled ? 'text-emerald-500 hover:text-emerald-600' : 'text-red-500 hover:text-red-600'}
-                                onClick={() => {
-                                    unlockAudio()
-                                    setSoundEnabled(isAudioReady())
-                                }}
-                                title={soundEnabled ? 'Sound enabled' : 'Tap to enable sound'}
-                            >
-                                {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-                            </Button>
                             <Button variant="ghost" size="icon" className="text-[var(--muted-foreground)] hover:text-[var(--foreground)]" onClick={() => window.location.reload()}>
                                 <RefreshCw className="h-5 w-5" />
                             </Button>

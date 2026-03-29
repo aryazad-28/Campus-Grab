@@ -55,6 +55,7 @@ const ProfileRow = ({
     label,
     value,
     onClick,
+    href,
     className = '',
     chevron = true,
 }: {
@@ -62,30 +63,35 @@ const ProfileRow = ({
     label: string
     value?: React.ReactNode
     onClick?: () => void
+    href?: string
     className?: string
     chevron?: boolean
-}) => (
-    <button
-        onClick={onClick}
-        disabled={!onClick}
-        className={cn(
-            "w-full flex items-center justify-between p-4 bg-[var(--card)] hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] transition-colors text-left",
-            !onClick && "cursor-default hover:bg-[var(--card)] hover:text-inherit",
-            className
-        )}
-    >
-        <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)]">
-                <Icon className="h-5 w-5" />
+}) => {
+    const content = (
+        <div
+            className={cn(
+                "w-full flex items-center justify-between p-4 bg-[var(--card)] hover:bg-[var(--accent)] hover:text-[var(--accent-foreground)] transition-colors text-left",
+                !onClick && !href && "cursor-default hover:bg-[var(--card)] hover:text-inherit",
+                className
+            )}
+        >
+            <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--muted)] text-[var(--muted-foreground)] border border-[var(--border)]">
+                    <Icon className="h-5 w-5" />
+                </div>
+                <span className="font-medium text-[var(--foreground)] text-sm sm:text-base">{label}</span>
             </div>
-            <span className="font-medium text-[var(--foreground)] text-sm sm:text-base">{label}</span>
+            <div className="flex items-center gap-3">
+                {value && <span className="text-sm font-medium text-[var(--muted-foreground)]">{value}</span>}
+                {(onClick || href) && chevron && <ChevronRight className="h-5 w-5 text-[var(--muted-foreground)] opacity-50" />}
+            </div>
         </div>
-        <div className="flex items-center gap-3">
-            {value && <span className="text-sm font-medium text-[var(--muted-foreground)]">{value}</span>}
-            {onClick && chevron && <ChevronRight className="h-5 w-5 text-[var(--muted-foreground)] opacity-50" />}
-        </div>
-    </button>
-)
+    )
+
+    if (href) return <Link href={href} className="block">{content}</Link>
+    if (onClick) return <button onClick={onClick} className="w-full text-left">{content}</button>
+    return content
+}
 
 export default function AdminProfilePage() {
     const router = useRouter()
@@ -369,9 +375,7 @@ export default function AdminProfilePage() {
                             chevron={false}
                         />
                         <div className="h-px w-full bg-[var(--border)]" />
-                        <Link href="/admin/support">
-                            <ProfileRow icon={HelpCircle} label="Help & Support" />
-                        </Link>
+                        <ProfileRow icon={HelpCircle} label="Help & Support" href="/admin/support" />
                     </div>
                 </div>
 
@@ -591,21 +595,13 @@ export default function AdminProfilePage() {
                         Legal
                     </h2>
                     <div className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)] shadow-sm">
-                        <Link href="/admin/terms">
-                            <ProfileRow icon={Receipt} label="Terms & Conditions" />
-                        </Link>
+                        <ProfileRow icon={Receipt} label="Terms & Conditions" href="/admin/terms" />
                         <div className="h-px w-full bg-[var(--border)]" />
-                        <Link href="/admin/privacy">
-                            <ProfileRow icon={Shield} label="Privacy Policy" />
-                        </Link>
+                        <ProfileRow icon={Shield} label="Privacy Policy" href="/admin/privacy" />
                         <div className="h-px w-full bg-[var(--border)]" />
-                        <Link href="/admin/refund">
-                            <ProfileRow icon={Receipt} label="Refund Policy" />
-                        </Link>
+                        <ProfileRow icon={Receipt} label="Refund Policy" href="/admin/refund" />
                         <div className="h-px w-full bg-[var(--border)]" />
-                        <Link href="/admin/about">
-                            <ProfileRow icon={Info} label="About Campus Grab" />
-                        </Link>
+                        <ProfileRow icon={Info} label="About Campus Grab" href="/admin/about" />
                     </div>
                 </div>
 
