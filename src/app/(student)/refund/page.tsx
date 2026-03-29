@@ -51,7 +51,7 @@ export default function RefundPage() {
 
                 <section>
                     <h2 className="text-base font-semibold mb-2" style={{ color: 'var(--foreground)' }}>5. Contact</h2>
-                    <p>For refund requests or disputes, please reach out via the Help & Support section in your profile or email us at support@campusgrab.in.</p>
+                    <p>For refund requests or disputes, please reach out via the Help & Support section in your profile or email us at aryarajanzad@gmail.com.</p>
                 </section>
 
                 <p className="text-xs pt-4" style={{ color: 'var(--muted-foreground)' }}>Last updated: March 2026</p>

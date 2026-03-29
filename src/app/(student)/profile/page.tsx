@@ -202,24 +202,9 @@ export default function ProfilePage() {
                 <ProfileRow
                     icon={HelpCircle}
                     label="Help & Support"
-                    sublabel="FAQs, contact us"
+                    sublabel="FAQs, report issues, and contact"
                     href="/support"
                     iconColor="#3b82f6"
-                />
-                <Divider />
-                <ProfileRow
-                    icon={Bug}
-                    label="Report an Issue"
-                    href="/support"
-                    iconColor="#f97316"
-                />
-                <Divider />
-                <ProfileRow
-                    icon={Phone}
-                    label="Contact Us"
-                    sublabel="support@campusgrab.in"
-                    href="/support"
-                    iconColor="#10b981"
                 />
             </div>
 
