@@ -21,6 +21,11 @@ export interface Order {
     payment_method: string
     completed_at?: string  // For analytics timing
     admin_id?: string       // Scopes order to a specific canteen
+    user_name?: string      // Name of the person who ordered
+    user_email?: string     // Email of the person who ordered
+    razorpay_payment_id?: string  // For invoice/receipt
+    paid_at?: string        // When payment was completed
+    payment_verified?: boolean
 }
 
 interface OrdersContextType {
@@ -55,7 +60,7 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                 try {
                     let query = supabase
                         .from('orders')
-                        .select('id, token_number, items, total, status, created_at, estimated_time, payment_method, completed_at, admin_id, payment_verified')
+                        .select('id, token_number, items, total, status, created_at, estimated_time, payment_method, completed_at, admin_id, payment_verified, user_name, user_email, razorpay_payment_id, paid_at')
                         .order('created_at', { ascending: false })
 
                     // If adminId provided, filter by it
@@ -189,7 +194,9 @@ export function OrdersProvider({ children, adminId }: { children: ReactNode; adm
                     p_total: newOrder.total,
                     p_estimated_time: newOrder.estimated_time,
                     p_status: newOrder.status,
-                    p_payment_method: newOrder.payment_method
+                    p_payment_method: newOrder.payment_method,
+                    p_user_name: newOrder.user_name || null,
+                    p_user_email: newOrder.user_email || null
                 }
 
 

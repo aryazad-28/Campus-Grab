@@ -2,9 +2,15 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
-import { Clock, ChefHat, Package, CheckCircle, ArrowLeft, Utensils, ChevronDown, Loader2, CalendarDays } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import {
+    Clock, ChefHat, Package, CheckCircle, ArrowLeft, Utensils,
+    ChevronDown, ChevronRight, Loader2, CalendarDays, Search,
+    RotateCcw, Store
+} from 'lucide-react'
 import { useOrders, Order } from '@/components/OrdersProvider'
 import { useAuth } from '@/components/AuthProvider'
+import { useCart } from '@/components/CartProvider'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 
@@ -67,9 +73,32 @@ function OrderTimeline({ status }: { status: Order['status'] }) {
     )
 }
 
+interface HistoryOrder {
+    id: string
+    token_number: string
+    items: { name: string; quantity: number; price: number }[]
+    total: number
+    status: string
+    created_at: string
+    admin_id: string
+    payment_method: string
+    estimated_time: number
+    user_name?: string
+    user_email?: string
+    razorpay_payment_id?: string
+    paid_at?: string
+    payment_verified?: boolean
+    admin_profiles?: {
+        canteen_name: string
+        canteen_image: string | null
+        college_name: string
+        area: string
+    }
+}
+
 interface HistoryDay {
     date: string
-    orders: Order[]
+    orders: HistoryOrder[]
     orderCount: number
     totalRevenue: number
 }
@@ -82,6 +111,8 @@ const MONTH_KEYS = [
 export default function OrdersPage() {
     const { orders, updateOrderStatus } = useOrders()
     const { user } = useAuth()
+    const { addToCart } = useCart()
+    const router = useRouter()
     const t = useTranslations('Orders')
     const tCommon = useTranslations('Common')
 
@@ -89,6 +120,7 @@ export default function OrdersPage() {
     const [isLoadingHistory, setIsLoadingHistory] = useState(false)
     const [selectedMonth, setSelectedMonth] = useState<string>('all')
     const [showMonthDropdown, setShowMonthDropdown] = useState(false)
+    const [searchQuery, setSearchQuery] = useState('')
 
     const activeOrders = orders.filter(o => o.status !== 'completed')
 
@@ -103,7 +135,6 @@ export default function OrdersPage() {
                 url += `&month=${selectedMonth}&year=${now.getFullYear()}`
             }
 
-            // Get auth token for API validation
             const { supabase } = await import('@/lib/supabase')
             const session = supabase ? (await supabase.auth.getSession()).data.session : null
             const headers: Record<string, string> = {}
@@ -127,6 +158,19 @@ export default function OrdersPage() {
         fetchHistory()
     }, [fetchHistory])
 
+    // Filter orders by search query
+    const filteredHistoryDays = searchQuery.trim()
+        ? historyDays.map(day => ({
+            ...day,
+            orders: day.orders.filter(order => {
+                const q = searchQuery.toLowerCase()
+                const canteenMatch = order.admin_profiles?.canteen_name?.toLowerCase().includes(q)
+                const itemMatch = order.items.some(i => i.name.toLowerCase().includes(q))
+                return canteenMatch || itemMatch
+            })
+        })).filter(day => day.orders.length > 0)
+        : historyDays
+
     const formatDateHeader = (dateStr: string) => {
         const date = new Date(dateStr + 'T00:00:00')
         const today = new Date()
@@ -139,8 +183,31 @@ export default function OrdersPage() {
         return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })
     }
 
-    const formatTime = (dateString: string) => {
-        return new Date(dateString).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+    const formatOrderDateTime = (dateString: string) => {
+        const d = new Date(dateString)
+        const day = d.getDate().toString().padStart(2, '0')
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        const month = monthNames[d.getMonth()]
+        const hours = d.getHours()
+        const minutes = d.getMinutes().toString().padStart(2, '0')
+        const ampm = hours >= 12 ? 'PM' : 'AM'
+        const h = hours % 12 || 12
+        return `Order placed on ${day} ${month}, ${h}:${minutes}${ampm}`
+    }
+
+    const handleReorder = (order: HistoryOrder, e: React.MouseEvent) => {
+        e.stopPropagation()
+        for (const item of order.items) {
+            for (let i = 0; i < item.quantity; i++) {
+                addToCart({
+                    id: `${item.name}-${Date.now()}-${i}`,
+                    name: item.name,
+                    price: item.price,
+                    eta_minutes: order.estimated_time || 15,
+                })
+            }
+        }
+        router.push(`/cart?canteen=${order.admin_id}`)
     }
 
     // Active order tracking view
@@ -211,20 +278,28 @@ export default function OrdersPage() {
                 )}
 
                 {/* Past orders section below active */}
-                {historyDays.length > 0 && (
+                {filteredHistoryDays.length > 0 && (
                     <div className="mt-8">
                         <h3 className="text-sm font-medium text-[var(--muted-foreground)] mb-3">{t('pastOrders')}</h3>
-                        {historyDays.map(day => (
+                        {filteredHistoryDays.map(day => (
                             <div key={day.date} className="mb-4">
                                 <p className="text-xs font-semibold text-[var(--muted-foreground)] uppercase mb-2">{formatDateHeader(day.date)}</p>
                                 {day.orders.filter(o => o.status === 'completed').map(o => (
-                                    <div key={o.id} className="rounded-xl bg-[var(--card)] border border-[var(--border)] p-3 flex items-center justify-between mb-2 opacity-60">
-                                        <div>
-                                            <p className="font-mono text-sm font-bold">{o.token_number || o.id}</p>
-                                            <p className="text-xs text-[var(--muted-foreground)]">{formatTime(o.created_at)} · ₹{o.total}</p>
+                                    <Link
+                                        key={o.id}
+                                        href={`/orders/${o.id}`}
+                                        className="block rounded-xl bg-[var(--card)] border border-[var(--border)] p-3 mb-2 hover:bg-[var(--card-elevated)] transition-colors"
+                                    >
+                                        <div className="flex items-center justify-between">
+                                            <div>
+                                                <p className="font-mono text-sm font-bold">{o.token_number || o.id}</p>
+                                                <p className="text-xs text-[var(--muted-foreground)]">
+                                                    {new Date(o.created_at).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })} · ₹{o.total}
+                                                </p>
+                                            </div>
+                                            <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)]" />
                                         </div>
-                                        <span className="text-xs text-[var(--muted-foreground)]">{t('completed')}</span>
-                                    </div>
+                                    </Link>
                                 ))}
                             </div>
                         ))}
@@ -234,11 +309,13 @@ export default function OrdersPage() {
         )
     }
 
-    // Order History View (no active orders)
+    // =============================================
+    // ORDER HISTORY VIEW (Zomato-style cards)
+    // =============================================
     return (
         <div className="container mx-auto max-w-md px-4 py-6 pb-32">
-            {/* Header with month filter */}
-            <div className="flex items-center justify-between mb-5 animate-fade-in-up">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4 animate-fade-in-up">
                 <h1 className="text-lg font-semibold">{t('title')}</h1>
                 <div className="relative">
                     <button
@@ -278,6 +355,18 @@ export default function OrdersPage() {
                 </div>
             </div>
 
+            {/* Search Bar */}
+            <div className="relative mb-5 animate-fade-in-up delay-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[var(--muted-foreground)]" />
+                <input
+                    type="text"
+                    placeholder="Search by canteen or dish"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full h-11 pl-10 pr-4 rounded-xl bg-[var(--card)] border border-[var(--border)] text-sm placeholder:text-[var(--muted-foreground)] focus:outline-none focus:ring-2 focus:ring-red-500/30 focus:border-red-500/50 transition-all"
+                />
+            </div>
+
             {/* Loading state */}
             {isLoadingHistory && (
                 <div className="flex flex-col items-center justify-center py-16 animate-fade-in">
@@ -287,48 +376,115 @@ export default function OrdersPage() {
             )}
 
             {/* Empty state */}
-            {!isLoadingHistory && historyDays.length === 0 && (
+            {!isLoadingHistory && filteredHistoryDays.length === 0 && (
                 <div className="text-center py-16 animate-fade-in">
                     <Clock className="mx-auto h-12 w-12 text-[var(--muted-foreground)] opacity-30 mb-4" />
-                    <p className="text-[var(--muted-foreground)] mb-4">{t('noOrdersYet')}</p>
-                    <Link href="/canteens" className="text-red-500 underline hover:no-underline font-medium">
-                        {t('browseCanteens')}
-                    </Link>
+                    <p className="text-[var(--muted-foreground)] mb-4">
+                        {searchQuery ? 'No orders match your search' : t('noOrdersYet')}
+                    </p>
+                    {!searchQuery && (
+                        <Link href="/canteens" className="text-red-500 underline hover:no-underline font-medium">
+                            {t('browseCanteens')}
+                        </Link>
+                    )}
                 </div>
             )}
 
-            {/* Date-grouped orders */}
-            {!isLoadingHistory && historyDays.map((day, dayIndex) => (
-                <div key={day.date} className={`mb-6 animate-fade-in-up delay-${Math.min(dayIndex + 1, 8)}`}>
+            {/* Zomato-style Order Cards */}
+            {!isLoadingHistory && filteredHistoryDays.map((day, dayIndex) => (
+                <div key={day.date} className={`mb-6 animate-fade-in-up delay-${Math.min(dayIndex + 2, 8)}`}>
                     {/* Date header */}
                     <div className="flex items-center justify-between mb-3">
-                        <h2 className="text-sm font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
+                        <h2 className="text-xs font-semibold text-[var(--muted-foreground)] uppercase tracking-wide">
                             {formatDateHeader(day.date)}
                         </h2>
-                        <span className="text-xs text-[var(--muted-foreground)]">
-                            {t('ordersCount', { count: day.orderCount })}
-                        </span>
                     </div>
 
                     {/* Orders for this date */}
-                    <div className="space-y-3">
-                        {day.orders.map((order) => (
-                            <div key={order.id} className="rounded-xl bg-[var(--card)] border border-[var(--border)] p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <p className="font-mono font-bold">{order.token_number || order.id}</p>
-                                    <span className="text-xs text-[var(--muted-foreground)]">{formatTime(order.created_at)}</span>
+                    <div className="space-y-4">
+                        {day.orders.map((order) => {
+                            const canteen = order.admin_profiles
+
+                            return (
+                                <div
+                                    key={order.id}
+                                    className="rounded-2xl bg-[var(--card)] border border-[var(--border)] overflow-hidden hover:border-[var(--muted-foreground)]/30 transition-colors"
+                                >
+                                    {/* Canteen header — clickable to order details */}
+                                    <Link href={`/orders/${order.id}`} className="block">
+                                        <div className="p-4 pb-3">
+                                            <div className="flex items-center gap-3">
+                                                {/* Canteen image */}
+                                                {canteen?.canteen_image ? (
+                                                    <img
+                                                        src={canteen.canteen_image}
+                                                        alt={canteen.canteen_name}
+                                                        className="h-12 w-12 rounded-xl object-cover flex-shrink-0"
+                                                    />
+                                                ) : (
+                                                    <div className="h-12 w-12 rounded-xl bg-[var(--card-elevated)] flex items-center justify-center flex-shrink-0">
+                                                        <Store className="h-6 w-6 text-[var(--muted-foreground)]" />
+                                                    </div>
+                                                )}
+                                                <div className="flex-1 min-w-0">
+                                                    <h3 className="font-semibold text-sm truncate">
+                                                        {canteen?.canteen_name || 'Canteen'}
+                                                    </h3>
+                                                    <p className="text-xs text-[var(--muted-foreground)] truncate">
+                                                        {canteen?.area || canteen?.college_name || ''}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Items */}
+                                        <div className="px-4 pb-3 border-t border-dashed border-[var(--border)]">
+                                            <div className="pt-3 space-y-1.5">
+                                                {order.items.map((item, idx) => (
+                                                    <div key={idx} className="flex items-start gap-2">
+                                                        <span className="mt-1 h-3.5 w-3.5 rounded-sm border border-green-500 flex items-center justify-center flex-shrink-0">
+                                                            <span className="h-1.5 w-1.5 rounded-full bg-green-500" />
+                                                        </span>
+                                                        <p className="text-sm text-[var(--foreground)]">
+                                                            {item.quantity} x {item.name}
+                                                        </p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Footer: date, status, price */}
+                                        <div className="px-4 pb-3 pt-2 border-t border-dashed border-[var(--border)]">
+                                            <div className="flex items-center justify-between">
+                                                <div>
+                                                    <p className="text-xs text-[var(--muted-foreground)]">
+                                                        {formatOrderDateTime(order.created_at)}
+                                                    </p>
+                                                    <p className="text-xs text-[var(--muted-foreground)]">
+                                                        {order.status === 'completed' ? 'Delivered' : order.status}
+                                                    </p>
+                                                </div>
+                                                <div className="flex items-center gap-1">
+                                                    <span className="font-semibold text-sm">₹{order.total.toFixed(2)}</span>
+                                                    <ChevronRight className="h-4 w-4 text-[var(--muted-foreground)]" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </Link>
+
+                                    {/* Reorder button */}
+                                    <div className="px-4 pb-4 flex justify-end">
+                                        <button
+                                            onClick={(e) => handleReorder(order, e)}
+                                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 border-red-500 text-red-500 text-xs font-semibold hover:bg-red-500/5 active:scale-[0.97] transition-all"
+                                        >
+                                            <RotateCcw className="h-3.5 w-3.5" />
+                                            Reorder
+                                        </button>
+                                    </div>
                                 </div>
-                                <div className="space-y-1">
-                                    {order.items.map((item: any, idx: number) => (
-                                        <p key={idx} className="text-sm text-[var(--muted-foreground)]">{item.quantity}x {item.name}</p>
-                                    ))}
-                                </div>
-                                <div className="mt-2 pt-2 border-t border-[var(--border)] flex justify-between text-sm font-medium">
-                                    <span>{tCommon('total')}</span>
-                                    <span>₹{order.total}</span>
-                                </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
                 </div>
             ))}

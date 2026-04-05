@@ -71,7 +71,9 @@ function CartContent() {
                 status: 'pending',
                 estimated_time: maxEta,
                 admin_id: canteenId,
-                payment_method: 'online'
+                payment_method: 'online',
+                user_name: user?.name || undefined,
+                user_email: user?.email || undefined
             })
 
             // Step 2: Create Razorpay order via API

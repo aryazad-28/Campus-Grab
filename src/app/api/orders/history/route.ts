@@ -44,7 +44,12 @@ export async function GET(request: NextRequest) {
         // Build query — fetch completed orders for this user
         let query = supabase
             .from('orders')
-            .select('id, token_number, items, total, status, created_at, admin_id, payment_method, estimated_time')
+            .select(`
+                id, token_number, items, total, status, created_at, admin_id, 
+                payment_method, estimated_time, user_name, user_email, 
+                razorpay_payment_id, paid_at, payment_verified,
+                admin_profiles!admin_id (canteen_name, canteen_image, college_name, area)
+            `)
             .eq('user_id', userId)
             .order('created_at', { ascending: false })
 

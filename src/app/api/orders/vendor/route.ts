@@ -56,7 +56,7 @@ export async function GET(request: NextRequest) {
 
             const { data: orders, error } = await supabase
                 .from('orders')
-                .select('id, token_number, items, total, status, created_at, payment_method, estimated_time')
+                .select('id, token_number, items, total, status, created_at, payment_method, estimated_time, user_name, user_email')
                 .eq('admin_id', adminId)
                 .neq('status', 'pending') // Only paid orders
                 .gte('created_at', startOfDay)

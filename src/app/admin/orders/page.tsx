@@ -126,6 +126,11 @@ export default function AdminOrdersPage() {
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
                                                 <p className="font-mono text-xl font-bold">{order.token_number || order.id}</p>
+                                                {(order as any).user_name && (
+                                                    <p className="text-sm font-medium text-[var(--foreground)] mt-0.5">
+                                                        {(order as any).user_name}
+                                                    </p>
+                                                )}
                                                 <p className="text-xs text-[var(--muted-foreground)]">{formatTime(order.created_at)}</p>
                                             </div>
                                             <Badge className={`${config.color} border gap-1 shadow-none font-medium`}>
