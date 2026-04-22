@@ -26,7 +26,6 @@ interface RewardsData {
     first_order_claimed: boolean
     streak_3_day: number
     streak_7_day: number
-    streak_7_day: number
     active_vouchers: Voucher[]
     transactions: RewardTransaction[]
     meter_max: number
