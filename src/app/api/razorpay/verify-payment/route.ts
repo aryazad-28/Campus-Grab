@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         // 1. Fetch order details
         const { data: order, error: orderError } = await supabase
             .from('orders')
-            .select('id, admin_id, status')
+            .select('id, admin_id, status, user_id, voucher_id')
             .eq('id', orderId)
             .single()
 
@@ -86,9 +86,43 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        // 4.5. Mark voucher as used if applicable
+        if (order.voucher_id) {
+            await supabase
+                .from('user_vouchers')
+                .update({
+                    is_used: true,
+                    order_id: orderId
+                })
+                .eq('id', order.voucher_id)
+        }
+
+        // 5. Award reward points (server-side only)
+        let rewardResult = null
+        if (order.user_id) {
+            try {
+                const { data: rewardData, error: rewardError } = await supabase
+                    .rpc('earn_reward_points', {
+                        p_user_id: order.user_id,
+                        p_order_id: orderId,
+                    })
+
+                if (rewardError) {
+                    console.error('Error awarding reward points:', rewardError)
+                } else {
+                    rewardResult = rewardData
+                    console.log('Reward points awarded:', rewardData)
+                }
+            } catch (rewardErr) {
+                // Non-critical — don't fail the order if rewards fail
+                console.error('Reward points error (non-critical):', rewardErr)
+            }
+        }
+
         return NextResponse.json({
             success: true,
             message: 'Payment verified successfully',
+            rewards: rewardResult,
         })
     } catch (error) {
         console.error('Error verifying payment:', error)

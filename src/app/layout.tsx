@@ -7,6 +7,7 @@ import { AuthProvider } from "@/components/AuthProvider"
 import { OrdersProvider } from "@/components/OrdersProvider"
 import { MenuProvider } from "@/components/MenuProvider"
 import { AIProvider } from "@/components/AIProvider"
+import { RewardsProvider } from "@/components/RewardsProvider"
 import { NextIntlClientProvider } from 'next-intl';
 import { getLocale, getMessages } from 'next-intl/server';
 
@@ -58,15 +59,17 @@ export default async function RootLayout({
       <body className={`${inter.variable} antialiased`}>
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
-            <AIProvider>
-              <MenuProvider>
-                <CartProvider>
-                  <OrdersProvider>
-                    {children}
-                  </OrdersProvider>
-                </CartProvider>
-              </MenuProvider>
-            </AIProvider>
+            <RewardsProvider>
+              <AIProvider>
+                <MenuProvider>
+                  <CartProvider>
+                    <OrdersProvider>
+                      {children}
+                    </OrdersProvider>
+                  </CartProvider>
+                </MenuProvider>
+              </AIProvider>
+            </RewardsProvider>
           </AuthProvider>
         </NextIntlClientProvider>
         <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive" />

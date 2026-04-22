@@ -3,6 +3,9 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { CartItem } from '@/lib/supabase'
 
+// ₹3 flat convenience fee per order
+export const CONVENIENCE_FEE = 3
+
 interface CartContextType {
     items: CartItem[]
     addToCart: (item: Omit<CartItem, 'quantity'>) => void
@@ -12,6 +15,8 @@ interface CartContextType {
     cartTotal: number
     cartCount: number
     maxEta: number
+    convenienceFee: number
+    orderTotal: number
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
@@ -75,6 +80,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const cartTotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0)
     const cartCount = items.reduce((sum, item) => sum + item.quantity, 0)
     const maxEta = items.length > 0 ? Math.max(...items.map(i => i.eta_minutes)) : 0
+    const convenienceFee = items.length > 0 ? CONVENIENCE_FEE : 0
+    const orderTotal = cartTotal + convenienceFee
 
     return (
         <CartContext.Provider value={{
@@ -85,7 +92,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
             clearCart,
             cartTotal,
             cartCount,
-            maxEta
+            maxEta,
+            convenienceFee,
+            orderTotal
         }}>
             {children}
         </CartContext.Provider>

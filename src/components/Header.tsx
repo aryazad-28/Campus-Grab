@@ -1,10 +1,11 @@
 'use client'
 
 import Link from 'next/link'
-import { ShoppingCart, User, Sun, Moon } from 'lucide-react'
+import { ShoppingCart, User, Sun, Moon, Star } from 'lucide-react'
 import { useCart } from './CartProvider'
 import { useAuth } from './AuthProvider'
 import { useTheme } from './ThemeProvider'
+import { useRewards } from './RewardsProvider'
 import { Button } from './ui/button'
 import { useTranslations } from 'next-intl'
 
@@ -12,6 +13,7 @@ export function Header() {
     const { cartCount } = useCart()
     const { isAuthenticated, user } = useAuth()
     const t = useTranslations('Header')
+    const { rewards } = useRewards()
 
     let themeContext: { theme: 'light' | 'dark'; toggleTheme: () => void } | null = null
     try {
@@ -56,6 +58,22 @@ export function Header() {
                         </Button>
                     )}
 
+                    {/* GrabPoints Badge — Desktop */}
+                    {isAuthenticated && (
+                        <Link href="/rewards" title="GrabPoints">
+                            <div className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors"
+                                style={{
+                                    background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.08))',
+                                    border: '1px solid rgba(245,158,11,0.25)',
+                                    color: '#d97706',
+                                }}
+                            >
+                                <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                <span>{rewards?.balance ?? 0}</span>
+                            </div>
+                        </Link>
+                    )}
+
                     <Link href="/cart" className="relative">
                         <Button variant="outline" size="icon" className="h-9 w-9">
                             <ShoppingCart className="h-4 w-4" />
@@ -81,8 +99,24 @@ export function Header() {
                     )}
                 </nav>
 
-                {/* Mobile: just theme toggle */}
+                {/* Mobile: theme toggle + GrabPoints badge */}
                 <div className="flex items-center gap-2 sm:hidden">
+                    {/* GrabPoints Badge — Mobile */}
+                    {isAuthenticated && (
+                        <Link href="/rewards" title="GrabPoints">
+                            <div className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold transition-all active:scale-95"
+                                style={{
+                                    background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1))',
+                                    border: '1px solid rgba(245,158,11,0.3)',
+                                    color: '#d97706',
+                                }}
+                            >
+                                <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                <span>{rewards?.balance ?? 0}</span>
+                            </div>
+                        </Link>
+                    )}
+
                     {themeContext && (
                         <Button
                             variant="ghost"

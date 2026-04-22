@@ -5,13 +5,14 @@ import Link from 'next/link'
 import {
     User, Mail, LogOut, Clock, ChevronRight,
     HelpCircle, Bug, Phone, FileText, Shield,
-    RotateCcw, Info, Globe
+    RotateCcw, Info, Globe, Gift, Star
 } from 'lucide-react'
 import { useAuth } from '@/components/AuthProvider'
 import { useOrders } from '@/components/OrdersProvider'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import LanguageSwitcher from '@/components/LanguageSwitcher'
+import { useRewards } from '@/components/RewardsProvider'
 
 /* ─── Reusable row component for menu-style items ─── */
 function ProfileRow({
@@ -79,6 +80,7 @@ export default function ProfilePage() {
     const router = useRouter()
     const { user, signOut, isAuthenticated, isLoading } = useAuth()
     const { orders } = useOrders()
+    const { rewards } = useRewards()
     const t = useTranslations('Profile')
     const tCommon = useTranslations('Common')
 
@@ -140,6 +142,54 @@ export default function ProfilePage() {
                     iconColor="#f59e0b"
                     showArrow={false}
                     rightElement={<LanguageSwitcher />}
+                />
+            </div>
+
+            {/* ─── Rewards ─── */}
+            <SectionTitle>Rewards</SectionTitle>
+            <div
+                className="rounded-2xl overflow-hidden animate-fade-in-up delay-1"
+                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
+            >
+                <div className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                            <div
+                                className="flex h-9 w-9 items-center justify-center rounded-xl"
+                                style={{ backgroundColor: 'rgba(245,158,11,0.1)' }}
+                            >
+                                <Gift className="h-[18px] w-[18px] text-amber-500" />
+                            </div>
+                            <div>
+                                <p className="text-sm font-medium">My Rewards</p>
+                                <p className="text-xs font-semibold text-emerald-600">
+                                    {rewards?.active_vouchers?.length || 0} Active Vouchers
+                                </p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-lg font-bold text-amber-600">{rewards?.balance ?? 0}</p>
+                            <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>pts to next unlock</p>
+                        </div>
+                    </div>
+
+                    <div className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-full h-2 mb-1.5 overflow-hidden">
+                        <div 
+                            className="bg-amber-500 h-2 rounded-full transition-all duration-500" 
+                            style={{ width: `${Math.min(100, ((rewards?.balance ?? 0) / 200) * 100)}%` }} 
+                        />
+                    </div>
+                    <p className="text-[10px] text-center" style={{ color: 'var(--muted-foreground)' }}>
+                        {200 - (rewards?.balance ?? 0)} points until next voucher
+                    </p>
+                </div>
+                <div style={{ borderTop: '1px solid var(--border)' }} />
+                <ProfileRow
+                    icon={Gift}
+                    label="View Rewards & History"
+                    sublabel="Streaks, transactions, how it works"
+                    href="/rewards"
+                    iconColor="#f59e0b"
                 />
             </div>
 
