@@ -39,27 +39,26 @@ function CartContent() {
     const { addOrder } = useOrders()
     const { isAuthenticated, user } = useAuth()
     const { trackNewOrder } = useAI()
-    const { rewards, refreshRewards } = useRewards()
+    const { rewards, refreshRewards, redeemPoints } = useRewards()
     const [step, setStep] = useState<CheckoutStep>('cart')
     const [orderToken, setOrderToken] = useState<string | null>(null)
     const [orderTime, setOrderTime] = useState<string | null>(null)
     const [isProcessing, setIsProcessing] = useState(false)
-    const [selectedVoucherId, setSelectedVoucherId] = useState<string | null>(null)
     const [earnedPoints, setEarnedPoints] = useState<number | null>(null)
-    const [unlockedVouchers, setUnlockedVouchers] = useState<any[]>([])
+    const [paymentMethod, setPaymentMethod] = useState<'online' | 'points'>('online')
 
-    // Final total after fee and discount
-    const voucherDiscount = selectedVoucherId
-        ? rewards?.active_vouchers.find(v => v.id === selectedVoucherId)?.discount_amount || 0
-        : 0
-    const finalTotal = Math.max(0, orderTotal - voucherDiscount)
+    const canPayWithPoints = rewards 
+        ? rewards.balance >= 2000 && cartTotal <= 120 && rewards.can_redeem_frequency 
+        : false
 
-    const handleToggleVoucher = (voucherId: string) => {
-        if (selectedVoucherId === voucherId) {
-            setSelectedVoucherId(null)
-        } else {
-            setSelectedVoucherId(voucherId)
-        }
+    const pointsDeducted = Math.ceil(cartTotal * 20)
+
+    // Final total after fee (waived if paying with points)
+    const finalTotal = paymentMethod === 'points' ? 0 : orderTotal
+
+    const handleTogglePaymentMethod = (method: 'online' | 'points') => {
+        if (method === 'points' && !canPayWithPoints) return
+        setPaymentMethod(method)
     }
 
     const handlePlaceOrder = async () => {
@@ -77,8 +76,6 @@ function CartContent() {
         setIsProcessing(true)
 
         try {
-            // No client-side redemption needed. Voucher is validated server-side.
-
             // Step 1: Create order in database (status: pending)
             const newOrder = await addOrder({
                 items: items.map(item => ({
@@ -86,23 +83,57 @@ function CartContent() {
                     quantity: item.quantity,
                     price: item.price
                 })),
-                total: cartTotal,
+                total: paymentMethod === 'points' ? cartTotal : cartTotal, // We record cart total, Razorpay adds fee later if online
                 status: 'pending',
                 estimated_time: maxEta,
                 admin_id: canteenId,
-                payment_method: 'online',
+                payment_method: paymentMethod,
                 user_name: user?.name || undefined,
                 user_email: user?.email || undefined
             })
 
-            // Step 2: Create Razorpay order via API (adds convenience fee server-side)
+            // Step 2a: Process Full Points Redemption
+            if (paymentMethod === 'points') {
+                const redeemResult = await redeemPoints(pointsDeducted, cartTotal, newOrder.id)
+                
+                if (!redeemResult.success) {
+                    alert(redeemResult.error || 'Failed to redeem points.')
+                    setIsProcessing(false)
+                    return
+                }
+
+                // Payment verified via points
+                setOrderToken(newOrder.token_number)
+                setOrderTime(new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }))
+                
+                // Track AI and Analytics
+                try {
+                    await trackNewOrder({
+                        orderId: newOrder.id,
+                        items: items.map(item => ({
+                            itemId: item.id,
+                            itemName: item.name,
+                            canteenId: canteenId,
+                            estimatedTime: item.eta_minutes
+                        }))
+                    })
+                } catch (e) {
+                    console.error('Failed to track AI order', e)
+                }
+
+                clearCart()
+                setStep('confirmation')
+                setIsProcessing(false)
+                return
+            }
+
+            // Step 2b: Create Razorpay order via API (adds convenience fee server-side)
             const razorpayRes = await fetch('/api/razorpay/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     orderId: newOrder.id,
                     canteenId: canteenId,
-                    voucherId: selectedVoucherId,
                 }),
             })
 
@@ -187,9 +218,6 @@ function CartContent() {
                         })
 
                         clearCart()
-                        if (verifyData.rewards?.vouchers_unlocked?.length > 0) {
-                            setUnlockedVouchers(verifyData.rewards.vouchers_unlocked)
-                        }
                         refreshRewards() // Refresh reward balance
                         setStep('confirmation')
                     } catch (error: any) {
@@ -286,32 +314,6 @@ function CartContent() {
                     </Card>
                 )}
 
-                {/* Vouchers Unlocked */}
-                {unlockedVouchers.length > 0 && (
-                    <div className="mb-6 space-y-3">
-                        <h3 className="text-lg font-bold text-emerald-600 flex items-center justify-center gap-2">
-                            🎉 Reward Unlocked! 🎉
-                        </h3>
-                        {unlockedVouchers.map((voucher, idx) => (
-                            <Card key={idx} className="border-emerald-300 bg-emerald-50 dark:bg-emerald-950/20 dark:border-emerald-800">
-                                <CardContent className="p-4 flex items-center gap-3">
-                                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-200 dark:bg-emerald-900">
-                                        <Gift className="h-5 w-5 text-emerald-700 dark:text-emerald-300" />
-                                    </div>
-                                    <div className="text-left flex-1">
-                                        <p className="text-sm font-semibold text-emerald-900 dark:text-emerald-100">
-                                            {voucher.title}
-                                        </p>
-                                        <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                                            ₹{voucher.amount} off your next order! Check your rewards profile.
-                                        </p>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
-                )}
-
                 {/* Liability Disclaimer */}
                 <div className="mb-6 flex items-start gap-2 rounded-lg bg-neutral-100 dark:bg-neutral-800/50 p-3 text-left">
                     <Info className="h-4 w-4 mt-0.5 text-neutral-500 shrink-0" />
@@ -366,67 +368,65 @@ function CartContent() {
                         <CardTitle className="text-base">{t('paymentMethod')}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4">
-                            <div className="flex items-center gap-3">
-                                <CreditCard className="h-5 w-5 text-emerald-600" />
+                        <div className="space-y-3">
+                            <button
+                                onClick={() => handleTogglePaymentMethod('online')}
+                                className={`w-full text-left rounded-lg border p-4 transition-colors flex items-center gap-3 ${paymentMethod === 'online'
+                                    ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-700'
+                                    : 'border-neutral-200 hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-neutral-700'
+                                    }`}
+                            >
+                                <CreditCard className={`h-5 w-5 ${paymentMethod === 'online' ? 'text-emerald-600' : 'text-neutral-500'}`} />
                                 <div>
-                                    <p className="font-medium text-emerald-900">{t('onlinePayment')}</p>
-                                    <p className="text-sm text-emerald-700">{t('paymentDesc')}</p>
+                                    <p className={`font-medium ${paymentMethod === 'online' ? 'text-emerald-900 dark:text-emerald-300' : ''}`}>
+                                        {t('onlinePayment')}
+                                    </p>
+                                    <p className="text-xs text-neutral-500 mt-0.5">
+                                        {t('paymentDesc')}
+                                    </p>
                                 </div>
-                            </div>
+                            </button>
+
+                            {isAuthenticated && rewards && (
+                                <button
+                                    onClick={() => handleTogglePaymentMethod('points')}
+                                    disabled={!canPayWithPoints}
+                                    className={`w-full text-left rounded-lg border p-4 transition-colors flex items-center justify-between gap-3 ${paymentMethod === 'points'
+                                        ? 'border-amber-400 bg-amber-50 dark:bg-amber-950/30 dark:border-amber-700'
+                                        : !canPayWithPoints 
+                                            ? 'border-neutral-100 bg-neutral-50 opacity-60 cursor-not-allowed dark:bg-neutral-900/50 dark:border-neutral-800' 
+                                            : 'border-neutral-200 hover:border-amber-300 hover:bg-amber-50/50 dark:border-neutral-700'
+                                        }`}
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <Gift className={`h-5 w-5 ${paymentMethod === 'points' ? 'text-amber-600' : 'text-neutral-500'}`} />
+                                        <div>
+                                            <p className={`font-medium ${paymentMethod === 'points' ? 'text-amber-900 dark:text-amber-300' : ''}`}>
+                                                Pay with Points
+                                            </p>
+                                            <p className="text-xs text-neutral-500 mt-0.5">
+                                                {!canPayWithPoints ? (
+                                                    rewards.balance < 2000 
+                                                        ? `Requires 2000 points (You have ${rewards.balance})`
+                                                        : cartTotal > 120 
+                                                            ? `Max order value is ₹120 (Cart is ₹${cartTotal})`
+                                                            : !rewards.can_redeem_frequency
+                                                                ? `Available in ${rewards.days_until_next_redemption} days`
+                                                                : 'Not eligible'
+                                                ) : (
+                                                    `Full order payment (Deducts ${pointsDeducted} pts)`
+                                                )}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    {paymentMethod === 'points' && (
+                                        <span className="text-[10px] uppercase font-bold text-amber-600">Selected</span>
+                                    )}
+                                </button>
+                            )}
                         </div>
                     </CardContent>
                 </Card>
-
-                {/* Available Vouchers */}
-                {isAuthenticated && rewards && rewards.active_vouchers && rewards.active_vouchers.length > 0 && (
-                    <Card className="mb-6 border-emerald-200 dark:border-emerald-800">
-                        <CardContent className="p-4">
-                            <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                    <Gift className="h-4 w-4 text-emerald-600" />
-                                    <span className="text-sm font-medium">Available Rewards</span>
-                                </div>
-                                <span className="text-xs font-mono text-emerald-600">
-                                    {rewards.active_vouchers.length} Vouchers
-                                </span>
-                            </div>
-
-                            <div className="space-y-2">
-                                {rewards.active_vouchers.map(voucher => {
-                                    const isSelected = selectedVoucherId === voucher.id
-                                    return (
-                                        <button
-                                            key={voucher.id}
-                                            onClick={() => handleToggleVoucher(voucher.id)}
-                                            className={`w-full text-left rounded-lg border p-3 transition-colors flex justify-between items-center ${isSelected
-                                                ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/30 dark:border-emerald-700'
-                                                : 'border-neutral-200 hover:border-emerald-300 hover:bg-emerald-50/50 dark:border-neutral-700'
-                                                }`}
-                                        >
-                                            <div>
-                                                <p className={`text-sm font-medium ${isSelected ? 'text-emerald-800 dark:text-emerald-300' : ''}`}>
-                                                    {voucher.title}
-                                                </p>
-                                                <p className="text-xs text-neutral-500 mt-0.5">
-                                                    {voucher.description}
-                                                </p>
-                                            </div>
-                                            <div className="flex flex-col items-end gap-1">
-                                                <span className={`font-bold ${isSelected ? 'text-emerald-600' : 'text-neutral-700 dark:text-neutral-300'}`}>
-                                                    -₹{voucher.discount_amount}
-                                                </span>
-                                                {isSelected && (
-                                                    <span className="text-[10px] uppercase font-bold text-emerald-600">Applied</span>
-                                                )}
-                                            </div>
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </CardContent>
-                    </Card>
-                )}
 
                 {/* Order Summary */}
                 <Card className="mb-6">
@@ -435,16 +435,17 @@ function CartContent() {
                             <span className="text-neutral-600 dark:text-neutral-400">{t('subtotal')}</span>
                             <span>{formatPrice(cartTotal)}</span>
                         </div>
-                        <div className="flex justify-between text-sm">
-                            <span className="text-neutral-600 dark:text-neutral-400">Convenience fee</span>
-                            <span>{formatPrice(convenienceFee)}</span>
-                        </div>
-                        {selectedVoucherId && voucherDiscount > 0 && (
-                            <div className="flex justify-between text-sm text-emerald-600">
+                        {paymentMethod === 'online' ? (
+                            <div className="flex justify-between text-sm">
+                                <span className="text-neutral-600 dark:text-neutral-400">Convenience fee</span>
+                                <span>{formatPrice(convenienceFee)}</span>
+                            </div>
+                        ) : (
+                            <div className="flex justify-between text-sm text-amber-600">
                                 <span className="flex items-center gap-1">
-                                    <Gift className="h-3 w-3" /> Voucher applied
+                                    <Gift className="h-3 w-3" /> Paid with Points
                                 </span>
-                                <span>−{formatPrice(voucherDiscount)}</span>
+                                <span>−{formatPrice(cartTotal)}</span>
                             </div>
                         )}
                         <div className="border-t border-neutral-200 pt-2 flex justify-between font-medium">

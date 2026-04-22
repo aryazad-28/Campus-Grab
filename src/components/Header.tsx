@@ -61,14 +61,14 @@ export function Header() {
                     {/* GrabPoints Badge — Desktop */}
                     {isAuthenticated && (
                         <Link href="/rewards" title="GrabPoints">
-                            <div className="flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors"
+                            <div className="flex h-9 items-center justify-center gap-1 rounded-full px-3 text-xs font-semibold transition-colors"
                                 style={{
                                     background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.08))',
                                     border: '1px solid rgba(245,158,11,0.25)',
                                     color: '#d97706',
                                 }}
                             >
-                                <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                <Star className="h-4 w-4 fill-amber-500 text-amber-500" />
                                 <span>{rewards?.balance ?? 0}</span>
                             </div>
                         </Link>
@@ -104,14 +104,14 @@ export function Header() {
                     {/* GrabPoints Badge — Mobile */}
                     {isAuthenticated && (
                         <Link href="/rewards" title="GrabPoints">
-                            <div className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-bold transition-all active:scale-95"
+                            <div className="flex h-9 items-center justify-center gap-1 rounded-full px-3 text-[11px] font-bold transition-all active:scale-95"
                                 style={{
                                     background: 'linear-gradient(135deg, rgba(245,158,11,0.15), rgba(217,119,6,0.1))',
                                     border: '1px solid rgba(245,158,11,0.3)',
                                     color: '#d97706',
                                 }}
                             >
-                                <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                                <Star className="h-3.5 w-3.5 fill-amber-500 text-amber-500" />
                                 <span>{rewards?.balance ?? 0}</span>
                             </div>
                         </Link>

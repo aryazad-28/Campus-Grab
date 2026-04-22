@@ -56,13 +56,13 @@ export default function RewardsPage() {
                     
                     <div className="mt-4">
                         <div className="flex justify-between text-xs text-white/80 mb-1">
-                            <span>Progress to next voucher</span>
-                            <span>{rewards.balance} / 200 pts</span>
+                            <span>Progress to Free Meal</span>
+                            <span>{rewards.balance} / 2000 pts</span>
                         </div>
                         <div className="w-full bg-white/20 rounded-full h-1.5 mb-2 overflow-hidden">
                             <div 
                                 className="bg-white h-1.5 rounded-full transition-all duration-500" 
-                                style={{ width: `${Math.min(100, (rewards.balance / 200) * 100)}%` }} 
+                                style={{ width: `${Math.min(100, (rewards.balance / 2000) * 100)}%` }} 
                             />
                         </div>
                         <p className="text-white/70 text-xs">
@@ -71,45 +71,6 @@ export default function RewardsPage() {
                     </div>
                 </div>
             </div>
-
-            {/* Active Vouchers */}
-            {rewards.active_vouchers && rewards.active_vouchers.length > 0 && (
-                <div className="mb-6 animate-fade-in-up delay-1">
-                    <h2 className="text-sm font-semibold mb-3 flex items-center gap-2" style={{ color: 'var(--muted-foreground)' }}>
-                        <Gift className="h-4 w-4" /> ACTIVE VOUCHERS
-                    </h2>
-                    <div className="space-y-3">
-                        {rewards.active_vouchers.map(voucher => (
-                            <div
-                                key={voucher.id}
-                                className="rounded-xl p-4 flex items-center gap-4"
-                                style={{ backgroundColor: 'var(--card)', border: '1px solid var(--border)' }}
-                            >
-                                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30 shrink-0">
-                                    <Gift className="h-6 w-6 text-emerald-600 dark:text-emerald-400" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <h3 className="font-bold text-emerald-600 dark:text-emerald-400 truncate pr-2">
-                                            {voucher.title}
-                                        </h3>
-                                        <span className="font-bold text-lg text-emerald-600 dark:text-emerald-400 shrink-0">
-                                            -₹{voucher.discount_amount}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs mb-2 text-neutral-600 dark:text-neutral-400">
-                                        {voucher.description}
-                                    </p>
-                                    <div className="flex items-center gap-1.5 text-[10px] font-medium text-amber-600 bg-amber-50 dark:bg-amber-950/30 w-fit px-2 py-0.5 rounded-md">
-                                        <Clock className="h-3 w-3" />
-                                        Expires {new Date(voucher.expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
-                                    </div>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
 
             {/* Streak Trackers */}
             <div className="mb-6 animate-fade-in-up delay-1">
@@ -212,9 +173,9 @@ export default function RewardsPage() {
                                 <Gift className="h-4 w-4 text-indigo-500" />
                             </div>
                             <div>
-                                <p className="text-sm font-medium">Unlock Vouchers</p>
+                                <p className="text-sm font-medium">Free Meal Unlock</p>
                                 <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                                    Every 200 pts unlocks a ₹15 off voucher. Milestones & Streaks unlock bigger bonuses!
+                                    Hit 2000 pts to pay for a full order with points (Max order value ₹120).
                                 </p>
                             </div>
                         </div>
@@ -223,14 +184,13 @@ export default function RewardsPage() {
 
                         <div className="flex items-start gap-3">
                             <div className="flex h-8 w-8 items-center justify-center rounded-lg shrink-0"
-                                style={{ backgroundColor: 'rgba(245,158,11,0.1)' }}>
-                                <Flame className="h-4 w-4 text-amber-500" />
+                                style={{ backgroundColor: 'rgba(239,68,68,0.1)' }}>
+                                <AlertTriangle className="h-4 w-4 text-red-500" />
                             </div>
                             <div>
-                                <p className="text-sm font-medium">Streak & Milestone Bonuses</p>
+                                <p className="text-sm font-medium">Strict Rules</p>
                                 <p className="text-xs" style={{ color: 'var(--muted-foreground)' }}>
-                                    3 orders in 3 days → ₹20 off voucher<br />
-                                    Every 5th order → ₹30 off voucher
+                                    Points cannot be used as partial discounts. Max 1 redemption per 7 days. Points expire after 30 days.
                                 </p>
                             </div>
                         </div>

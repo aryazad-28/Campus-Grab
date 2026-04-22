@@ -50,25 +50,25 @@ export async function POST(request: NextRequest) {
         )
 
         const body = await request.json()
-        const { userId, points, orderTotal } = body
+        const { userId, orderId, orderTotal } = body
 
-        if (!userId || !points || !orderTotal) {
+        if (!userId || !orderId || !orderTotal) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
-        }
-
-        if (points < 200) {
-            return NextResponse.json({ error: 'Minimum redemption is 200 points' }, { status: 400 })
         }
 
         const { data, error } = await supabase.rpc('redeem_reward_points', {
             p_user_id: userId,
-            p_points: points,
+            p_order_id: orderId,
             p_order_total: orderTotal,
         })
 
         if (error) {
             console.error('Error redeeming points:', error)
             return NextResponse.json({ error: 'Failed to redeem points' }, { status: 500 })
+        }
+
+        if (data && data.success === false) {
+            return NextResponse.json({ error: data.error }, { status: 400 })
         }
 
         return NextResponse.json(data)

@@ -11,14 +11,6 @@ interface RewardTransaction {
     created_at: string
 }
 
-export interface Voucher {
-    id: string
-    title: string
-    description: string
-    discount_amount: number
-    expires_at: string
-}
-
 interface RewardsData {
     balance: number
     lifetime_earned: number
@@ -26,15 +18,18 @@ interface RewardsData {
     first_order_claimed: boolean
     streak_3_day: number
     streak_7_day: number
-    active_vouchers: Voucher[]
+    next_expiry: string | null
+    expiring_points: number
+    can_redeem_frequency: boolean
+    days_until_next_redemption: number
     transactions: RewardTransaction[]
-    meter_max: number
 }
 
 interface RewardsContextType {
     rewards: RewardsData | null
     isLoading: boolean
     refreshRewards: () => Promise<void>
+    redeemPoints: (points: number, orderTotal: number, orderId: string) => Promise<{ success: boolean; error?: string }>
 }
 
 const defaultRewards: RewardsData = {
@@ -44,9 +39,11 @@ const defaultRewards: RewardsData = {
     first_order_claimed: false,
     streak_3_day: 0,
     streak_7_day: 0,
-    active_vouchers: [],
+    next_expiry: null,
+    expiring_points: 0,
+    can_redeem_frequency: true,
+    days_until_next_redemption: 0,
     transactions: [],
-    meter_max: 200
 }
 
 const RewardsContext = createContext<RewardsContextType | undefined>(undefined)
@@ -81,11 +78,41 @@ export function RewardsProvider({ children }: { children: ReactNode }) {
         }
     }, [isAuthenticated, user?.id, fetchRewards])
 
+    const redeemPoints = useCallback(async (points: number, orderTotal: number, orderId: string) => {
+        if (!user?.id) return { success: false, error: 'Not authenticated' }
+
+        try {
+            const res = await fetch('/api/rewards', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    orderId,
+                    orderTotal,
+                }),
+            })
+
+            const data = await res.json()
+
+            if (!res.ok || data.success === false) {
+                return { success: false, error: data.error || 'Failed to redeem points' }
+            }
+
+            // Update local state by forcing a refresh
+            await fetchRewards()
+
+            return { success: true }
+        } catch (err) {
+            return { success: false, error: 'Network error' }
+        }
+    }, [user?.id, fetchRewards])
+
     return (
         <RewardsContext.Provider value={{
             rewards: rewards || defaultRewards,
             isLoading,
             refreshRewards: fetchRewards,
+            redeemPoints,
         }}>
             {children}
         </RewardsContext.Provider>

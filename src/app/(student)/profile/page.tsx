@@ -161,26 +161,28 @@ export default function ProfilePage() {
                                 <Gift className="h-[18px] w-[18px] text-amber-500" />
                             </div>
                             <div>
-                                <p className="text-sm font-medium">My Rewards</p>
+                                <p className="text-sm font-medium">My Points</p>
                                 <p className="text-xs font-semibold text-emerald-600">
-                                    {rewards?.active_vouchers?.length || 0} Active Vouchers
+                                    {(rewards?.balance ?? 0) >= 2000 ? 'Free Meal Unlocked!' : 'Keep earning!'}
                                 </p>
                             </div>
                         </div>
                         <div className="text-right">
                             <p className="text-lg font-bold text-amber-600">{rewards?.balance ?? 0}</p>
-                            <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>pts to next unlock</p>
+                            <p className="text-[11px]" style={{ color: 'var(--muted-foreground)' }}>total pts</p>
                         </div>
                     </div>
 
                     <div className="w-full bg-neutral-100 dark:bg-neutral-800 rounded-full h-2 mb-1.5 overflow-hidden">
                         <div 
                             className="bg-amber-500 h-2 rounded-full transition-all duration-500" 
-                            style={{ width: `${Math.min(100, ((rewards?.balance ?? 0) / 200) * 100)}%` }} 
+                            style={{ width: `${Math.min(100, ((rewards?.balance ?? 0) / 2000) * 100)}%` }} 
                         />
                     </div>
                     <p className="text-[10px] text-center" style={{ color: 'var(--muted-foreground)' }}>
-                        {200 - (rewards?.balance ?? 0)} points until next voucher
+                        {(rewards?.balance ?? 0) >= 2000 
+                            ? 'You have enough points to redeem a full meal!' 
+                            : `${2000 - (rewards?.balance ?? 0)} points until free meal unlock`}
                     </p>
                 </div>
                 <div style={{ borderTop: '1px solid var(--border)' }} />
